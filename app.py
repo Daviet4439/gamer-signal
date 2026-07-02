@@ -1964,9 +1964,10 @@ def crear_varios_posts(cantidad, pregunta):
         if not noticia_verificada_para_publicar(item) and categoria in ["gaming", "indie", "tecnologia", "anime"]:
             etiqueta = f"{categoria}/editorial"
 
-        posts.append(f"PUBLICACIÓN {indice} - {etiqueta.upper()}\n\n{post}")
+        posts.append(f"PUBLICACIÓN {indice} - {reparar_texto_roto(etiqueta.upper())}\n\n{post}")
 
     respuesta = "\n\n---\n\n".join(posts)
+    respuesta = reparar_texto_roto(limpiar_texto_publicable_final(respuesta))
     st.session_state.last_post_text = respuesta
     st.session_state.last_post_title = f"{cantidad}_posts_gamer_signal"
     st.session_state.last_post_items = items_generados
@@ -3504,7 +3505,45 @@ def limpiar_html(texto):
     texto = re.sub(r"\bappeared first on\b[^.?!]*(?:[.?!]|$)", "", texto, flags=re.IGNORECASE | re.DOTALL)
     while "  " in texto:
         texto = texto.replace("  ", " ")
-    return texto.strip()
+    return reparar_texto_roto(texto.strip())
+
+
+def reparar_texto_roto(texto):
+    if not texto:
+        return ""
+    reemplazos = {
+        "Ã¡": "\u00e1",
+        "Ã©": "\u00e9",
+        "Ã­": "\u00ed",
+        "Ã³": "\u00f3",
+        "Ãº": "\u00fa",
+        "Ã±": "\u00f1",
+        "Ã": "\u00c1",
+        "Ã‰": "\u00c9",
+        "Ã": "\u00cd",
+        "Ã“": "\u00d3",
+        "Ãš": "\u00da",
+        "Ã‘": "\u00d1",
+        "Â¿": "\u00bf",
+        "Â¡": "\u00a1",
+        "â€“": "-",
+        "â€”": "-",
+        "â€˜": "'",
+        "â€™": "'",
+        "â€œ": '"',
+        "â€": '"',
+        "ðŸŽ®": "\U0001f3ae",
+        "ðŸ‘‡": "\U0001f447",
+        "ðŸ“¡": "\U0001f4e1",
+        "Ãº": "\u00fa",
+        "Ã³": "\u00f3",
+        "Ã­a": "\u00eda",
+        "Ã©n": "\u00e9n",
+        "Ã³n": "\u00f3n",
+    }
+    for malo, bueno in reemplazos.items():
+        texto = texto.replace(malo, bueno)
+    return texto
 
 
 def recortar_texto(texto, limite=360):
@@ -3859,6 +3898,56 @@ def limpiar_texto_publicable_final(texto):
     return limpio
 
 
+def asegurar_caption_en_espanol(post, titulo_original="", resumen_original="", estilo="news"):
+    """Evita que el caption final publique titulares o parrafos en ingles."""
+    texto = reparar_texto_roto(limpiar_texto_publicable_final(post))
+    titulo_es = titulo_publico_en_espanol(titulo_original, estilo)
+    resumen_es = resumen_publico_en_espanol(titulo_original, resumen_original, estilo)
+
+    lineas = []
+    reemplazo_resumen_usado = False
+    for linea in texto.splitlines():
+        limpia = linea.strip()
+        if not limpia:
+            lineas.append("")
+            continue
+
+        sin_emoji = re.sub(r"^[^\w#¿¡]+", "", limpia).strip()
+        es_hashtag = limpia.startswith("#")
+        es_pregunta = "?" in limpia or "¿" in limpia
+
+        if not es_hashtag and parece_texto_ingles(sin_emoji):
+            if len(sin_emoji) <= 120 and not es_pregunta:
+                prefijo = "🎮 " if limpia.startswith("🎮") else ""
+                lineas.append(f"{prefijo}{titulo_es}")
+            elif not reemplazo_resumen_usado:
+                lineas.append(resumen_es)
+                reemplazo_resumen_usado = True
+            continue
+
+        lineas.append(limpia)
+
+    texto = "\n".join(lineas)
+    texto = re.sub(r"\n{3,}", "\n\n", texto).strip()
+    texto = texto.replace("Eso conecta con Puede conectar con", "Eso conecta con")
+    texto = texto.replace("conecta con Puede conectar con", "conecta con")
+    texto = texto.replace("Lo importante es mirar por qué esto importa", "Lo importante es mirar por qué esto puede importar")
+
+    # Si todavia queda demasiado ingles, reconstruye un caption limpio desde cero.
+    cuerpo_sin_tags = "\n".join(
+        linea for linea in texto.splitlines() if not linea.lstrip().startswith("#")
+    )
+    if parece_texto_ingles(cuerpo_sin_tags):
+        hashtags = "\n".join(
+            linea for linea in texto.splitlines() if linea.lstrip().startswith("#")
+        )
+        if not hashtags:
+            hashtags = limitar_hashtags_texto(crear_hashtags(f"{titulo_original} {resumen_original}"))
+        texto = crear_post_limpio(titulo_es, resumen_es, estilo, "", hashtags)
+
+    return reparar_texto_roto(limpiar_texto_publicable_final(texto))
+
+
 def revisar_coherencia_editorial(post, estilo):
     """Limpia notas internas y comprueba que el caption suene publicable."""
     texto = str(post or "").strip()
@@ -4066,7 +4155,9 @@ def generate_social_post(item, estilo=None):
     hashtags = limitar_hashtags_texto(hashtags)
 
     post = crear_post_limpio(titulo, resumen, estilo_real, nostalgia, hashtags)
+    post = asegurar_caption_en_espanol(post, titulo, resumen, estilo_real)
     post = revisar_coherencia_editorial(post, estilo_real)
+    post = asegurar_caption_en_espanol(post, titulo, resumen, estilo_real)
     st.session_state.last_post_text = post
     st.session_state.last_post_title = normalizar_titulo_gamer(titulo)
     return post
@@ -4152,7 +4243,8 @@ def formatear_noticias(noticias):
         st.session_state.generated_items[item["id"]] = item
         st.session_state.last_item_id = item["id"]
         st.session_state.news_by_number[numero] = item
-        respuesta += f"### Noticia {numero}: {item['title']}\n\n"
+        titulo_visible = titulo_publico_en_espanol(item.get("title", ""), "news")
+        respuesta += f"### Noticia {numero}: {titulo_visible}\n\n"
         respuesta += f"**Fecha:** {item['date']}\n\n"
         respuesta += f"**Fuente:** {item['source']}\n\n"
         respuesta += f"**Confianza:** {item['confidence_level']}\n\n"
@@ -4161,7 +4253,7 @@ def formatear_noticias(noticias):
             respuesta += f"**Fuentes revisadas:** {', '.join(item['verification_sources'])}\n\n"
         respuesta += f"**Ángulo:** {item['content_angle']}\n\n"
         if item["nostalgia_angle"]:
-            respuesta += f"**Ángulo nostálgico:** {item['nostalgia_angle']}\n\n"
+            respuesta += f"**Ángulo nostálgico:** {reparar_texto_roto(item['nostalgia_angle'])}\n\n"
         respuesta += f"**Link:** {item['link']}\n\n"
         respuesta += f"ID para feedback: `{item['id']}`\n\n---\n\n"
     return respuesta
@@ -4186,7 +4278,7 @@ def crear_opciones_post_recientes():
         st.session_state.news_by_number[numero] = item
         st.session_state.last_item_id = item["id"]
 
-        titulo = limpiar_html(item.get("title", "Noticia gamer"))
+        titulo = titulo_publico_en_espanol(item.get("title", "Noticia gamer"), "news")
         fuente = item.get("source", "Fuente no disponible")
         fecha = item.get("date", "")
         angulo = item.get("content_angle", "noticia")
@@ -4212,7 +4304,7 @@ def crear_opciones_post_recientes():
         respuesta += f"- **Idea:** {idea}\n"
         respuesta += f"- **Ángulo:** {angulo}\n"
         if nostalgia:
-            respuesta += f"- **Conexión nostálgica:** {nostalgia}\n"
+            respuesta += f"- **Conexión nostálgica:** {reparar_texto_roto(nostalgia)}\n"
         respuesta += f"- **Para usarla:** crea post de la noticia {numero}\n\n"
 
     return respuesta
