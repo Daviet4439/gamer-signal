@@ -353,6 +353,15 @@ st.markdown(
         margin-bottom: 10px;
     }
 
+    .daily-radar-brand-grid.single-brand {
+        grid-template-columns: minmax(280px, 460px);
+        justify-content: center;
+    }
+
+    .daily-radar-brand-grid.two-brands {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
     .daily-radar-brand-heading {
         display: flex;
         align-items: center;
@@ -3738,6 +3747,8 @@ def parece_texto_ingles(texto):
         "season", "today", "this november", "this july", "this summer",
         "acclaimed", "fantasy", "getting an anime", "anime adaptation",
         "just announced", "announced", "alongside", "teaser trailer",
+        "could inherit", "by default", "physical gaming crown",
+        "monthly games", "free play days",
     ]
     if any(frase in texto_bajo for frase in frases_ingles):
         return True
@@ -3753,6 +3764,8 @@ def parece_texto_ingles(texto):
         " april ", " may ", " june ", " july ", " august ", " september ",
         " october ", " acclaimed ", " fantasy ", " getting ", " adaptation ",
         " announced ", " alongside ", " teaser ", " trailer ", " song ", " war ",
+        " could ", " inherit ", " physical ", " crown ", " default ",
+        " monthly ", " games ",
     ]
     return sum(1 for palabra in palabras_ingles if palabra in texto_bajo) >= 2
 
@@ -4864,6 +4877,7 @@ def render_daily_radar_panel():
         "Daviet Gaming": "Dragon Pixel busca gaming, PC, tecnologia, cultura geek y posts con enfoque creativo.",
     }
     marcas = [(marca, descripciones_marca[marca]) for marca in marcas_visibles()]
+    brand_grid_class = "two-brands" if len(marcas) > 1 else "single-brand"
     categorias = [
         ("noticia_actual", "Actualidad"),
         ("debate", "Debate"),
@@ -4926,7 +4940,7 @@ def render_daily_radar_panel():
                 <div class="daily-radar-date">{fecha}</div>
             </div>
             <div class="daily-radar-section-title">Oportunidades por marca</div>
-            <div class="daily-radar-grid daily-radar-brand-grid">
+            <div class="daily-radar-grid daily-radar-brand-grid {brand_grid_class}">
                 {''.join(brand_cards)}
             </div>
             <div class="daily-radar-section-title">Temas calientes por categoria</div>
