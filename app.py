@@ -340,6 +340,35 @@ st.markdown(
         margin-bottom: 8px;
     }
 
+    .daily-radar-section-title {
+        margin: 12px 0 8px;
+        color: rgba(255, 215, 0, 0.88);
+        font-family: "Rajdhani", "Inter", sans-serif;
+        font-size: 13px;
+        font-weight: 800;
+        text-transform: uppercase;
+    }
+
+    .daily-radar-brand-grid {
+        margin-bottom: 10px;
+    }
+
+    .daily-radar-brand-heading {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        color: var(--gc-white);
+        font-weight: 900;
+        margin-bottom: 10px;
+    }
+
+    .daily-radar-brand-heading img {
+        width: 44px;
+        height: 44px;
+        object-fit: contain;
+        display: block;
+    }
+
     .daily-radar-item {
         color: rgba(255, 255, 255, 0.88);
         font-size: 13px;
@@ -2026,17 +2055,38 @@ def crear_calendario_contenido(marca=None):
 """
 
 
+def es_modo_dueno():
+    try:
+        owner = st.query_params.get("owner", "")
+    except Exception:
+        try:
+            owner = st.experimental_get_query_params().get("owner", [""])[0]
+        except Exception:
+            owner = ""
+    return str(owner).strip().lower() in ["daviet", "admin", "owner", "1", "true"]
+
+
+def marcas_visibles():
+    return ["Gamer Cave", "Daviet Gaming"] if es_modo_dueno() else ["Gamer Cave"]
+
+
+def marca_permitida(marca):
+    if marca in marcas_visibles():
+        return marca
+    return "Gamer Cave"
+
+
 def render_dashboard():
-    marcas = ["Gamer Cave", "Daviet Gaming"]
+    marcas = marcas_visibles()
     marca_actual = st.session_state.get("active_brand", "Gamer Cave")
-    if marca_actual == "General":
+    if marca_actual == "General" or marca_actual not in marcas:
         marca_actual = "Gamer Cave"
         st.session_state.active_brand = marca_actual
 
     left, center, right = st.columns([0.75, 2.5, 0.75])
     with center:
         st.markdown('<div class="signal-brand-title">Marca activa</div>', unsafe_allow_html=True)
-        cols = st.columns(2)
+        cols = st.columns(len(marcas))
         for col, marca in zip(cols, marcas):
             with col:
                 activo = marca_actual == marca
@@ -4344,7 +4394,10 @@ def detectar_interes_editorial(texto):
 
 def aplicar_marca_si_el_usuario_la_menciona(texto):
     marca = detectar_marca_en_texto(texto)
-    if marca:
+    if marca and marca in marcas_visibles():
+        st.session_state.active_brand = marca
+    elif marca:
+        marca = "Gamer Cave"
         st.session_state.active_brand = marca
     return marca
 
@@ -4366,6 +4419,9 @@ def pedir_marca_para_post(pregunta):
         "pregunta": pregunta,
         "created_at": ahora(),
     }
+    if not es_modo_dueno():
+        st.session_state.active_brand = "Gamer Cave"
+        return "Lo hago para **Gamer Cave**."
     return (
         "¿Para cuál marca lo hago?\n\n"
         "Puedes responder: **Gamer Cave** o **Daviet Gaming**."
@@ -4437,14 +4493,14 @@ def es_comando_de_publicacion(texto):
 
 
 def marcas_para_publicacion(texto):
-    if any(p in texto for p in ["ambas marcas", "ambas marca", "las dos marcas", "las 2 marcas", "ambas"]):
+    if es_modo_dueno() and any(p in texto for p in ["ambas marcas", "ambas marca", "las dos marcas", "las 2 marcas", "ambas"]):
         return ["Gamer Cave", "Daviet Gaming"]
 
     marca = detectar_marca_en_texto(texto)
-    if marca:
+    if marca and marca in marcas_visibles():
         return [marca]
 
-    return [st.session_state.get("active_brand", "Gamer Cave")]
+    return [marca_permitida(st.session_state.get("active_brand", "Gamer Cave"))]
 
 
 def marcar_ultimos_posts_como_publicados(texto):
@@ -4674,6 +4730,8 @@ if "active_brand" not in st.session_state:
     st.session_state.active_brand = "Gamer Cave"
 elif st.session_state.active_brand == "General":
     st.session_state.active_brand = "Gamer Cave"
+elif st.session_state.active_brand not in marcas_visibles():
+    st.session_state.active_brand = "Gamer Cave"
 
 if "monitor_active" not in st.session_state:
     st.session_state.monitor_active = False
@@ -4790,10 +4848,22 @@ with st.sidebar:
 def render_daily_radar_panel():
     log = leer_json(MONITOR_FILE, [])
     if not log:
-        return
+        try:
+            monitor_revisar_fuentes()
+            log = leer_json(MONITOR_FILE, [])
+        except Exception:
+            log = []
 
-    memoria = monitor_actualizar_memoria_marca(log)
+    memoria = monitor_actualizar_memoria_marca(log) if log else {
+        "brands": {"Gamer Cave": [], "Daviet Gaming": []},
+        "buckets": {},
+    }
     fecha = html_escape(fecha_hora_actual_texto())
+    descripciones_marca = {
+        "Gamer Cave": "8Bit busca temas para comunidad, nostalgia, anime, debate y noticias gamer.",
+        "Daviet Gaming": "Dragon Pixel busca gaming, PC, tecnologia, cultura geek y posts con enfoque creativo.",
+    }
+    marcas = [(marca, descripciones_marca[marca]) for marca in marcas_visibles()]
     categorias = [
         ("noticia_actual", "Actualidad"),
         ("debate", "Debate"),
@@ -4802,6 +4872,31 @@ def render_daily_radar_panel():
         ("anime", "Anime / Geek"),
         ("indie", "Indie"),
     ]
+
+    brand_cards = []
+    for marca, fallback in marcas:
+        items = memoria.get("brands", {}).get(marca, [])[:1]
+        logo = html_escape(logo_data_url(marca), quote=True)
+        if items:
+            item = items[0]
+            titulo = html_escape(titulo_publico_en_espanol(item.get("title", ""), "news"))
+            fuente = html_escape(item.get("source", "fuente"))
+            angulo = html_escape(item.get("angle", fallback))
+            contenido = (
+                f'<div class="daily-radar-item"><strong>{titulo}</strong><br>{fuente}</div>'
+                f'<div class="daily-radar-angle">{angulo}</div>'
+            )
+        else:
+            contenido = f'<div class="daily-radar-item">{html_escape(fallback)}</div>'
+        brand_cards.append(
+            f'<div class="daily-radar-card daily-radar-brand-card">'
+            f'<div class="daily-radar-brand-heading">'
+            f'<img src="{logo}" alt="{html_escape(marca)}">'
+            f'<span>{html_escape(marca)}</span>'
+            f'</div>'
+            f'{contenido}'
+            f'</div>'
+        )
 
     cards = []
     for bucket, label in categorias:
@@ -4830,6 +4925,11 @@ def render_daily_radar_panel():
                 <div class="daily-radar-title">Radar diario</div>
                 <div class="daily-radar-date">{fecha}</div>
             </div>
+            <div class="daily-radar-section-title">Oportunidades por marca</div>
+            <div class="daily-radar-grid daily-radar-brand-grid">
+                {''.join(brand_cards)}
+            </div>
+            <div class="daily-radar-section-title">Temas calientes por categoria</div>
             <div class="daily-radar-grid">
                 {''.join(cards)}
             </div>
