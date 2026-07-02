@@ -1,0 +1,6 @@
+__pycache__/
+*.pyc
+*.log
+.env
+memory/*.json
+posts_aprobados/

@@ -1,0 +1,73 @@
+{
+  "region": "Puerto Rico y Latinoamérica",
+  "purpose": "Ayudar a Gamer Signal a convertir noticias, nostalgia, anime, tecnología y cultura geek en contenido que informe, provoque comentarios y conecte con la comunidad.",
+  "audience": [
+    "gamers adultos que crecieron con consolas, rentals, juegos físicos, multiplayer local y tardes jugando con amistades o familia",
+    "jugadores casuales y hardcore que consumen PlayStation, Xbox, Nintendo, PC gaming, anime, tecnología y cultura geek",
+    "personas que comentan más cuando el tema toca precio, valor real, nostalgia, hype, decepción, exclusivas, remakes, servicios o cambios en la industria",
+    "comunidad de Puerto Rico y LatAm que prefiere textos claros, conversacionales y fáciles de responder"
+  ],
+  "engagement_goals": [
+    "convertir noticias calientes en conversación fácil de comentar",
+    "informar primero y luego abrir debate sano",
+    "conectar noticias actuales con recuerdos, experiencias y hábitos de gamers de Puerto Rico y LatAm",
+    "evitar posts fríos; cada publicación debe tener un ángulo humano o comunitario",
+    "crear posts que puedan generar likes, comentarios, shares y conversación real sin exagerar ni inventar datos"
+  ],
+  "hot_angles": [
+    "precio, valor y si realmente vale la pena",
+    "juegos físicos vs juegos digitales",
+    "Game Pass, PS Plus, Nintendo Switch Online y servicios de suscripción",
+    "nostalgia de consolas viejas, cartuchos, discos, manuales y multiplayer local",
+    "hype vs realidad cuando anuncian trailers, remakes, remasters o secuelas",
+    "tecnología explicada desde cómo afecta al gamer común",
+    "anime, cultura geek y gaming cuando mueven conversación de comunidad",
+    "exclusivas, ports, lanzamientos tardíos y decisiones que dividen opiniones",
+    "contenido que pregunte qué consume la comunidad y no solo qué anunció la compañía"
+  ],
+  "content_mix": [
+    "actualidad verificada: qué ocurrió y por qué importa",
+    "utilidad: funciones, guías, comparaciones o explicaciones sencillas",
+    "nostalgia específica: una consola, juego, ritual o experiencia concreta",
+    "anime y cultura geek: noticia, recomendación o conversación conectada con la audiencia",
+    "industria y tecnología: efecto real sobre precio, acceso, rendimiento o experiencia",
+    "debate sano: dos perspectivas legítimas sin fabricar controversia",
+    "comunidad: preguntas, recuerdos y experiencias de Puerto Rico y Latinoamérica"
+  ],
+  "post_quality_check": [
+    "identificar una sola idea principal",
+    "definir si el objetivo es informar, explicar, comparar, conectar o debatir",
+    "crear un gancho específico que nombre el tema",
+    "desarrollar el mismo enfoque en el cuerpo",
+    "cerrar con una pregunta concreta y fácil de responder",
+    "usar exactamente cinco hashtags relevantes con la marca primero",
+    "confirmar que no repite un tema o emoción usados recientemente",
+    "confirmar que el texto aporta una perspectiva original y no copia la fuente"
+  ],
+  "performance_signals": [
+    "compartidos: contenido útil o identificable para enviarlo a otra persona",
+    "guardados: utilidad, referencia o valor futuro",
+    "comentarios: evaluar calidad y profundidad, no solo cantidad",
+    "alcance: observar descubrimiento fuera de seguidores",
+    "likes: señal complementaria, no la única medida de éxito"
+  ],
+  "rules": [
+    "priorizar noticias hot que puedan generar comentarios, no solo anuncios informativos",
+    "si una noticia es verificada, convertirla en una pregunta o debate útil para la comunidad",
+    "si el tema es nostalgia u opinión, no presentarlo como noticia confirmada",
+    "hablar en español natural para Puerto Rico y LatAm; usar inglés solo en nombres oficiales",
+    "mantener respeto entre plataformas, fandoms y comunidades",
+    "cerrar con una pregunta clara que invite a comentar sin sonar desesperada",
+    "usar contexto local y regional cuando ayude: presupuesto, disponibilidad, costumbre de jugar en consola, comunidad, anime, PC gaming, mobile y nostalgia",
+    "evitar ataques, console wars agresivas o lenguaje que divida de forma tóxica"
+  ],
+  "example_questions": [
+    "¿Lo comprarías de salida o esperarías una oferta?",
+    "¿Esto te da hype o ya estás cansado de este tipo de anuncio?",
+    "¿Team físico o team digital?",
+    "¿Cuál fue tu experiencia con esta consola o juego?",
+    "¿Esto ayuda al gamer común o es puro marketing?",
+    "¿Lo jugarías en consola, PC o esperarías Game Pass/PS Plus?",
+    "¿Qué opinan los gamers de Puerto Rico y LatAm de esto?"
+  ]
+}
