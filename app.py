@@ -560,6 +560,35 @@ def render_reloj_actual():
     )
 
 
+def activar_auto_refresh_10_minutos():
+    refresh_ms = RADAR_REFRESH_MINUTES * 60 * 1000
+    components_html(
+        f"""
+        <script>
+        (function () {{
+            const REFRESH_MS = {refresh_ms};
+            function userIsTyping() {{
+                const active = window.parent.document.activeElement;
+                if (!active) return false;
+                const tag = (active.tagName || "").toLowerCase();
+                return tag === "textarea" || tag === "input" || active.isContentEditable;
+            }}
+            setTimeout(function () {{
+                if (!userIsTyping()) {{
+                    window.parent.location.reload();
+                }} else {{
+                    setTimeout(function () {{
+                        if (!userIsTyping()) window.parent.location.reload();
+                    }}, 60 * 1000);
+                }}
+            }}, REFRESH_MS);
+        }})();
+        </script>
+        """,
+        height=0,
+    )
+
+
 HOY = ahora_en_puerto_rico().date()
 ANIO_NOTICIAS = HOY.year
 FECHA_INICIO = HOY - timedelta(days=14)
@@ -583,6 +612,7 @@ FEED_TIMEOUT_SECONDS = 3
 MAX_ENTRADAS_POR_FUENTE = 8
 NEWS_CACHE_TTL_SECONDS = 1800
 API_TIMEOUT_SECONDS = 8
+RADAR_REFRESH_MINUTES = 10
 
 BRAND_LOGOS = {
     "Gamer Cave": ASSETS_DIR / "assistant_8bit.png",
@@ -967,6 +997,51 @@ def obtener_secreto(nombre):
         pass
 
     return os.environ.get(nombre, "").strip()
+
+
+def telegram_configurado():
+    return bool(obtener_secreto("TELEGRAM_BOT_TOKEN") and obtener_secreto("TELEGRAM_CHAT_ID"))
+
+
+def enviar_telegram(mensaje):
+    token = obtener_secreto("TELEGRAM_BOT_TOKEN")
+    chat_id = obtener_secreto("TELEGRAM_CHAT_ID")
+    if not token or not chat_id:
+        return False
+
+    try:
+        data = urlencode({
+            "chat_id": chat_id,
+            "text": mensaje,
+            "disable_web_page_preview": "true",
+        }).encode("utf-8")
+        request = Request(
+            f"https://api.telegram.org/bot{token}/sendMessage",
+            data=data,
+            headers={"User-Agent": "GamerSignal/1.0"},
+        )
+        with urlopen(request, timeout=API_TIMEOUT_SECONDS) as response:
+            return 200 <= response.status < 300
+    except Exception:
+        return False
+
+
+def notificar_hallazgos_telegram(nuevos):
+    if not nuevos or not telegram_configurado():
+        return False
+
+    lineas = [
+        "Gamer Signal encontró noticias nuevas para revisar:",
+        "",
+    ]
+    for item in nuevos[:5]:
+        titulo = titulo_publico_en_espanol(item.get("title", ""), "news")
+        fuente = item.get("source", "fuente")
+        lineas.append(f"- {titulo} ({fuente})")
+
+    lineas.append("")
+    lineas.append("Abre Gamer Signal para convertirlas en post.")
+    return enviar_telegram("\n".join(lineas))
 
 
 def api_disponible(nombre):
@@ -3176,10 +3251,21 @@ def monitor_registrar_hallazgos(noticias):
     guardar_json(MONITOR_FILE, log)
     st.session_state.monitor_last_run = ahora()
     st.session_state.monitor_new_count = len(nuevos)
+    if nuevos:
+        st.session_state.last_notification_sent = notificar_hallazgos_telegram(nuevos)
     return nuevos
 
 
-def monitor_revisar_fuentes():
+def monitor_revisar_fuentes(force=False):
+    if force:
+        try:
+            leer_feed.clear()
+            cargar_noticias_base.clear()
+        except Exception:
+            try:
+                st.cache_data.clear()
+            except Exception:
+                pass
     noticias = buscar_noticias()
     return monitor_registrar_hallazgos(noticias)
 
@@ -4747,10 +4833,10 @@ elif st.session_state.active_brand not in marcas_visibles():
     st.session_state.active_brand = "Gamer Cave"
 
 if "monitor_active" not in st.session_state:
-    st.session_state.monitor_active = False
+    st.session_state.monitor_active = True
 
 if "monitor_interval_minutes" not in st.session_state:
-    st.session_state.monitor_interval_minutes = 15
+    st.session_state.monitor_interval_minutes = RADAR_REFRESH_MINUTES
 
 if "monitor_last_run" not in st.session_state:
     st.session_state.monitor_last_run = None
@@ -4774,6 +4860,7 @@ st.markdown(
     unsafe_allow_html=True,
 )
 render_reloj_actual()
+activar_auto_refresh_10_minutos()
 
 if st.session_state.get("monitor_active"):
     try:
@@ -4781,15 +4868,11 @@ if st.session_state.get("monitor_active"):
         debe_revisar = True
         if ultimo:
             ultimo_dt = datetime.fromisoformat(ultimo)
-            debe_revisar = (ahora_en_puerto_rico() - ultimo_dt).total_seconds() >= st.session_state.monitor_interval_minutes * 60
+            debe_revisar = (ahora_en_puerto_rico() - ultimo_dt).total_seconds() >= RADAR_REFRESH_MINUTES * 60
         if debe_revisar:
             monitor_revisar_fuentes()
     except Exception:
         pass
-    components_html(
-        f"<script>setTimeout(function(){{window.parent.location.reload();}}, {int(st.session_state.monitor_interval_minutes) * 60000});</script>",
-        height=0,
-    )
 
 with st.sidebar:
     st.header("Memoria")
@@ -4832,10 +4915,14 @@ with st.sidebar:
         format_func=lambda x: f"{x} min",
     )
     if st.button("Revisar monitor ahora"):
-        nuevos = monitor_revisar_fuentes()
+        nuevos = monitor_revisar_fuentes(force=True)
         st.success(f"Monitor revisado. Nuevos: {len(nuevos)}")
+        st.rerun()
     st.caption(f"Ultima revision: {st.session_state.monitor_last_run or 'pendiente'}")
     st.caption(f"Nuevos en la ultima revision: {st.session_state.monitor_new_count}")
+    st.caption("Telegram: activo" if telegram_configurado() else "Telegram: sin configurar")
+    if st.session_state.get("last_notification_sent"):
+        st.caption("Ultima notificacion: enviada")
     log_monitor = leer_json(MONITOR_FILE, [])
     if log_monitor:
         with st.expander("Ultimos hallazgos", expanded=False):
@@ -4859,6 +4946,14 @@ with st.sidebar:
         st.write("No hay preferencias guardadas todavía.")
 
 def render_daily_radar_panel():
+    left, center, right = st.columns([1, 1.2, 1])
+    with center:
+        if st.button("Actualizar radar", key="refresh_daily_radar", use_container_width=True):
+            nuevos = monitor_revisar_fuentes(force=True)
+            st.session_state.monitor_new_count = len(nuevos)
+            st.success(f"Radar actualizado. Nuevos: {len(nuevos)}")
+            st.rerun()
+
     log = leer_json(MONITOR_FILE, [])
     if not log:
         try:
