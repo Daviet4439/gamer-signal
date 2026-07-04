@@ -3251,8 +3251,6 @@ def monitor_registrar_hallazgos(noticias):
     guardar_json(MONITOR_FILE, log)
     st.session_state.monitor_last_run = ahora()
     st.session_state.monitor_new_count = len(nuevos)
-    if nuevos:
-        st.session_state.last_notification_sent = notificar_hallazgos_telegram(nuevos)
     return nuevos
 
 
@@ -4920,9 +4918,6 @@ with st.sidebar:
         st.rerun()
     st.caption(f"Ultima revision: {st.session_state.monitor_last_run or 'pendiente'}")
     st.caption(f"Nuevos en la ultima revision: {st.session_state.monitor_new_count}")
-    st.caption("Telegram: activo" if telegram_configurado() else "Telegram: sin configurar")
-    if st.session_state.get("last_notification_sent"):
-        st.caption("Ultima notificacion: enviada")
     log_monitor = leer_json(MONITOR_FILE, [])
     if log_monitor:
         with st.expander("Ultimos hallazgos", expanded=False):
