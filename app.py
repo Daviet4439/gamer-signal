@@ -673,6 +673,22 @@ FUENTES = {
     "TechCrunch AI confiable": "https://techcrunch.com/category/artificial-intelligence/feed/",
 }
 
+FUENTES_COMUNIDAD = {
+    "Reddit Gaming - señal de comunidad": "https://www.reddit.com/r/gaming/.rss",
+    "Reddit TrueGaming - señal de debate": "https://www.reddit.com/r/truegaming/.rss",
+    "Reddit PatientGamers - señal nostalgia": "https://www.reddit.com/r/patientgamers/.rss",
+    "Reddit RetroGaming - señal nostalgia": "https://www.reddit.com/r/retrogaming/.rss",
+    "Reddit Nintendo - señal comunidad": "https://www.reddit.com/r/nintendo/.rss",
+    "Reddit PlayStation - señal comunidad": "https://www.reddit.com/r/playstation/.rss",
+    "Reddit Xbox - señal comunidad": "https://www.reddit.com/r/xbox/.rss",
+    "Reddit PCGaming - señal comunidad": "https://www.reddit.com/r/pcgaming/.rss",
+    "Reddit IndieGaming - señal indie": "https://www.reddit.com/r/indiegaming/.rss",
+    "Reddit Anime - señal anime": "https://www.reddit.com/r/anime/.rss",
+    "Reddit Manga - señal anime": "https://www.reddit.com/r/manga/.rss",
+    "Reddit JRPG - señal fandom": "https://www.reddit.com/r/JRPG/.rss",
+    "Reddit Argaming - señal LatAm": "https://www.reddit.com/r/Argaming/.rss",
+}
+
 TEMAS_DEBATE = [
     "Juegos físicos vs juegos digitales",
     "Battle pass y microtransacciones",
@@ -1424,6 +1440,17 @@ def guia_como_se_juega(tema):
     )
 
 
+def buscar_senales_comunidad_tema(tema, limite=5):
+    tema_bajo = normalizar_tema_contexto(tema).lower()
+    palabras = palabras_clave_tema(tema_bajo)
+    resultados = []
+    for item in cargar_senales_comunidad():
+        texto = f"{item.get('title', '')} {item.get('summary', '')}".lower()
+        if tema_bajo in texto or palabras_clave_tema(texto) & palabras:
+            resultados.append(item)
+    return resultados[:limite]
+
+
 def crear_contexto_api(pregunta):
     tema = limpiar_pedido_contexto(pregunta)
     if not tema:
@@ -1474,6 +1501,12 @@ def crear_contexto_api(pregunta):
 
     respuesta += guia_como_se_juega(tema) + "\n"
     respuesta += formatear_fuentes_oficiales(tema) + "\n"
+    senales = buscar_senales_comunidad_tema(tema)
+    if senales:
+        respuesta += "\n**Señales recientes de comunidad (no son noticia confirmada):**\n"
+        for senal in senales:
+            titulo = titulo_publico_en_espanol(senal.get("title", ""), "debate")
+            respuesta += f"- {titulo} | {senal.get('source', 'comunidad')}\n"
     respuesta += "Nota: esto ayuda con contexto. Para noticias actuales sigo usando filtro estricto de fuentes oficiales o 2+ fuentes confiables."
     return respuesta
 
@@ -2746,6 +2779,17 @@ def filtrar_noticias_verificadas(noticias):
     return [item for item in noticias if noticia_verificada_para_publicar(item)]
 
 
+def filtrar_items_para_monitor(noticias):
+    items = []
+    for item in noticias:
+        if noticia_verificada_para_publicar(item):
+            items.append(item)
+            continue
+        if item.get("is_community_signal") and item.get("content_angle") in ["nostalgia", "debate", "anime", "indie"]:
+            items.append(item)
+    return items
+
+
 def item_es_contexto_editorial(item):
     if not item:
         return True
@@ -3209,8 +3253,55 @@ def cargar_noticias_base():
     return noticias
 
 
+@st.cache_data(ttl=NEWS_CACHE_TTL_SECONDS, show_spinner=False)
+def cargar_senales_comunidad():
+    senales = []
+    fecha_minima = FECHA_FINAL - timedelta(days=45)
+    for fuente, url in FUENTES_COMUNIDAD.items():
+        entradas = leer_feed(url)
+        for entrada in entradas:
+            fecha = date(entrada["year"], entrada["month"], entrada["day"])
+            if fecha.year != ANIO_NOTICIAS or fecha < fecha_minima or fecha > FECHA_FINAL:
+                continue
+
+            titulo = limpiar_html(entrada.get("title", "Tema de comunidad"))
+            resumen_original = limpiar_html(entrada.get("summary", ""))
+            resumen = (
+                "Señal de conversación detectada en comunidad. "
+                "Usar con cautela como idea de nostalgia, debate o fandom; no presentarlo como noticia confirmada."
+            )
+            if resumen_original:
+                resumen += " " + recortar_texto(resumen_original, 180)
+
+            item = {
+                "id": str(uuid.uuid5(uuid.NAMESPACE_URL, f"{fuente}|{entrada.get('link', '')}|{titulo}")),
+                "title": titulo,
+                "summary": resumen,
+                "date": str(fecha),
+                "source": fuente,
+                "link": entrada.get("link", ""),
+                "source_official": False,
+                "source_trusted": False,
+                "is_community_signal": True,
+                "confidence_level": "community_signal",
+                "verification_count": 0,
+                "verification_level": "señal de comunidad; no confirma noticia",
+            }
+            item["nostalgia_angle"] = detectar_angulo_nostalgia(item)
+            item["content_angle"] = detectar_content_angle(item)
+            if "nostalgia" in fuente.lower() or item["nostalgia_angle"]:
+                item["content_angle"] = "nostalgia"
+            elif "debate" in fuente.lower() or "truegaming" in fuente.lower():
+                item["content_angle"] = "debate"
+            elif "anime" in fuente.lower() or "manga" in fuente.lower():
+                item["content_angle"] = "anime"
+            senales.append(item)
+    return senales
+
+
 def buscar_noticias():
     noticias = [dict(item) for item in cargar_noticias_base()]
+    noticias.extend(dict(item) for item in cargar_senales_comunidad())
     return aplicar_preferencias(noticias)
 
 
@@ -3224,7 +3315,7 @@ def monitor_registrar_hallazgos(noticias):
     conocidos = {entrada.get("id") for entrada in log}
     nuevos = []
 
-    for item in filtrar_noticias_verificadas(noticias):
+    for item in filtrar_items_para_monitor(noticias):
         item_id = monitor_item_key(item)
         if item_id in conocidos:
             continue
@@ -3259,6 +3350,7 @@ def monitor_revisar_fuentes(force=False):
         try:
             leer_feed.clear()
             cargar_noticias_base.clear()
+            cargar_senales_comunidad.clear()
         except Exception:
             try:
                 st.cache_data.clear()
@@ -3944,12 +4036,58 @@ def titulo_publico_en_espanol(titulo, estilo):
     return f"{tema}: tema gamer del momento"
 
 
+def traducir_basico_en_espanol(texto):
+    texto = limpiar_html(texto)
+    if not texto:
+        return ""
+
+    reemplazos = [
+        (r"\bhas announced\b", "anunció"),
+        (r"\bannounced\b", "anunció"),
+        (r"\brevealed\b", "reveló"),
+        (r"\breveals\b", "revela"),
+        (r"\bgetting an anime\b", "tendrá anime"),
+        (r"\banime adaptation\b", "adaptación al anime"),
+        (r"\bcoming in\b", "llegará en"),
+        (r"\bcoming soon\b", "llegará pronto"),
+        (r"\brelease date\b", "fecha de lanzamiento"),
+        (r"\btrailer\b", "tráiler"),
+        (r"\bteaser trailer\b", "avance teaser"),
+        (r"\bnew details\b", "nuevos detalles"),
+        (r"\bupdate\b", "actualización"),
+        (r"\bavailable today\b", "disponible hoy"),
+        (r"\bhands-on\b", "primeras impresiones"),
+        (r"\bplayers\b", "jugadores"),
+        (r"\bdeveloper\b", "desarrollador"),
+        (r"\bdevelopers\b", "desarrolladores"),
+        (r"\bcommunity\b", "comunidad"),
+        (r"\bfans\b", "fans"),
+        (r"\bseason\b", "temporada"),
+        (r"\bgame\b", "juego"),
+        (r"\bgames\b", "juegos"),
+        (r"\bphysical games\b", "juegos físicos"),
+        (r"\bdigital games\b", "juegos digitales"),
+        (r"\bopen world\b", "mundo abierto"),
+        (r"\bmultiplayer\b", "multijugador"),
+        (r"\blocal multiplayer\b", "multiplayer local"),
+    ]
+
+    traducido = texto
+    for patron, reemplazo in reemplazos:
+        traducido = re.sub(patron, reemplazo, traducido, flags=re.IGNORECASE)
+    return reparar_texto_roto(limpiar_texto_publicable_final(traducido))
+
+
 def resumen_publico_en_espanol(titulo, resumen, estilo):
     resumen_limpio = limpiar_html(resumen)
     if resumen_limpio and not parece_texto_ingles(resumen_limpio):
         return recortar_texto(resumen_limpio, 260)
 
     tema = extraer_tema_para_titulo(titulo)
+    resumen_traducido = traducir_basico_en_espanol(resumen_limpio)
+    if resumen_traducido and not parece_texto_ingles(resumen_traducido):
+        return recortar_texto(resumen_traducido, 260)
+
     titulo_bajo = titulo.lower()
     resumen_bajo = resumen_limpio.lower()
     if "anime adaptation" in titulo_bajo or "getting an anime" in titulo_bajo or "anime adaptation" in resumen_bajo:
