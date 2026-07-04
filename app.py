@@ -424,12 +424,24 @@ st.markdown(
 
     div[data-testid="stButton"] > button {
         min-height: 40px;
+        min-width: 96px;
         border-radius: 10px;
         border: 1px solid rgba(255, 215, 0, 0.34);
         background: rgba(42, 42, 42, 0.72);
         color: var(--gc-white);
         font-family: "Rajdhani", "Inter", sans-serif;
         font-weight: 700;
+        white-space: nowrap;
+        word-break: keep-all;
+        overflow-wrap: normal;
+        text-align: center;
+    }
+
+    div[data-testid="stButton"] > button p {
+        white-space: nowrap;
+        word-break: keep-all;
+        overflow-wrap: normal;
+        margin: 0;
     }
 
     .stApp {
@@ -4446,6 +4458,297 @@ def generate_social_post(item, estilo=None):
     st.session_state.last_post_text = post
     st.session_state.last_post_title = normalizar_titulo_gamer(titulo)
     return post
+
+
+# Capa final de idioma y limpieza para evitar que titulares RSS salgan en ingles.
+# Las fuentes originales se guardan internamente, pero el caption visible queda en espanol.
+def limpiar_texto_publicable_final(texto):
+    limpio = str(texto or "")
+    reemplazos = {
+        "todavÃ­a": "todav\u00eda",
+        "tendrÃ¡": "tendr\u00e1",
+        "adaptaciÃ³n": "adaptaci\u00f3n",
+        "atenciÃ³n": "atenci\u00f3n",
+        "conversaciÃ³n": "conversaci\u00f3n",
+        "mÃ¡s": "m\u00e1s",
+        "trÃ¡iler": "tr\u00e1iler",
+        "tecnologÃ­a": "tecnolog\u00eda",
+        "quÃ©": "qu\u00e9",
+        "quiÃ©n": "qui\u00e9n",
+        "por quÃ©": "por qu\u00e9",
+        "cÃ³mo": "c\u00f3mo",
+        "estÃ¡": "est\u00e1",
+        "estÃ¡n": "est\u00e1n",
+        "fÃ­sico": "f\u00edsico",
+        "fÃ­sicos": "f\u00edsicos",
+        "grÃ¡ficos": "gr\u00e1ficos",
+        "aÃ±o": "a\u00f1o",
+        "aÃ±os": "a\u00f1os",
+        "Ã¡ngulo": "\u00e1ngulo",
+        "nostÃ¡lgico": "nost\u00e1lgico",
+        "PokÃ©mon": "Pok\u00e9mon",
+        "Â¿": "\u00bf",
+        "Â¡": "\u00a1",
+        "â€”": "-",
+        "â€“": "-",
+        "â€™": "'",
+        "â€œ": "\"",
+        "â€": "\"",
+        "ðŸŽ®": "\U0001f3ae",
+        "ðŸ‘‡": "\U0001f447",
+    }
+    for malo, bueno in reemplazos.items():
+        limpio = limpio.replace(malo, bueno)
+
+    limpio = re.sub(r"https?://\S+", "", limpio)
+    limpio = re.sub(r"\bThe post\b.*?\bappeared first on\b.*?(?:\.|\n|$)", "", limpio, flags=re.IGNORECASE | re.DOTALL)
+    limpio = re.sub(r"\bappeared first on\b.*?(?:\.|\n|$)", "", limpio, flags=re.IGNORECASE | re.DOTALL)
+    limpio = re.sub(r"\n{3,}", "\n\n", limpio)
+    limpio = re.sub(r"[ \t]{2,}", " ", limpio)
+    return limpio.strip()
+
+
+def parece_texto_ingles(texto):
+    texto_bajo = f" {limpiar_html(texto).lower()} "
+    frases_ingles = [
+        "release date", "hands-on", "available today", "coming soon", "coming to",
+        "is about", "about fear", "questionable choices", "official podcast",
+        "handing players the keys", "keys to the seas", "appeared first",
+        "the post", "update details", "launches", "launching", "announces",
+        "reveals", "report", "new trailer", "season", "this november",
+        "this july", "this summer", "acclaimed", "fantasy manga",
+        "getting an anime", "anime adaptation", "just announced", "alongside",
+        "teaser trailer", "could inherit", "by default", "physical gaming crown",
+        "monthly games", "free play days", "drops its", "recommendation",
+        "enhancements detailed", "finally addresses", "plot hole",
+    ]
+    if any(frase in texto_bajo for frase in frases_ingles):
+        return True
+    palabras = [
+        " the ", " and ", " with ", " for ", " from ", " this ", " that ",
+        " players ", " update ", " available ", " coming ", " launches ",
+        " launch ", " report ", " details ", " official ", " podcast ",
+        " episode ", " expect ", " chaos ", " caused ", " release ", " date ",
+        " fear ", " empathy ", " choices ", " today ", " november ", "july",
+        "acclaimed", "fantasy", "getting", "adaptation", "announced",
+        "alongside", "teaser", "trailer", "could", "inherit", "physical",
+        "crown", "default", "monthly", "games", "free", "days",
+    ]
+    return sum(1 for palabra in palabras if palabra in texto_bajo) >= 2
+
+
+def extraer_tema_para_titulo(titulo):
+    limpio = limpiar_texto_publicable_final(limpiar_html(titulo))
+    limpio = re.sub(r"\s+", " ", limpio).strip(" -:|")
+
+    patrones = [
+        r"\bGTA\s*6\b",
+        r"\bGrand Theft Auto\s*VI\b",
+        r"\bNintendo Switch\s*2\b",
+        r"\bPlayStation\s*5\b",
+        r"\bPS5\b",
+        r"\bXbox\b",
+        r"\bSteam Deck\b",
+        r"\bSea of Thieves\b",
+        r"\bCall of Duty\b",
+        r"\bAssassin.?s Creed[^:,-]*",
+        r"\bOne Piece\b",
+        r"\bGameCube\b",
+        r"\bGame Boy\b",
+    ]
+    for patron in patrones:
+        match = re.search(patron, limpio, flags=re.IGNORECASE)
+        if match:
+            return normalizar_titulo_gamer(match.group(0).strip())
+
+    anime_match = re.search(
+        r"(?:manga|anime)\s+(.+?)\s+(?:is getting|gets|will get|getting|receives|announced|tendr)",
+        limpio,
+        flags=re.IGNORECASE,
+    )
+    if anime_match:
+        return anime_match.group(1).strip(" -:.,")
+
+    for separador in [" - ", " – ", " — ", ":"]:
+        if separador in limpio:
+            posible = limpio.split(separador, 1)[0].strip()
+            if 3 <= len(posible) <= 80:
+                return normalizar_titulo_gamer(posible)
+
+    palabras_corte = [" is ", " are ", " gets ", " launches ", " reveals ", " announces ", " drops ", " details "]
+    bajo = limpio.lower()
+    for separador in palabras_corte:
+        if separador in bajo:
+            posible = limpio[:bajo.find(separador)].strip()
+            if 3 <= len(posible) <= 80:
+                return normalizar_titulo_gamer(posible)
+
+    return normalizar_titulo_gamer(limpio[:80].strip(" -:.,") or "tema gamer")
+
+
+def titulo_publico_en_espanol(titulo, estilo):
+    original = limpiar_texto_publicable_final(limpiar_html(titulo))
+    if not original:
+        return "Tema gamer para comentar"
+
+    tema = normalizar_titulo_gamer(extraer_tema_para_titulo(original))
+    bajo = original.lower()
+
+    if not parece_texto_ingles(original):
+        limpio = normalizar_titulo_gamer(original)
+        if estilo in ["nostalgia", "emocional"] and re.search(r"\b20\d{2}\b", limpio):
+            limpio = re.sub(r"\b(?:de\s+)?20\d{2}\b", "", limpio, flags=re.IGNORECASE)
+            limpio = re.sub(r"\s{2,}", " ", limpio).strip(" -:")
+            return f"{limpio}: recuerdos que todav\u00eda conectan"
+        return limpio
+
+    if re.search(r"\bgta\s*6\b|grand theft auto\s*vi", bajo):
+        return "GTA 6 vuelve a mover la conversaci\u00f3n gamer"
+    if "physical gaming crown" in bajo or "physical" in bajo and "gaming" in bajo:
+        return "Los juegos f\u00edsicos vuelven al debate"
+    if "getting an anime" in bajo or "anime adaptation" in bajo:
+        return f"{tema} tendr\u00e1 adaptaci\u00f3n al anime"
+    if "podcast" in bajo:
+        return f"{tema}: tema oficial para comentar"
+    if "free play days" in bajo or "monthly games" in bajo:
+        return "Juegos incluidos este mes para comentar"
+    if "hands-on" in bajo or "demo available" in bajo or "available today" in bajo:
+        return f"{tema}: demo y primeras impresiones"
+    if "trailer" in bajo or "teaser" in bajo:
+        return f"{tema}: nuevo avance para comentar"
+    if "update" in bajo or "details" in bajo or "enhancements" in bajo:
+        return f"{tema}: nuevos detalles para jugadores"
+    if "release date" in bajo or "launch" in bajo or "coming" in bajo:
+        return f"{tema}: lanzamiento bajo la lupa"
+    if "plot hole" in bajo:
+        return f"{tema}: detalle que encendi\u00f3 la conversaci\u00f3n"
+
+    if estilo == "debate":
+        return f"{tema} abre debate gamer"
+    if estilo in ["nostalgia", "emocional"]:
+        return f"{tema}: recuerdos gamer"
+    if estilo == "corto":
+        return f"{tema}: tema r\u00e1pido para comentar"
+    return f"{tema}: noticia para comentar"
+
+
+def traducir_basico_en_espanol(texto):
+    limpio = limpiar_texto_publicable_final(limpiar_html(texto))
+    if not limpio:
+        return ""
+    reemplazos = [
+        (r"\bhas announced\b", "anunci\u00f3"),
+        (r"\bannounced\b", "anunci\u00f3"),
+        (r"\brevealed\b", "revel\u00f3"),
+        (r"\breveals\b", "revela"),
+        (r"\bgetting an anime\b", "tendr\u00e1 adaptaci\u00f3n al anime"),
+        (r"\banime adaptation\b", "adaptaci\u00f3n al anime"),
+        (r"\bcoming in\b", "llegar\u00e1 en"),
+        (r"\bcoming soon\b", "llegar\u00e1 pronto"),
+        (r"\brelease date\b", "fecha de lanzamiento"),
+        (r"\bteaser trailer\b", "avance"),
+        (r"\btrailer\b", "avance"),
+        (r"\bnew details\b", "nuevos detalles"),
+        (r"\bupdate\b", "actualizaci\u00f3n"),
+        (r"\bavailable today\b", "disponible hoy"),
+        (r"\bhands-on\b", "primeras impresiones"),
+        (r"\bplayers\b", "jugadores"),
+        (r"\bdevelopers\b", "desarrolladores"),
+        (r"\bdeveloper\b", "desarrollador"),
+        (r"\bcommunity\b", "comunidad"),
+        (r"\bfans\b", "fans"),
+        (r"\bseason\b", "temporada"),
+        (r"\bgames\b", "juegos"),
+        (r"\bgame\b", "juego"),
+        (r"\bphysical games\b", "juegos f\u00edsicos"),
+        (r"\bdigital games\b", "juegos digitales"),
+        (r"\bopen world\b", "mundo abierto"),
+        (r"\blocal multiplayer\b", "multiplayer local"),
+    ]
+    traducido = limpio
+    for patron, reemplazo in reemplazos:
+        traducido = re.sub(patron, reemplazo, traducido, flags=re.IGNORECASE)
+    return limpiar_texto_publicable_final(traducido)
+
+
+def resumen_publico_en_espanol(titulo, resumen, estilo):
+    resumen_limpio = limpiar_texto_publicable_final(limpiar_html(resumen))
+    tema = titulo_publico_en_espanol(titulo, estilo).replace(": noticia para comentar", "")
+    tema = tema.replace(": tema oficial para comentar", "").strip()
+
+    if resumen_limpio and not parece_texto_ingles(resumen_limpio):
+        return recortar_texto(resumen_limpio, 260)
+
+    traducido = traducir_basico_en_espanol(resumen_limpio)
+    if traducido and not parece_texto_ingles(traducido):
+        return recortar_texto(traducido, 260)
+
+    bajo = f"{titulo} {resumen}".lower()
+    if "anime" in bajo or "manga" in bajo:
+        return (
+            f"{tema} se est\u00e1 moviendo dentro de la conversaci\u00f3n geek. "
+            "La clave es explicarlo simple y conectar con fans de anime, manga y cultura gamer."
+        )
+    if "gta 6" in bajo or "grand theft auto vi" in bajo:
+        return (
+            "GTA 6 sigue siendo uno de los temas que m\u00e1s mueve conversaci\u00f3n. "
+            "Lo interesante es mirar c\u00f3mo afecta el calendario, el hype y las expectativas de la comunidad."
+        )
+    if estilo == "debate":
+        return (
+            f"{tema} puede abrir una conversaci\u00f3n buena entre jugadores. "
+            "La idea es presentar los dos lados sin convertirlo en pelea."
+        )
+    if estilo in ["nostalgia", "emocional"]:
+        return (
+            f"{tema} conecta con recuerdos gamer, consolas viejas, juegos f\u00edsicos "
+            "y momentos que muchos todav\u00eda reconocen."
+        )
+    return (
+        f"{tema} es un tema reciente dentro del mundo gamer. "
+        "Lo importante es explicar qu\u00e9 pas\u00f3, por qu\u00e9 importa y qu\u00e9 conversaci\u00f3n puede abrir."
+    )
+
+
+def asegurar_caption_en_espanol(post, titulo_original="", resumen_original="", estilo="news"):
+    texto = limpiar_texto_publicable_final(post)
+    titulo_es = titulo_publico_en_espanol(titulo_original, estilo)
+    resumen_es = resumen_publico_en_espanol(titulo_original, resumen_original, estilo)
+    lineas = []
+    cambio_resumen = False
+
+    for linea in texto.splitlines():
+        limpia = linea.strip()
+        if not limpia:
+            lineas.append("")
+            continue
+        if limpia.startswith("#"):
+            lineas.append(limitar_hashtags_texto(limpia))
+            continue
+        sin_emoji = re.sub(r"^[^\w#\u00bf\u00a1]+", "", limpia).strip()
+        if parece_texto_ingles(sin_emoji):
+            if len(sin_emoji) <= 140:
+                prefijo = "\U0001f3ae " if limpia.startswith("\U0001f3ae") else ""
+                lineas.append(f"{prefijo}{titulo_es}")
+            elif not cambio_resumen:
+                lineas.append(resumen_es)
+                cambio_resumen = True
+            continue
+        lineas.append(limpia)
+
+    salida = "\n".join(lineas)
+    salida = salida.replace("Eso conecta con Puede conectar con", "Eso conecta con")
+    salida = salida.replace("conecta con Puede conectar con", "conecta con")
+    salida = re.sub(r"\n{3,}", "\n\n", salida).strip()
+
+    cuerpo = "\n".join(linea for linea in salida.splitlines() if not linea.lstrip().startswith("#"))
+    if parece_texto_ingles(cuerpo):
+        hashtags = "\n".join(linea for linea in salida.splitlines() if linea.lstrip().startswith("#"))
+        if not hashtags:
+            hashtags = limitar_hashtags_texto(crear_hashtags(f"{titulo_original} {resumen_original}"))
+        salida = crear_post_limpio(titulo_es, resumen_es, estilo, "", hashtags)
+    return limpiar_texto_publicable_final(salida)
+
 
 def crear_debate():
     prompt = buscar_prompt("debate")
