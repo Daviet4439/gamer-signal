@@ -612,6 +612,7 @@ FEEDBACK_FILE = MEMORY_DIR / "feedback_log.json"
 USED_FILE = MEMORY_DIR / "used_topics.json"
 MONITOR_FILE = MEMORY_DIR / "monitor_log.json"
 MONITOR_BRAND_FILE = MEMORY_DIR / "monitor_brand_memory.json"
+ACCESS_LOG_FILE = MEMORY_DIR / "access_log.json"
 APPROVED_POSTS_DIR = Path("posts_aprobados")
 ASSETS_DIR = Path("assets")
 
@@ -955,7 +956,7 @@ SENALES_INDIE = [
 
 def preparar_memoria():
     MEMORY_DIR.mkdir(exist_ok=True)
-    for archivo in [PREFS_FILE, FEEDBACK_FILE, USED_FILE, MONITOR_FILE, MONITOR_BRAND_FILE]:
+    for archivo in [PREFS_FILE, FEEDBACK_FILE, USED_FILE, MONITOR_FILE, MONITOR_BRAND_FILE, ACCESS_LOG_FILE]:
         if not archivo.exists():
             archivo.write_text("[]", encoding="utf-8")
     prefs = leer_json(PREFS_FILE, [])
@@ -2203,6 +2204,39 @@ def marca_permitida(marca):
     if marca in marcas_visibles():
         return marca
     return "Gamer Cave"
+
+
+def registrar_acceso_simple():
+    if st.session_state.get("access_logged"):
+        return
+
+    tipo_link = "dueno" if es_modo_dueno() else "publico"
+    ahora_pr = ahora_en_puerto_rico()
+    log = leer_json(ACCESS_LOG_FILE, [])
+    log.append({
+        "tipo": tipo_link,
+        "fecha": ahora_pr.strftime("%Y-%m-%d"),
+        "hora": ahora_pr.strftime("%I:%M:%S %p"),
+        "timestamp": ahora_pr.isoformat(),
+    })
+    guardar_json(ACCESS_LOG_FILE, log[-300:])
+    st.session_state.access_logged = True
+
+
+def render_access_log_simple():
+    if not es_modo_dueno():
+        return
+
+    accesos = leer_json(ACCESS_LOG_FILE, [])
+    st.divider()
+    st.subheader("Accesos al link")
+    if not accesos:
+        st.write("Todavia no hay accesos registrados.")
+        return
+
+    for item in list(reversed(accesos))[:12]:
+        tipo = "Link de dueno" if item.get("tipo") == "dueno" else "Link publico"
+        st.write(f"- {tipo}: {item.get('fecha', '')} {item.get('hora', '')}")
 
 
 def render_dashboard():
@@ -5228,6 +5262,7 @@ def responder(pregunta):
 
 
 preparar_memoria()
+registrar_acceso_simple()
 
 if "mensajes" not in st.session_state:
     st.session_state.mensajes = [
@@ -5380,6 +5415,8 @@ with st.sidebar:
         st.json(prefs)
     else:
         st.write("No hay preferencias guardadas todavía.")
+
+    render_access_log_simple()
 
 def render_daily_radar_panel():
     left, center, right = st.columns([1, 1.2, 1])
