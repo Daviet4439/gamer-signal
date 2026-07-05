@@ -2234,6 +2234,15 @@ def render_access_log_simple():
         st.write("Todavia no hay accesos registrados.")
         return
 
+    hoy = ahora_en_puerto_rico().strftime("%Y-%m-%d")
+    publicos_hoy = sum(1 for item in accesos if item.get("tipo") == "publico" and item.get("fecha") == hoy)
+    dueno_hoy = sum(1 for item in accesos if item.get("tipo") == "dueno" and item.get("fecha") == hoy)
+    total_publicos = sum(1 for item in accesos if item.get("tipo") == "publico")
+    total_dueno = sum(1 for item in accesos if item.get("tipo") == "dueno")
+
+    st.write(f"Hoy: publico {publicos_hoy} / dueno {dueno_hoy}")
+    st.write(f"Total guardado: publico {total_publicos} / dueno {total_dueno}")
+
     for item in list(reversed(accesos))[:12]:
         tipo = "Link de dueno" if item.get("tipo") == "dueno" else "Link publico"
         st.write(f"- {tipo}: {item.get('fecha', '')} {item.get('hora', '')}")
@@ -2419,61 +2428,6 @@ def angulo_para_bucket(bucket):
     }
     return angulos.get(bucket, "Convertirlo en post simple, útil y fácil de comentar.")
 
-
-def render_daily_radar_panel():
-    log = leer_json(MONITOR_FILE, [])
-    if not log:
-        return
-
-    memoria = monitor_actualizar_memoria_marca(log)
-    fecha = html_escape(fecha_hora_actual_texto())
-    cards = []
-    categorias = [
-        ("noticia_actual", "Actualidad"),
-        ("debate", "Debate"),
-        ("nostalgia", "Nostalgia"),
-        ("tecnologia", "Tecnologia"),
-        ("anime", "Anime / Geek"),
-        ("indie", "Indie"),
-    ]
-    for bucket, label in categorias:
-        items = memoria.get("buckets", {}).get(bucket, [])[:1]
-        if not items:
-            contenido = '<div class="daily-radar-item">Sin hallazgos suficientes todavía.</div>'
-        else:
-            partes = []
-            for item in items:
-                titulo = html_escape(titulo_publico_en_espanol(item.get("title", ""), "news"))
-                tipo = html_escape(str(item.get("bucket", "noticia_actual")).replace("_", " "))
-                fuente = html_escape(item.get("source", "fuente"))
-                angulo = html_escape(item.get("angle", "Explicarlo claro y cerrar con pregunta."))
-                partes.append(
-                    f'<div class="daily-radar-item"><strong>{titulo}</strong><br>'
-                    f'{tipo} · {fuente}</div>'
-                    f'<div class="daily-radar-angle">{angulo}</div>'
-                )
-            contenido = "".join(partes)
-        cards.append(
-            f'<div class="daily-radar-card">'
-            f'<div class="daily-radar-brand">{html_escape(marca)}</div>'
-            f'{contenido}'
-            f'</div>'
-        )
-
-    st.markdown(
-        f"""
-        <div class="daily-radar-panel">
-            <div class="daily-radar-header">
-                <div class="daily-radar-title">Radar diario</div>
-                <div class="daily-radar-date">{fecha}</div>
-            </div>
-            <div class="daily-radar-grid">
-                {''.join(cards)}
-            </div>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
 
 
 def render_news_cards():
@@ -3958,218 +3912,6 @@ def normalizar_titulo_gamer(titulo):
     return reemplazos.get(bajo, limpio[:1].upper() + limpio[1:])
 
 
-def parece_texto_ingles(texto):
-    texto_bajo = f" {texto.lower()} "
-    frases_ingles = [
-        "release date", "hands-on", "available today", "coming soon", "coming to",
-        "is about", "about fear", "questionable choices", "official podcast",
-        "handing players the keys", "keys to the seas",
-        "episode", "appeared first", "the post", "update details", "launches",
-        "launching", "announces", "reveals", "report", "new trailer",
-        "season", "today", "this november", "this july", "this summer",
-        "acclaimed", "fantasy", "getting an anime", "anime adaptation",
-        "just announced", "announced", "alongside", "teaser trailer",
-        "could inherit", "by default", "physical gaming crown",
-        "monthly games", "free play days",
-    ]
-    if any(frase in texto_bajo for frase in frases_ingles):
-        return True
-
-    palabras_ingles = [
-        " the ", " and ", " with ", " for ", " from ", " this ", " that ",
-        " players ", " player ", " update ", " available ", " coming ",
-        " launches ", " launch ", " season ", " report ", " details ",
-        " first ", " about ", " more ", " new ", " official ", " podcast ",
-        " episode ", " expect ", " chaos ", " caused ", " release ", " date ",
-        " end ", " fear ", " empathy ", " choices ", " today ", " tomorrow ",
-        " november ", " december ", " january ", " february ", " march ",
-        " april ", " may ", " june ", " july ", " august ", " september ",
-        " october ", " acclaimed ", " fantasy ", " getting ", " adaptation ",
-        " announced ", " alongside ", " teaser ", " trailer ", " song ", " war ",
-        " could ", " inherit ", " physical ", " crown ", " default ",
-        " monthly ", " games ",
-    ]
-    return sum(1 for palabra in palabras_ingles if palabra in texto_bajo) >= 2
-
-
-def limpiar_titulo_ingles_para_tema(titulo):
-    limpio = limpiar_html(titulo).strip()
-    limpio = re.sub(r"\s+", " ", limpio)
-    limpio = re.sub(r"^(official\s+)?", "", limpio, flags=re.IGNORECASE).strip()
-    limpio = re.sub(r"\s+appeared first.*$", "", limpio, flags=re.IGNORECASE).strip()
-    return limpio
-
-
-def extraer_tema_para_titulo(titulo):
-    limpio = titulo.strip()
-
-    anime_match = re.search(r"(?:manga|anime)\s+(.+?)\s+(?:is getting|gets|will get|getting|receives|announced)", limpio, flags=re.IGNORECASE)
-    if anime_match:
-        return anime_match.group(1).strip(" -:.,")
-    entidades = [
-        r"\bGTA\s*6\b",
-        r"\bGrand Theft Auto\s*VI\b",
-        r"\bNintendo Switch\s*2\b",
-        r"\bPlayStation\s*5\b",
-        r"\bPS5\b",
-        r"\bXbox\b",
-        r"\bSteam Deck\b",
-    ]
-    for patron in entidades:
-        coincidencia = re.search(patron, limpio, flags=re.IGNORECASE)
-        if coincidencia:
-            return coincidencia.group(0)
-
-    separadores = [" is ", " are ", " gets ", " launches ", " reveals ", " announces ", " update ", " - ", " — ", ":"]
-    bajo = limpio.lower()
-    for separador in separadores:
-        if separador in bajo:
-            posicion = bajo.find(separador)
-            candidato = limpio[:posicion].strip()
-            if len(candidato) >= 3:
-                return candidato
-    return limpio
-
-
-def titulo_publico_en_espanol(titulo, estilo):
-    titulo_limpio = limpiar_titulo_ingles_para_tema(titulo)
-    if not parece_texto_ingles(titulo_limpio):
-        titulo_normalizado = normalizar_titulo_gamer(titulo_limpio)
-        if estilo in ["nostalgia", "emocional"] and re.search(r"\b20\d{2}\b", titulo_normalizado):
-            tema_sin_ano = re.sub(r"\b(?:de\s+)?20\d{2}\b", "", titulo_normalizado, flags=re.IGNORECASE)
-            tema_sin_ano = re.sub(r"\s{2,}", " ", tema_sin_ano).strip(" -:")
-            return f"{tema_sin_ano}: recuerdos que todavía conectan"
-        return titulo_normalizado
-
-    tema = normalizar_titulo_gamer(extraer_tema_para_titulo(titulo_limpio))
-    titulo_bajo = titulo_limpio.lower()
-
-    if re.search(r"\bgta\s*6\b|grand theft auto\s*vi", titulo_bajo):
-        if "release date" in titulo_bajo or "lanzamiento" in titulo_bajo:
-            return "GTA 6 mueve el calendario gamer"
-        return "GTA 6 vuelve a dominar la conversación"
-
-    if "getting an anime" in titulo_bajo or "anime adaptation" in titulo_bajo:
-        return f"{tema} tendrá anime"
-
-    if "playstation podcast" in titulo_bajo:
-        return "Podcast de PlayStation: charla oficial"
-    if "official podcast" in titulo_bajo or "podcast" in titulo_bajo:
-        return f"{tema}: charla oficial"
-    if "handing players the keys" in titulo_bajo or "keys to the seas" in titulo_bajo:
-        return f"{tema}: más control para jugadores"
-    if "hands-on" in titulo_bajo or "demo available" in titulo_bajo or "available today" in titulo_bajo:
-        return f"{tema}: demo y primeras impresiones"
-    if "update" in titulo_bajo or "details" in titulo_bajo:
-        return f"{tema}: nuevos detalles oficiales"
-    if "release date" in titulo_bajo or "launch" in titulo_bajo or "coming" in titulo_bajo:
-        return f"{tema}: lanzamiento bajo la lupa"
-    if "is about" in titulo_bajo or "about" in titulo_bajo:
-        return f"{tema}: una mirada al juego"
-    if "trailer" in titulo_bajo:
-        return f"{tema}: nuevo tráiler para comentar"
-    if "season" in titulo_bajo:
-        return f"{tema}: nueva temporada en camino"
-
-    if estilo == "debate":
-        return f"{tema} abre debate gamer"
-    if estilo in ["noticia", "news"]:
-        return f"{tema}: noticia para comentar"
-    if estilo == "emocional":
-        return f"{tema} conecta con la comunidad"
-    if estilo in ["nostalgia", "corto"]:
-        return f"{tema}: recuerdos gamer"
-    return f"{tema}: tema gamer del momento"
-
-
-def traducir_basico_en_espanol(texto):
-    texto = limpiar_html(texto)
-    if not texto:
-        return ""
-
-    reemplazos = [
-        (r"\bhas announced\b", "anunció"),
-        (r"\bannounced\b", "anunció"),
-        (r"\brevealed\b", "reveló"),
-        (r"\breveals\b", "revela"),
-        (r"\bgetting an anime\b", "tendrá anime"),
-        (r"\banime adaptation\b", "adaptación al anime"),
-        (r"\bcoming in\b", "llegará en"),
-        (r"\bcoming soon\b", "llegará pronto"),
-        (r"\brelease date\b", "fecha de lanzamiento"),
-        (r"\btrailer\b", "tráiler"),
-        (r"\bteaser trailer\b", "avance teaser"),
-        (r"\bnew details\b", "nuevos detalles"),
-        (r"\bupdate\b", "actualización"),
-        (r"\bavailable today\b", "disponible hoy"),
-        (r"\bhands-on\b", "primeras impresiones"),
-        (r"\bplayers\b", "jugadores"),
-        (r"\bdeveloper\b", "desarrollador"),
-        (r"\bdevelopers\b", "desarrolladores"),
-        (r"\bcommunity\b", "comunidad"),
-        (r"\bfans\b", "fans"),
-        (r"\bseason\b", "temporada"),
-        (r"\bgame\b", "juego"),
-        (r"\bgames\b", "juegos"),
-        (r"\bphysical games\b", "juegos físicos"),
-        (r"\bdigital games\b", "juegos digitales"),
-        (r"\bopen world\b", "mundo abierto"),
-        (r"\bmultiplayer\b", "multijugador"),
-        (r"\blocal multiplayer\b", "multiplayer local"),
-    ]
-
-    traducido = texto
-    for patron, reemplazo in reemplazos:
-        traducido = re.sub(patron, reemplazo, traducido, flags=re.IGNORECASE)
-    return reparar_texto_roto(limpiar_texto_publicable_final(traducido))
-
-
-def resumen_publico_en_espanol(titulo, resumen, estilo):
-    resumen_limpio = limpiar_html(resumen)
-    if resumen_limpio and not parece_texto_ingles(resumen_limpio):
-        return recortar_texto(resumen_limpio, 260)
-
-    tema = extraer_tema_para_titulo(titulo)
-    resumen_traducido = traducir_basico_en_espanol(resumen_limpio)
-    if resumen_traducido and not parece_texto_ingles(resumen_traducido):
-        return recortar_texto(resumen_traducido, 260)
-
-    titulo_bajo = titulo.lower()
-    resumen_bajo = resumen_limpio.lower()
-    if "anime adaptation" in titulo_bajo or "getting an anime" in titulo_bajo or "anime adaptation" in resumen_bajo:
-        return (
-            f"{normalizar_titulo_gamer(tema)} tendrá una adaptación al anime. "
-            "La noticia puede mover conversación entre fans de manga, anime y cultura geek, "
-            "especialmente cuando una obra empieza a llamar la atención antes de su estreno."
-        )
-    if estilo in ["noticia", "news"] and re.search(r"\bgta\s*6\b|grand theft auto\s*vi", titulo_bajo):
-        if "release date" in titulo_bajo or "lanzamiento" in titulo_bajo:
-            return (
-                "La expectativa alrededor de la fecha de lanzamiento de GTA 6 está influyendo "
-                "en la conversación sobre otros juegos previstos para el mismo periodo. "
-                "Competir por atención frente a un estreno de este tamaño puede afectar cómo "
-                "otros estudios organizan sus lanzamientos."
-            )
-    if estilo == "debate":
-        return (
-            f"{tema} puede abrir una conversación interesante entre jugadores. "
-            "Lo importante es mirar los dos lados del tema sin convertirlo en pelea."
-        )
-    if estilo in ["noticia", "news"]:
-        return (
-            f"{tema} vuelve a moverse dentro de la conversación gamer. "
-            "La clave está en entender qué cambia, a quién le interesa y por qué puede importar para la comunidad."
-        )
-    if estilo == "emocional":
-        return (
-            f"{tema} conecta con esa parte emocional del gaming: los recuerdos, las etapas y los momentos que se quedan."
-        )
-    if estilo == "corto":
-        return f"{tema} puede traer conversación rápida entre gamers."
-    return (
-        f"{tema} puede conectar con recuerdos gamer, opiniones y conversaciones de comunidad."
-    )
-
 
 def enfoque_comunidad_pr_latam(titulo, texto_base, estilo):
     texto = f"{titulo} {texto_base}".lower()
@@ -4199,84 +3941,6 @@ def enfoque_comunidad_pr_latam(titulo, texto_base, estilo):
 
 
 
-
-def limpiar_texto_publicable_final(texto):
-    reemplazos = {
-        "todavía": "todav\u00eda",
-        "tendrá": "tendr\u00e1",
-        "adaptación": "adaptaci\u00f3n",
-        "atención": "atenci\u00f3n",
-        "conversación": "conversaci\u00f3n",
-        "más": "m\u00e1s",
-        "tráiler": "tr\u00e1iler",
-        "tecnología": "tecnolog\u00eda",
-        "qué": "qu\u00e9",
-        "quién": "qui\u00e9n",
-        "por qué": "por qu\u00e9",
-        "cómo": "c\u00f3mo",
-        "está": "est\u00e1",
-        "están": "est\u00e1n",
-        "físico": "f\u00edsico",
-        "gráficos": "gr\u00e1ficos",
-    }
-    limpio = str(texto or "")
-    for malo, bueno in reemplazos.items():
-        try:
-            bueno_final = bueno.encode("ascii").decode("unicode_escape")
-        except UnicodeEncodeError:
-            bueno_final = bueno
-        limpio = limpio.replace(malo, bueno_final)
-    return limpio
-
-
-def asegurar_caption_en_espanol(post, titulo_original="", resumen_original="", estilo="news"):
-    """Evita que el caption final publique titulares o parrafos en ingles."""
-    texto = reparar_texto_roto(limpiar_texto_publicable_final(post))
-    titulo_es = titulo_publico_en_espanol(titulo_original, estilo)
-    resumen_es = resumen_publico_en_espanol(titulo_original, resumen_original, estilo)
-
-    lineas = []
-    reemplazo_resumen_usado = False
-    for linea in texto.splitlines():
-        limpia = linea.strip()
-        if not limpia:
-            lineas.append("")
-            continue
-
-        sin_emoji = re.sub(r"^[^\w#¿¡]+", "", limpia).strip()
-        es_hashtag = limpia.startswith("#")
-        es_pregunta = "?" in limpia or "¿" in limpia
-
-        if not es_hashtag and parece_texto_ingles(sin_emoji):
-            if len(sin_emoji) <= 120 and not es_pregunta:
-                prefijo = "🎮 " if limpia.startswith("🎮") else ""
-                lineas.append(f"{prefijo}{titulo_es}")
-            elif not reemplazo_resumen_usado:
-                lineas.append(resumen_es)
-                reemplazo_resumen_usado = True
-            continue
-
-        lineas.append(limpia)
-
-    texto = "\n".join(lineas)
-    texto = re.sub(r"\n{3,}", "\n\n", texto).strip()
-    texto = texto.replace("Eso conecta con Puede conectar con", "Eso conecta con")
-    texto = texto.replace("conecta con Puede conectar con", "conecta con")
-    texto = texto.replace("Lo importante es mirar por qué esto importa", "Lo importante es mirar por qué esto puede importar")
-
-    # Si todavia queda demasiado ingles, reconstruye un caption limpio desde cero.
-    cuerpo_sin_tags = "\n".join(
-        linea for linea in texto.splitlines() if not linea.lstrip().startswith("#")
-    )
-    if parece_texto_ingles(cuerpo_sin_tags):
-        hashtags = "\n".join(
-            linea for linea in texto.splitlines() if linea.lstrip().startswith("#")
-        )
-        if not hashtags:
-            hashtags = limitar_hashtags_texto(crear_hashtags(f"{titulo_original} {resumen_original}"))
-        texto = crear_post_limpio(titulo_es, resumen_es, estilo, "", hashtags)
-
-    return reparar_texto_roto(limpiar_texto_publicable_final(texto))
 
 
 def revisar_coherencia_editorial(post, estilo):
@@ -4664,6 +4328,52 @@ def titulo_publico_en_espanol(titulo, estilo):
     if estilo == "corto":
         return f"{tema}: tema r\u00e1pido para comentar"
     return f"{tema}: noticia para comentar"
+
+
+def titulo_visible_seguro(item, estilo="news", bucket=None):
+    """Titulo final para UI: nunca deja un headline entero en ingles."""
+    item = item or {}
+    original = item.get("title", "") if isinstance(item, dict) else str(item)
+    titulo = titulo_publico_en_espanol(original, estilo)
+    titulo = limpiar_texto_publicable_final(titulo)
+    bajo = titulo.lower()
+    palabras_ingles_visibles = [
+        " could ", " inherit ", " crown", " by default", " hands-on", " available",
+        " today", " announced", " revealed", " finally", " addresses", " release date",
+        " coming", " getting", " trailer", " report", " details", " version",
+    ]
+    if not parece_texto_ingles(titulo) and not any(p in f" {bajo} " for p in palabras_ingles_visibles):
+        return titulo
+
+    tema = normalizar_titulo_gamer(extraer_tema_para_titulo(original))
+    if parece_texto_ingles(tema):
+        tema = "Tema gamer"
+
+    bucket = bucket or item.get("content_angle", "")
+    if bucket in ["debate"]:
+        return f"{tema}: debate para la comunidad"
+    if bucket in ["nostalgia"]:
+        return f"{tema}: recuerdos gamer para comentar"
+    if bucket in ["tecnologia", "hardware", "technology"]:
+        return f"{tema}: tecnologia explicada para gamers"
+    if bucket in ["anime"]:
+        return f"{tema}: tema anime/geek para comentar"
+    if bucket in ["indie"]:
+        return f"{tema}: indie para tener en el radar"
+    return f"{tema}: noticia para comentar"
+
+
+def estado_verificacion_item(item):
+    item = item or {}
+    if item.get("source_official"):
+        return ("Verde", "fuente oficial")
+    if item.get("verification_count", 0) >= 2:
+        return ("Verde", "confirmada por varias fuentes")
+    if item.get("is_community_signal"):
+        return ("Amarillo", "senal de comunidad, usar como debate")
+    if item.get("source_trusted"):
+        return ("Amarillo", "fuente confiable, revisar contexto")
+    return ("Rojo", "no usar como noticia confirmada")
 
 
 def traducir_basico_en_espanol(texto):
@@ -5419,13 +5129,21 @@ with st.sidebar:
     render_access_log_simple()
 
 def render_daily_radar_panel():
-    left, center, right = st.columns([1, 1.2, 1])
+    left, center, right = st.columns([1, 1.6, 1])
     with center:
         if st.button("Actualizar radar", key="refresh_daily_radar", use_container_width=True):
             nuevos = monitor_revisar_fuentes(force=True)
             st.session_state.monitor_new_count = len(nuevos)
             st.success(f"Radar actualizado. Nuevos: {len(nuevos)}")
             st.rerun()
+
+    action_cols = st.columns([1, 1, 1])
+    with action_cols[0]:
+        st.button("Crear post del radar", key="radar_make_post", use_container_width=True, on_click=set_quick_prompt, args=("usa el radar diario para crear un post",))
+    with action_cols[1]:
+        st.button("5 posts del radar", key="radar_make_5_posts", use_container_width=True, on_click=set_quick_prompt, args=("usa el radar diario para 5 posts",))
+    with action_cols[2]:
+        st.button("Debate del radar", key="radar_make_debate", use_container_width=True, on_click=set_quick_prompt, args=("hazme un post de debate del radar",))
 
     log = leer_json(MONITOR_FILE, [])
     if not log:
@@ -5461,11 +5179,13 @@ def render_daily_radar_panel():
         logo = html_escape(logo_data_url(marca), quote=True)
         if items:
             item = items[0]
-            titulo = html_escape(titulo_publico_en_espanol(item.get("title", ""), "news"))
+            titulo = html_escape(titulo_visible_seguro(item, "news"))
             fuente = html_escape(item.get("source", "fuente"))
+            color, verificacion = estado_verificacion_item(item)
             angulo = html_escape(item.get("angle", fallback))
             contenido = (
                 f'<div class="daily-radar-item"><strong>{titulo}</strong><br>{fuente}</div>'
+                f'<div class="daily-radar-angle">Verificacion: {html_escape(color)} - {html_escape(verificacion)}</div>'
                 f'<div class="daily-radar-angle">{angulo}</div>'
             )
         else:
@@ -5485,10 +5205,12 @@ def render_daily_radar_panel():
         items = memoria.get("buckets", {}).get(bucket, [])[:1]
         if items:
             item = items[0]
-            titulo = html_escape(titulo_publico_en_espanol(item.get("title", ""), "news"))
+            titulo = html_escape(titulo_visible_seguro(item, "news", bucket))
             fuente = html_escape(item.get("source", "fuente"))
+            color, verificacion = estado_verificacion_item(item)
             contenido = (
                 f'<div class="daily-radar-item"><strong>{titulo}</strong><br>{fuente}</div>'
+                f'<div class="daily-radar-angle">Verificacion: {html_escape(color)} - {html_escape(verificacion)}</div>'
                 f'<div class="daily-radar-angle">{html_escape(angulo_para_bucket(bucket))}</div>'
             )
         else:
@@ -5553,5 +5275,3 @@ for mensaje in st.session_state.mensajes:
 
 if chat_iniciado:
     render_last_post_box()
-
-
