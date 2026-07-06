@@ -4153,6 +4153,7 @@ def generate_social_post(item, estilo=None):
     post = asegurar_caption_en_espanol(post, titulo, resumen, estilo_real)
     post = revisar_coherencia_editorial(post, estilo_real)
     post = asegurar_caption_en_espanol(post, titulo, resumen, estilo_real)
+    post = aplicar_reglas_editoriales_fuertes(post, item, estilo_real)
     st.session_state.last_post_text = post
     st.session_state.last_post_title = normalizar_titulo_gamer(titulo)
     return post
@@ -4492,6 +4493,156 @@ def asegurar_caption_en_espanol(post, titulo_original="", resumen_original="", e
             hashtags = limitar_hashtags_texto(crear_hashtags(f"{titulo_original} {resumen_original}"))
         salida = crear_post_limpio(titulo_es, resumen_es, estilo, "", hashtags)
     return limpiar_texto_publicable_final(salida)
+
+
+def quitar_prefijos_editoriales(linea):
+    """Convierte notas tipo 'Titulo:' o 'Post:' en caption limpio."""
+    texto = str(linea or "").strip()
+    patrones = [
+        r"^(t[i\u00ed]tulo|titulo)\s*:\s*",
+        r"^(subt[i\u00ed]tulo|subtitulo)\s*:\s*",
+        r"^(post|caption|publicaci[o\u00f3]n)\s*:\s*",
+        r"^(cierre|pregunta|cta)\s*:\s*",
+        r"^(hashtags?)\s*:\s*",
+    ]
+    for patron in patrones:
+        texto = re.sub(patron, "", texto, flags=re.IGNORECASE).strip()
+    return texto
+
+
+def linea_no_publicable(linea):
+    """Detecta lineas que son para control interno, no para redes."""
+    texto = limpiar_texto_publicable_final(linea).strip().lower()
+    if not texto:
+        return False
+    prefijos = [
+        "fuente:", "fuentes:", "link:", "fecha:", "confianza:",
+        "id para feedback:", "referencia interna", "referencia usada",
+        "sugerencia visual:", "angulo recomendado:", "\u00e1ngulo recomendado:",
+        "verificacion:", "verificaci\u00f3n:", "nota interna:",
+        "prompt:", "accion:", "acci\u00f3n:",
+    ]
+    if any(texto.startswith(prefijo) for prefijo in prefijos):
+        return True
+    frases_internas = [
+        "lo importante es aterrizarlo a la comunidad",
+        "que cambia, a quien le interesa",
+        "qu\u00e9 cambia, a qui\u00e9n le interesa",
+        "referencia gamer cave usada",
+        "tema de opinion/nostalgia solicitado por el usuario",
+        "no se presenta como noticia confirmada",
+    ]
+    return any(frase in texto for frase in frases_internas)
+
+
+def limpiar_lineas_para_caption(texto):
+    """Deja solo el caption publicable: sin links, fuentes ni etiquetas internas."""
+    limpio = limpiar_texto_publicable_final(reparar_texto_roto(texto))
+    lineas_limpias = []
+    for linea in limpio.splitlines():
+        linea = quitar_prefijos_editoriales(linea)
+        if linea_no_publicable(linea):
+            continue
+        if re.search(r"https?://|www\.", linea, flags=re.IGNORECASE):
+            continue
+        linea = linea.strip()
+        lineas_limpias.append(linea)
+    salida = "\n".join(lineas_limpias)
+    salida = re.sub(r"\n{3,}", "\n\n", salida)
+    salida = re.sub(r"[ \t]{2,}", " ", salida)
+    return salida.strip()
+
+
+def asegurar_hashtags_editoriales(texto, titulo_original="", resumen_original=""):
+    """Siempre deja exactamente 5 hashtags y la marca primero."""
+    brand = get_brand_voice().get("brand", "")
+    lineas = texto.splitlines()
+    hashtags = []
+    cuerpo = []
+    for linea in lineas:
+        tags_linea = re.findall(r"#[a-zA-Z0-9_\u00f1\u00d1]+", linea)
+        if tags_linea and linea.strip().startswith("#"):
+            hashtags.extend(tags_linea)
+            continue
+        cuerpo.append(linea)
+
+    if not hashtags:
+        hashtags = crear_hashtags(f"{titulo_original} {resumen_original}").split()
+
+    if brand == "Daviet Gaming":
+        hashtags = ["#davietgaming"] + [tag for tag in hashtags if tag.lower() != "#davietgaming"]
+    elif brand == "El Gamer Cave":
+        hashtags = ["#elgamercave"] + [tag for tag in hashtags if tag.lower() != "#elgamercave"]
+
+    tags_finales = limitar_hashtags_texto(" ".join(hashtags), 5)
+    cuerpo_limpio = "\n".join(cuerpo).strip()
+    return f"{cuerpo_limpio}\n\n{tags_finales}".strip()
+
+
+def asegurar_pregunta_final(texto, titulo_original="", estilo="news"):
+    """El caption debe cerrar con una pregunta antes de hashtags."""
+    partes = texto.strip().splitlines()
+    if not partes:
+        return texto
+
+    hashtag_line = ""
+    if partes[-1].strip().startswith("#"):
+        hashtag_line = partes.pop().strip()
+
+    cuerpo = "\n".join(partes).strip()
+    if "?" not in cuerpo and "\u00bf" not in cuerpo:
+        cuerpo = f"{cuerpo}\n\n{pregunta_engagement(titulo_original or cuerpo[:80], estilo)}".strip()
+
+    if hashtag_line:
+        return f"{cuerpo}\n\n{hashtag_line}".strip()
+    return cuerpo
+
+
+def caption_tiene_ingles_visible(texto):
+    """Ignora nombres propios, pero detecta frases largas en ingles dentro del caption."""
+    cuerpo = "\n".join(
+        linea for linea in str(texto or "").splitlines()
+        if not linea.strip().startswith("#")
+    )
+    return parece_texto_ingles(cuerpo)
+
+
+def aplicar_reglas_editoriales_fuertes(post, item=None, estilo="news"):
+    """
+    Capa final sin IA: el caption visible debe quedar publicable.
+    Reglas:
+    - Espanol natural.
+    - Sin links, fuentes, fechas, notas internas ni referencia usada.
+    - Gancho, cuerpo y pregunta alineados.
+    - Exactamente 5 hashtags y marca primero.
+    """
+    item = item or {}
+    titulo_original = limpiar_html(item.get("title", "Tema gamer"))
+    resumen_original = limpiar_html(item.get("summary", ""))
+    nostalgia = limpiar_html(item.get("nostalgia_angle", ""))
+
+    hashtags = crear_hashtags(f"{titulo_original} {resumen_original}")
+    texto = limpiar_lineas_para_caption(post)
+
+    if caption_tiene_ingles_visible(texto):
+        texto = crear_post_limpio(
+            titulo_publico_en_espanol(titulo_original, estilo),
+            resumen_publico_en_espanol(titulo_original, resumen_original, estilo),
+            estilo,
+            nostalgia,
+            hashtags,
+        )
+        texto = limpiar_lineas_para_caption(texto)
+
+    texto = texto.replace("Eso conecta con Puede conectar con", "Eso conecta con")
+    texto = texto.replace("conecta con Puede conectar con", "conecta con")
+    texto = texto.replace("y la nostalgia gamer y la nostalgia gamer", "y la nostalgia gamer")
+    texto = re.sub(r"\b20\d{2}\s+y\s+la nostalgia gamer\b", "nostalgia gamer", texto, flags=re.IGNORECASE)
+    texto = asegurar_hashtags_editoriales(texto, titulo_original, resumen_original)
+    texto = asegurar_pregunta_final(texto, titulo_original, estilo)
+    texto = limpiar_texto_publicable_final(reparar_texto_roto(texto))
+    texto = re.sub(r"\n{3,}", "\n\n", texto).strip()
+    return texto
 
 
 def crear_debate():
