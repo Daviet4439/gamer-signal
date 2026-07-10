@@ -1353,7 +1353,6 @@ def limpiar_pedido_contexto(pregunta):
     ]
     return " ".join(palabras).strip(" .,:;-")
 
-
 def normalizar_tema_contexto(tema):
     tema = " ".join(str(tema or "").split()).strip(" .,:;-")
     bajo = tema.lower()
@@ -1976,6 +1975,31 @@ def seleccionar_noticia_para_categoria(noticias, categoria, titulos_usados):
     return None
 
 
+def detectar_exclusiones_usuario(texto):
+    """Lee frases como 'que no sea Xbox' o 'sin PlayStation'."""
+    texto = limpiar_texto_publicable_final(texto).lower()
+    exclusiones = []
+    mapa = {
+        "xbox": ["xbox", "xbox wire", "microsoft"],
+        "playstation": ["playstation", "ps5", "ps plus", "sony"],
+        "nintendo": ["nintendo", "switch", "mario", "zelda", "pokemon", "pok\u00e9mon"],
+        "pc": ["pc gaming", "steam", "nvidia", "amd", "gpu"],
+        "anime": ["anime", "manga", "crunchyroll"],
+    }
+    patrones = ["no sea", "sin", "no de", "que no sea", "que no salga", "otra que no sea"]
+    for clave, palabras in mapa.items():
+        if any(patron in texto and clave in texto for patron in patrones):
+            exclusiones.extend(palabras)
+    return list(dict.fromkeys(exclusiones))
+
+
+def item_cumple_exclusiones(item, exclusiones):
+    if not exclusiones:
+        return True
+    texto = f"{item.get('title', '')} {item.get('summary', '')} {item.get('source', '')}".lower()
+    return not any(exclusion.lower() in texto for exclusion in exclusiones)
+
+
 def crear_item_editorial_categoria(categoria, titulos_usados):
     if categoria == "indie":
         temas = [
@@ -2081,7 +2105,11 @@ def categorias_para_posts(cantidad, texto):
 def crear_varios_posts(cantidad, pregunta):
     cantidad = max(2, min(cantidad, 8))
     texto = pregunta.lower()
-    noticias = filtrar_noticias_verificadas(buscar_noticias())
+    exclusiones = detectar_exclusiones_usuario(texto)
+    noticias = [
+        item for item in filtrar_noticias_verificadas(buscar_noticias())
+        if item_cumple_exclusiones(item, exclusiones)
+    ]
     titulos_usados = set()
     posts = []
     items_generados = []
@@ -3594,8 +3622,12 @@ def responder_monitor(texto):
     return resumen_monitor()
 
 
-def elegir_noticia_nueva_para_post(categoria_preferida=None):
-    noticias = filtrar_noticias_verificadas(buscar_noticias())
+def elegir_noticia_nueva_para_post(categoria_preferida=None, texto_usuario=""):
+    exclusiones = detectar_exclusiones_usuario(texto_usuario)
+    noticias = [
+        item for item in filtrar_noticias_verificadas(buscar_noticias())
+        if item_cumple_exclusiones(item, exclusiones)
+    ]
     if categoria_preferida:
         preferidas = [
             item for item in noticias
@@ -3802,32 +3834,47 @@ def quitar_marca_de_texto(texto):
 
 
 def limpiar_pedido_post(pregunta):
-    texto = pregunta.strip()
-    texto_lower = texto.lower()
+    texto_lower = str(pregunta or "").lower()
+    for malo, bueno in [
+        ("á", "a"), ("é", "e"), ("í", "i"), ("ó", "o"), ("ú", "u"),
+        ("Ã¡", "a"), ("Ã©", "e"), ("Ã­", "i"), ("Ã³", "o"), ("Ãº", "u"),
+    ]:
+        texto_lower = texto_lower.replace(malo, bueno)
     frases = [
-        "créame un post", "creame un post", "crea un post", "crear un post",
+        "dame un post", "dame una publicacion",
+        "dame post", "dame un caption", "dame una noticia para post",
+        "creame un post", "crea un post", "crear un post",
         "hazme un post", "haz un post", "post para instagram", "post para facebook",
-        "caption para tiktok", "caption para reel", "post", "instagram", "facebook",
-        "hazme", "creame", "créame", "crea", "crear", "hacer", "hace", "haz",
+        "caption para tiktok", "caption para reel", "publicacion",
+        "instagram", "facebook", "hazme", "creame", "crea", "crear",
+        "hacer", "hace", "haz", "dame", "post", "caption",
     ]
-    for frase in frases:
+    for frase in sorted(frases, key=len, reverse=True):
         texto_lower = texto_lower.replace(frase, " ")
+
     texto_lower = quitar_marca_de_texto(texto_lower)
+
     for separador in [" sobre ", " de "]:
         if separador in texto_lower:
             texto_lower = texto_lower.split(separador, 1)[1]
+
     texto_lower = texto_lower.strip()
     for prefijo in ["sobre ", "de "]:
         if texto_lower.startswith(prefijo):
             texto_lower = texto_lower[len(prefijo):]
+
     ruido = [
         "por favor", "para redes", "para publicar", "con estilo gamer", "del tema",
-        "para la marca", "para marca", "para mi marca", "para mi pagina", "para mi página",
+        "para la marca", "para marca", "para mi marca", "para mi pagina",
+        "otra noticia", "otra", "noticia", "noticias", "actual", "reciente",
         "para", "la marca", "marca",
     ]
     for item in ruido:
         texto_lower = texto_lower.replace(item, " ")
-    return " ".join(texto_lower.split()).strip(" .,:;-")
+
+    limpio = " ".join(texto_lower.split()).strip(" .,:;-")
+    vacios = {"", "un", "una", "uno", "unos", "unas", "nuevo", "nueva", "redes", "publicar", "hot", "viral"}
+    return "" if limpio in vacios else limpio
 
 
 def crear_item_desde_pedido(pregunta, estilo):
@@ -4712,33 +4759,43 @@ ID para feedback: `{info["id"]}`
 """
 
 
-def formatear_noticias(noticias):
-    noticias = filtrar_noticias_verificadas(noticias)
+def formatear_noticias(noticias, texto_usuario=""):
+    exclusiones = detectar_exclusiones_usuario(texto_usuario)
+    noticias = [
+        item for item in filtrar_noticias_verificadas(noticias)
+        if item_cumple_exclusiones(item, exclusiones)
+    ]
     if not noticias:
+        extra = "\n\nTambien aplique tu filtro de exclusion, por eso quite esos temas de la lista." if exclusiones else ""
         return (
-            f"No encontré noticias que pasen la verificación automática del año {ANIO_NOTICIAS}.\n\n"
+            f"No encontre noticias que pasen la verificacion automatica del ano {ANIO_NOTICIAS}.\n\n"
             "Estoy filtrando solo fuentes oficiales o noticias confirmadas por varias fuentes."
+            f"{extra}"
         )
-    respuesta = f"Busqué y filtré noticias verificadas del año {ANIO_NOTICIAS}.\n\n"
+
+    respuesta = f"Busque y filtre noticias verificadas del ano {ANIO_NOTICIAS}.\n\n"
+    if exclusiones:
+        respuesta += "Tambien quite de la lista lo que pediste evitar.\n\n"
     respuesta += f"Rango usado: {FECHA_INICIO} hasta {FECHA_FINAL}\n\n"
     st.session_state.news_by_number = {}
+
     for numero, item in enumerate(noticias[:5], start=1):
         st.session_state.generated_items[item["id"]] = item
         st.session_state.last_item_id = item["id"]
         st.session_state.news_by_number[numero] = item
-        titulo_visible = titulo_publico_en_espanol(item.get("title", ""), "news")
+
+        titulo_visible = titulo_visible_seguro(item, "news")
+        estado, detalle = estado_verificacion_item(item)
+        resumen = resumen_publico_en_espanol(item.get("title", ""), item.get("summary", ""), "news")
+
         respuesta += f"### Noticia {numero}: {titulo_visible}\n\n"
-        respuesta += f"**Fecha:** {item['date']}\n\n"
-        respuesta += f"**Fuente:** {item['source']}\n\n"
-        respuesta += f"**Confianza:** {item['confidence_level']}\n\n"
-        respuesta += f"**Verificación:** {item.get('verification_level', 'sin corroborar')}\n\n"
-        if item.get("verification_sources"):
-            respuesta += f"**Fuentes revisadas:** {', '.join(item['verification_sources'])}\n\n"
-        respuesta += f"**Ángulo:** {item['content_angle']}\n\n"
-        if item["nostalgia_angle"]:
-            respuesta += f"**Ángulo nostálgico:** {reparar_texto_roto(item['nostalgia_angle'])}\n\n"
-        respuesta += f"**Link:** {item['link']}\n\n"
-        respuesta += f"ID para feedback: `{item['id']}`\n\n---\n\n"
+        respuesta += f"**Fecha:** {item.get('date', '')}\n\n"
+        respuesta += f"**Fuente:** {item.get('source', 'fuente')}\n\n"
+        respuesta += f"**Estado:** {estado} - {detalle}\n\n"
+        respuesta += f"{resumen}\n\n"
+        if item.get("nostalgia_angle"):
+            respuesta += f"**Conexion nostalgica:** {reparar_texto_roto(item['nostalgia_angle'])}\n\n"
+        respuesta += f"Para usarla: **post de la noticia {numero}**\n\n---\n\n"
     return respuesta
 
 
@@ -5085,7 +5142,7 @@ def responder(pregunta):
         tema_manual = limpiar_pedido_post(pregunta)
         pedido_generico = tema_manual in ["", "nuevo", "nueva", "redes", "publicar", "hot", "viral", "del dia", "del día"]
 
-        if not marca_mencionada and pedido_generico and not numero:
+        if not marca_mencionada and pedido_generico and not numero and len(marcas_visibles()) > 1:
             return pedir_marca_para_post(pregunta)
 
         if cantidad_posts > 1 and not es_pedido_de_noticia_numerada(texto):
@@ -5100,7 +5157,7 @@ def responder(pregunta):
             or "reciente" in texto
             or detectar_interes_editorial(texto)
         ):
-            item = elegir_noticia_nueva_para_post(detectar_interes_editorial(texto))
+            item = elegir_noticia_nueva_para_post(detectar_interes_editorial(texto), pregunta)
         else:
             estilo_manual = "nostalgia" if estilo == "all" else estilo
             item = crear_item_desde_pedido(pregunta, estilo_manual)
@@ -5119,7 +5176,7 @@ def responder(pregunta):
         return crear_nostalgia(pregunta)
     if any(p in texto for p in ["debate", "opinión", "opinion", "vs", "versus"]):
         return crear_debate()
-    return formatear_noticias(buscar_noticias())
+    return formatear_noticias(buscar_noticias(), pregunta)
 
 
 preparar_memoria()
