@@ -1912,7 +1912,12 @@ NUMEROS_EN_TEXTO = {
 
 
 def extraer_cantidad_posts(texto):
-    if not any(p in texto for p in ["post", "posts", "publicación", "publicaciones", "caption", "captions"]):
+    palabras_cantidad = [
+        "post", "posts", "publicación", "publicaciones", "publicacion",
+        "caption", "captions", "noticia", "noticias", "tema", "temas",
+        "idea", "ideas", "opciones",
+    ]
+    if not any(p in texto for p in palabras_cantidad):
         return 1
 
     for palabra in texto.replace("#", " ").split():
@@ -1924,6 +1929,32 @@ def extraer_cantidad_posts(texto):
             return numero
 
     return 1
+
+
+HORARIOS_PUBLICACION_LATAM = [
+    {"dia": "lunes", "mx": "12:30 p. m.", "ar": "3:30 p. m.", "razon": "buen espacio de mediodía para abrir conversación"},
+    {"dia": "martes", "mx": "8:00 p. m.", "ar": "11:00 p. m.", "razon": "noche fuerte para debate y gaming"},
+    {"dia": "miércoles", "mx": "1:00 p. m.", "ar": "4:00 p. m.", "razon": "ventana útil para noticias y tecnología"},
+    {"dia": "jueves", "mx": "7:30 p. m.", "ar": "10:30 p. m.", "razon": "buena hora para hype, anime y lanzamientos"},
+    {"dia": "viernes", "mx": "8:30 p. m.", "ar": "11:30 p. m.", "razon": "noche gamer para posts con energía"},
+    {"dia": "sábado", "mx": "11:30 a. m.", "ar": "2:30 p. m.", "razon": "fin de semana para nostalgia y comunidad"},
+    {"dia": "domingo", "mx": "7:00 p. m.", "ar": "10:00 p. m.", "razon": "cierre de semana para debate o calendario"},
+]
+
+
+def sugerencia_horario_publicacion(indice, categoria="general"):
+    fecha_objetivo = ahora_en_puerto_rico().date() + timedelta(days=max(indice, 1) - 1)
+    horario = HORARIOS_PUBLICACION_LATAM[fecha_objetivo.weekday()]
+    categoria = (categoria or "general").lower()
+    ajuste = ""
+    if categoria in ["nostalgia", "debate"]:
+        ajuste = " Ideal para comentarios."
+    elif categoria in ["tecnologia", "anime", "indie"]:
+        ajuste = " Bueno para guardar y compartir."
+    return (
+        f"{horario['dia'].title()} {fecha_objetivo.strftime('%d/%m')} - México: {horario['mx']} | "
+        f"Argentina: {horario['ar']} ({horario['razon']}).{ajuste}"
+    )
 
 
 def es_pedido_de_noticia_numerada(texto):
@@ -1973,6 +2004,57 @@ def seleccionar_noticia_para_categoria(noticias, categoria, titulos_usados):
             return item
 
     return None
+
+
+def seleccionar_noticias_variadas(noticias, cantidad, texto_usuario=""):
+    """Elige noticias reales con mezcla de categorias y fuentes."""
+    cantidad = max(1, min(cantidad, 8))
+    exclusiones = detectar_exclusiones_usuario(texto_usuario)
+    disponibles = [
+        item for item in filtrar_noticias_verificadas(noticias)
+        if item_cumple_exclusiones(item, exclusiones)
+    ]
+    titulos_usados = set()
+    fuentes_usadas = {}
+    seleccionadas = []
+
+    def puede_usarse(item, controlar_fuente=True):
+        titulo_key = item.get("title", "").lower().strip()
+        if not titulo_key or titulo_key in titulos_usados:
+            return False
+        if tema_repetido(item.get("title", "")) or tema_muy_similar(item.get("title", "")):
+            return False
+        if controlar_fuente and cantidad >= 4:
+            fuente = item.get("source", "fuente")
+            if fuentes_usadas.get(fuente, 0) >= 2:
+                return False
+        return True
+
+    def agregar(item):
+        titulo_key = item.get("title", "").lower().strip()
+        fuente = item.get("source", "fuente")
+        titulos_usados.add(titulo_key)
+        fuentes_usadas[fuente] = fuentes_usadas.get(fuente, 0) + 1
+        seleccionadas.append(item)
+
+    for categoria in categorias_para_posts(cantidad, texto_usuario or "noticias"):
+        for item in disponibles:
+            if len(seleccionadas) >= cantidad:
+                break
+            if categoria_de_item(item) == categoria and puede_usarse(item):
+                agregar(item)
+                break
+        if len(seleccionadas) >= cantidad:
+            break
+
+    for controlar_fuente in [True, False]:
+        for item in disponibles:
+            if len(seleccionadas) >= cantidad:
+                break
+            if puede_usarse(item, controlar_fuente=controlar_fuente):
+                agregar(item)
+
+    return seleccionadas
 
 
 def detectar_exclusiones_usuario(texto):
@@ -2088,13 +2170,15 @@ def crear_item_editorial_categoria(categoria, titulos_usados):
 
 
 def categorias_para_posts(cantidad, texto):
-    base = ["gaming", "tecnologia", "nostalgia", "anime", "debate"]
+    base = ["gaming", "tecnologia", "anime", "indie", "debate", "nostalgia"]
+    if "noticia" in texto or "noticias" in texto or "actualidad" in texto:
+        base = ["gaming", "tecnologia", "anime", "indie", "debate", "nostalgia"]
     if "anime" in texto:
-        base = ["anime", "gaming", "nostalgia", "debate", "tecnologia"]
+        base = ["anime", "gaming", "tecnologia", "debate", "nostalgia", "indie"]
     elif "debate" in texto:
-        base = ["debate", "gaming", "anime", "nostalgia", "tecnologia"]
+        base = ["debate", "gaming", "anime", "tecnologia", "nostalgia", "indie"]
     elif "nostalgia" in texto or "retro" in texto:
-        base = ["nostalgia", "gaming", "anime", "debate", "tecnologia"]
+        base = ["nostalgia", "gaming", "anime", "debate", "tecnologia", "indie"]
 
     categorias = []
     while len(categorias) < cantidad:
@@ -2110,6 +2194,7 @@ def crear_varios_posts(cantidad, pregunta):
         item for item in filtrar_noticias_verificadas(buscar_noticias())
         if item_cumple_exclusiones(item, exclusiones)
     ]
+    noticias = seleccionar_noticias_variadas(noticias, min(cantidad * 2, 8), texto)
     titulos_usados = set()
     posts = []
     items_generados = []
@@ -2151,7 +2236,11 @@ def crear_varios_posts(cantidad, pregunta):
         if not noticia_verificada_para_publicar(item) and categoria in ["gaming", "indie", "tecnologia", "anime"]:
             etiqueta = f"{categoria}/editorial"
 
-        posts.append(f"PUBLICACIÓN {indice} - {reparar_texto_roto(etiqueta.upper())}\n\n{post}")
+        horario = sugerencia_horario_publicacion(indice, categoria)
+        posts.append(
+            f"PUBLICACIÓN {indice} - {reparar_texto_roto(etiqueta.upper())}\n"
+            f"HORARIO SUGERIDO: {horario}\n\n{post}"
+        )
 
     respuesta = "\n\n---\n\n".join(posts)
     respuesta = reparar_texto_roto(limpiar_texto_publicable_final(respuesta))
@@ -2596,11 +2685,18 @@ def render_post_response(post):
     for index, parte in enumerate(partes, start=1):
         contenido = parte
         etiqueta = f"Post {index}"
+        horario = ""
         if parte.startswith("PUBLICACIÓN") and "\n\n" in parte:
-            etiqueta, contenido = parte.split("\n\n", 1)
-            etiqueta = etiqueta.title()
+            encabezado, contenido = parte.split("\n\n", 1)
+            lineas_encabezado = encabezado.splitlines()
+            etiqueta = lineas_encabezado[0].title()
+            for linea in lineas_encabezado[1:]:
+                if linea.upper().startswith("HORARIO SUGERIDO:"):
+                    horario = linea.split(":", 1)[1].strip()
         if len(partes) > 1:
             st.markdown(f"#### {etiqueta}")
+            if horario:
+                st.caption(f"Horario sugerido: {horario}")
         render_post_card(contenido.strip())
 
 
@@ -4759,12 +4855,10 @@ ID para feedback: `{info["id"]}`
 """
 
 
-def formatear_noticias(noticias, texto_usuario=""):
+def formatear_noticias(noticias, texto_usuario="", cantidad=5):
+    cantidad = max(1, min(cantidad, 8))
     exclusiones = detectar_exclusiones_usuario(texto_usuario)
-    noticias = [
-        item for item in filtrar_noticias_verificadas(noticias)
-        if item_cumple_exclusiones(item, exclusiones)
-    ]
+    noticias = seleccionar_noticias_variadas(noticias, cantidad, texto_usuario)
     if not noticias:
         extra = "\n\nTambien aplique tu filtro de exclusion, por eso quite esos temas de la lista." if exclusiones else ""
         return (
@@ -4779,7 +4873,7 @@ def formatear_noticias(noticias, texto_usuario=""):
     respuesta += f"Rango usado: {FECHA_INICIO} hasta {FECHA_FINAL}\n\n"
     st.session_state.news_by_number = {}
 
-    for numero, item in enumerate(noticias[:5], start=1):
+    for numero, item in enumerate(noticias[:cantidad], start=1):
         st.session_state.generated_items[item["id"]] = item
         st.session_state.last_item_id = item["id"]
         st.session_state.news_by_number[numero] = item
@@ -4787,8 +4881,11 @@ def formatear_noticias(noticias, texto_usuario=""):
         titulo_visible = titulo_visible_seguro(item, "news")
         estado, detalle = estado_verificacion_item(item)
         resumen = resumen_publico_en_espanol(item.get("title", ""), item.get("summary", ""), "news")
+        categoria = categoria_de_item(item)
+        horario = sugerencia_horario_publicacion(numero, categoria)
 
         respuesta += f"### Noticia {numero}: {titulo_visible}\n\n"
+        respuesta += f"**Horario sugerido:** {horario}\n\n"
         respuesta += f"**Fecha:** {item.get('date', '')}\n\n"
         respuesta += f"**Fuente:** {item.get('source', 'fuente')}\n\n"
         respuesta += f"**Estado:** {estado} - {detalle}\n\n"
@@ -4924,6 +5021,8 @@ def crear_lista_comandos():
 - **hazme un post para Daviet Gaming**
 - **hazme un post para Gamer Cave**
 - **hazme un post**
+- **hazme 6 posts variados**
+- **6 noticias variadas que no sean de Xbox**
 - **créame 5 posts hot**
 - **noticias oficiales de gaming**
 - **opciones de post recientes**
@@ -5176,7 +5275,8 @@ def responder(pregunta):
         return crear_nostalgia(pregunta)
     if any(p in texto for p in ["debate", "opinión", "opinion", "vs", "versus"]):
         return crear_debate()
-    return formatear_noticias(buscar_noticias(), pregunta)
+    cantidad_noticias = cantidad_posts if cantidad_posts > 1 else 5
+    return formatear_noticias(buscar_noticias(), pregunta, cantidad_noticias)
 
 
 preparar_memoria()
