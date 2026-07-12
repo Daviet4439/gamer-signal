@@ -1931,32 +1931,6 @@ def extraer_cantidad_posts(texto):
     return 1
 
 
-HORARIOS_PUBLICACION_LATAM = [
-    {"dia": "lunes", "mx": "12:30 p. m.", "ar": "3:30 p. m.", "razon": "buen espacio de mediodía para abrir conversación"},
-    {"dia": "martes", "mx": "8:00 p. m.", "ar": "11:00 p. m.", "razon": "noche fuerte para debate y gaming"},
-    {"dia": "miércoles", "mx": "1:00 p. m.", "ar": "4:00 p. m.", "razon": "ventana útil para noticias y tecnología"},
-    {"dia": "jueves", "mx": "7:30 p. m.", "ar": "10:30 p. m.", "razon": "buena hora para hype, anime y lanzamientos"},
-    {"dia": "viernes", "mx": "8:30 p. m.", "ar": "11:30 p. m.", "razon": "noche gamer para posts con energía"},
-    {"dia": "sábado", "mx": "11:30 a. m.", "ar": "2:30 p. m.", "razon": "fin de semana para nostalgia y comunidad"},
-    {"dia": "domingo", "mx": "7:00 p. m.", "ar": "10:00 p. m.", "razon": "cierre de semana para debate o calendario"},
-]
-
-
-def sugerencia_horario_publicacion(indice, categoria="general"):
-    fecha_objetivo = ahora_en_puerto_rico().date() + timedelta(days=max(indice, 1) - 1)
-    horario = HORARIOS_PUBLICACION_LATAM[fecha_objetivo.weekday()]
-    categoria = (categoria or "general").lower()
-    ajuste = ""
-    if categoria in ["nostalgia", "debate"]:
-        ajuste = " Ideal para comentarios."
-    elif categoria in ["tecnologia", "anime", "indie"]:
-        ajuste = " Bueno para guardar y compartir."
-    return (
-        f"{horario['dia'].title()} {fecha_objetivo.strftime('%d/%m')} - México: {horario['mx']} | "
-        f"Argentina: {horario['ar']} ({horario['razon']}).{ajuste}"
-    )
-
-
 def es_pedido_de_noticia_numerada(texto):
     return any(
         frase in texto
@@ -2236,10 +2210,8 @@ def crear_varios_posts(cantidad, pregunta):
         if not noticia_verificada_para_publicar(item) and categoria in ["gaming", "indie", "tecnologia", "anime"]:
             etiqueta = f"{categoria}/editorial"
 
-        horario = sugerencia_horario_publicacion(indice, categoria)
         posts.append(
-            f"PUBLICACIÓN {indice} - {reparar_texto_roto(etiqueta.upper())}\n"
-            f"HORARIO SUGERIDO: {horario}\n\n{post}"
+            f"PUBLICACIÓN {indice} - {reparar_texto_roto(etiqueta.upper())}\n\n{post}"
         )
 
     respuesta = "\n\n---\n\n".join(posts)
@@ -2685,18 +2657,11 @@ def render_post_response(post):
     for index, parte in enumerate(partes, start=1):
         contenido = parte
         etiqueta = f"Post {index}"
-        horario = ""
         if parte.startswith("PUBLICACIÓN") and "\n\n" in parte:
-            encabezado, contenido = parte.split("\n\n", 1)
-            lineas_encabezado = encabezado.splitlines()
-            etiqueta = lineas_encabezado[0].title()
-            for linea in lineas_encabezado[1:]:
-                if linea.upper().startswith("HORARIO SUGERIDO:"):
-                    horario = linea.split(":", 1)[1].strip()
+            etiqueta, contenido = parte.split("\n\n", 1)
+            etiqueta = etiqueta.title()
         if len(partes) > 1:
             st.markdown(f"#### {etiqueta}")
-            if horario:
-                st.caption(f"Horario sugerido: {horario}")
         render_post_card(contenido.strip())
 
 
@@ -4881,11 +4846,8 @@ def formatear_noticias(noticias, texto_usuario="", cantidad=5):
         titulo_visible = titulo_visible_seguro(item, "news")
         estado, detalle = estado_verificacion_item(item)
         resumen = resumen_publico_en_espanol(item.get("title", ""), item.get("summary", ""), "news")
-        categoria = categoria_de_item(item)
-        horario = sugerencia_horario_publicacion(numero, categoria)
 
         respuesta += f"### Noticia {numero}: {titulo_visible}\n\n"
-        respuesta += f"**Horario sugerido:** {horario}\n\n"
         respuesta += f"**Fecha:** {item.get('date', '')}\n\n"
         respuesta += f"**Fuente:** {item.get('source', 'fuente')}\n\n"
         respuesta += f"**Estado:** {estado} - {detalle}\n\n"
