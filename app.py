@@ -17,6 +17,8 @@ import streamlit as st
 from streamlit.components.v1 import html as components_html
 
 
+APP_VERSION = "2026.07.13-3"
+
 st.set_page_config(page_title="Gamer Signal", page_icon="📡", layout="centered")
 
 st.markdown(
@@ -169,6 +171,14 @@ st.markdown(
         font-size: 15px;
         margin-top: 10px;
         font-family: "Inter", sans-serif;
+    }
+
+    .gamer-signal-build {
+        color: rgba(255, 215, 0, 0.68);
+        font-size: 11px;
+        margin-top: 8px;
+        font-family: "Rajdhani", "Inter", sans-serif;
+        letter-spacing: 0;
     }
 
     .signal-brand-title {
@@ -604,7 +614,7 @@ def activar_auto_refresh_10_minutos():
 HOY = ahora_en_puerto_rico().date()
 ANIO_NOTICIAS = HOY.year
 FECHA_INICIO = HOY - timedelta(days=14)
-FECHA_FINAL = HOY + timedelta(days=14)
+FECHA_FINAL = HOY
 
 MEMORY_DIR = Path("memory")
 PREFS_FILE = MEMORY_DIR / "user_preferences.json"
@@ -623,7 +633,7 @@ NICHE_MEMORY_FILE = PROMPTS_DIR / "niche_memory.json"
 
 FEED_TIMEOUT_SECONDS = 3
 MAX_ENTRADAS_POR_FUENTE = 8
-NEWS_CACHE_TTL_SECONDS = 1800
+NEWS_CACHE_TTL_SECONDS = 600
 API_TIMEOUT_SECONDS = 8
 RADAR_REFRESH_MINUTES = 10
 
@@ -4434,6 +4444,14 @@ def extraer_tema_para_titulo(titulo):
     limpio = limpiar_texto_publicable_final(limpiar_html(titulo))
     limpio = re.sub(r"\s+", " ", limpio).strip(" -:|")
 
+    prefijo_generico = re.match(
+        r"^(?:pre[- ]?order|preventa|now available|available now|ya disponible|buy now|wishlist|xbox|playstation|nintendo|steam|gog)\s*:\s*(.+)$",
+        limpio,
+        flags=re.IGNORECASE,
+    )
+    if prefijo_generico and len(prefijo_generico.group(1).strip()) >= 3:
+        limpio = prefijo_generico.group(1).strip()
+
     patrones = [
         r"\bGTA\s*6\b",
         r"\bGrand Theft Auto\s*VI\b",
@@ -4512,6 +4530,8 @@ def titulo_publico_en_espanol(titulo, estilo):
 
     if "love and deepspace" in bajo:
         return "Love and Deepspace vuelve a mover conversación entre fans"
+    if "pre-order" in bajo or "preorder" in bajo or "preventa" in bajo:
+        return f"{tema}: preventa disponible"
     if "foreign-worker" in bajo or ("visas" in bajo and "xbox" in bajo):
         return "Microsoft responde a la conversación sobre despidos en Xbox"
     if "mass xbox layoffs" in bajo or ("xbox" in bajo and "layoffs" in bajo):
@@ -4545,6 +4565,8 @@ def titulo_publico_en_espanol(titulo, estilo):
         return f"{tema}: recuerdos gamer"
     if estilo == "corto":
         return f"{tema}: tema r\u00e1pido para comentar"
+    if tema.lower() in ["xbox", "playstation", "nintendo", "steam"]:
+        return f"{tema}: novedad para la comunidad gamer"
     return f"{tema}: noticia para comentar"
 
 
@@ -4657,6 +4679,11 @@ def resumen_publico_en_espanol(titulo, resumen, estilo):
         return (
             "Love and Deepspace volvió a generar conversación entre fans. "
             "La clave está en explicar qué provocó la reacción y por qué una comunidad puede dividirse tanto alrededor de un juego."
+        )
+    if "pre-order" in bajo or "preorder" in bajo or "preventa" in bajo:
+        return (
+            f"{tema} ya aparece como opción para quienes siguen próximos lanzamientos. "
+            "Lo útil es explicar qué es, por qué puede interesar y si vale ponerlo en el radar antes de comprar."
         )
     if "layoff" in bajo or "despido" in bajo:
         return (
@@ -5390,6 +5417,20 @@ def responder(pregunta):
 preparar_memoria()
 registrar_acceso_simple()
 
+if st.session_state.get("app_version") != APP_VERSION:
+    for key in [
+        "mensajes",
+        "generated_items",
+        "last_item_id",
+        "news_by_number",
+        "last_post_text",
+        "last_post_title",
+        "last_post_items",
+        "pending_post_request",
+    ]:
+        st.session_state.pop(key, None)
+    st.session_state.app_version = APP_VERSION
+
 if "mensajes" not in st.session_state:
     st.session_state.mensajes = [
         {
@@ -5455,6 +5496,7 @@ st.markdown(
         {header_mascot_html}
         <h1 class="gamer-signal-title">Gamer Signal</h1>
         <div class="gamer-signal-subtitle">Noticias, nostalgia gamer, debates y posts para tus marcas.</div>
+        <div class="gamer-signal-build">Actualizado {APP_VERSION}</div>
     </div>
     """,
     unsafe_allow_html=True,
