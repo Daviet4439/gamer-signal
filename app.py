@@ -17,7 +17,7 @@ import streamlit as st
 from streamlit.components.v1 import html as components_html
 
 
-APP_VERSION = "2026.07.13-3"
+APP_VERSION = "2026.07.13-4"
 
 st.set_page_config(page_title="Gamer Signal", page_icon="📡", layout="centered")
 
@@ -153,6 +153,56 @@ st.markdown(
         height: 128px;
         object-fit: contain;
         filter: drop-shadow(0 0 16px rgba(255, 215, 0, 0.28));
+    }
+
+    .corner-gs-logo {
+        position: fixed;
+        top: 92px;
+        right: 22px;
+        z-index: 999;
+        width: 52px;
+        height: 52px;
+        border-radius: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-family: "Orbitron", "Inter", sans-serif;
+        font-size: 18px;
+        font-weight: 900;
+        color: var(--gc-white);
+        background:
+            radial-gradient(circle at 70% 24%, rgba(255, 255, 255, 0.95), transparent 10%),
+            linear-gradient(135deg, var(--gc-gold) 0%, var(--gc-red) 48%, var(--gc-black) 100%);
+        border: 1px solid rgba(255, 215, 0, 0.75);
+        box-shadow: 0 0 20px rgba(255, 215, 0, 0.20), 0 12px 30px rgba(225, 6, 0, 0.18);
+        pointer-events: none;
+    }
+
+    .corner-gs-logo::before,
+    .corner-gs-logo::after {
+        content: "";
+        position: absolute;
+        border: 2px solid rgba(255, 255, 255, 0.78);
+        border-left-color: transparent;
+        border-bottom-color: transparent;
+        border-radius: 50%;
+        transform: rotate(-25deg);
+    }
+
+    .corner-gs-logo::before {
+        width: 34px;
+        height: 34px;
+    }
+
+    .corner-gs-logo::after {
+        width: 24px;
+        height: 24px;
+    }
+
+    .corner-gs-logo span {
+        position: relative;
+        z-index: 1;
+        text-shadow: 0 2px 10px rgba(0, 0, 0, 0.55);
     }
 
     .gamer-signal-title {
@@ -402,6 +452,25 @@ st.markdown(
     }
 
     @media (max-width: 760px) {
+        .corner-gs-logo {
+            top: 72px;
+            right: 12px;
+            width: 42px;
+            height: 42px;
+            border-radius: 13px;
+            font-size: 15px;
+        }
+
+        .corner-gs-logo::before {
+            width: 28px;
+            height: 28px;
+        }
+
+        .corner-gs-logo::after {
+            width: 20px;
+            height: 20px;
+        }
+
         .st-key-signal_control_bar {
             top: 6px;
             padding: 8px 10px 12px;
@@ -2319,7 +2388,16 @@ def es_modo_dueno():
             owner = st.experimental_get_query_params().get("owner", [""])[0]
         except Exception:
             owner = ""
-    return str(owner).strip().lower() in ["daviet", "admin", "owner", "1", "true"]
+    return str(owner).strip().lower() in [
+        "daviet",
+        "davietes",
+        "davietgaming",
+        "daviet-gaming",
+        "admin",
+        "owner",
+        "1",
+        "true",
+    ]
 
 
 def marcas_visibles():
@@ -5492,6 +5570,7 @@ header_mascot_html = (
 )
 st.markdown(
     f"""
+    <div class="corner-gs-logo" aria-label="Gamer Signal"><span>GS</span></div>
     <div class="gamer-signal-header">
         {header_mascot_html}
         <h1 class="gamer-signal-title">Gamer Signal</h1>
