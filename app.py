@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+﻿# -*- coding: utf-8 -*-
 
 import json
 import os
@@ -17,9 +17,9 @@ import streamlit as st
 from streamlit.components.v1 import html as components_html
 
 
-APP_VERSION = "2026.07.13-5"
+APP_VERSION = "2026.07.13-2253"
 
-st.set_page_config(page_title="Gamer Signal", page_icon="📡", layout="centered")
+st.set_page_config(page_title="Gamer Signal", page_icon="ðŸ“¡", layout="centered")
 
 st.markdown(
     """
@@ -64,7 +64,7 @@ st.markdown(
     }
 
     section[data-testid="stSidebar"]::after {
-        content: "☰";
+        content: "â˜°";
         position: fixed;
         top: 84px;
         left: 18px;
@@ -611,8 +611,8 @@ def ahora_en_puerto_rico():
 def fecha_hora_actual_texto():
     ahora = ahora_en_puerto_rico()
     dias = [
-        "lunes", "martes", "miércoles", "jueves",
-        "viernes", "sábado", "domingo",
+        "lunes", "martes", "miÃ©rcoles", "jueves",
+        "viernes", "sÃ¡bado", "domingo",
     ]
     meses = [
         "enero", "febrero", "marzo", "abril", "mayo", "junio",
@@ -652,7 +652,7 @@ def render_reloj_actual():
                 second: "2-digit"
             }).format(ahora);
             document.getElementById("gamer-signal-clock").textContent =
-                fecha + " · " + hora + " · Puerto Rico";
+                fecha + " Â· " + hora + " Â· Puerto Rico";
         }
         actualizarRelojGamerSignal();
         setInterval(actualizarRelojGamerSignal, 1000);
@@ -756,7 +756,7 @@ FUENTES = {
     "Anime Corner confiable": "https://animecorner.me/feed/",
     "VIZ Blog oficial": "https://www.viz.com/blog/rss",
 
-    # Tecnología oficial
+    # TecnologÃ­a oficial
     "OpenAI News oficial": "https://openai.com/news/rss.xml",
     "NVIDIA Blog oficial": "https://blogs.nvidia.com/feed/",
     "Unity Blog oficial": "https://blog.unity.com/feed",
@@ -777,53 +777,53 @@ FUENTES = {
 }
 
 FUENTES_COMUNIDAD = {
-    "Reddit Gaming - señal de comunidad": "https://www.reddit.com/r/gaming/.rss",
-    "Reddit TrueGaming - señal de debate": "https://www.reddit.com/r/truegaming/.rss",
-    "Reddit PatientGamers - señal nostalgia": "https://www.reddit.com/r/patientgamers/.rss",
-    "Reddit RetroGaming - señal nostalgia": "https://www.reddit.com/r/retrogaming/.rss",
-    "Reddit Nintendo - señal comunidad": "https://www.reddit.com/r/nintendo/.rss",
-    "Reddit PlayStation - señal comunidad": "https://www.reddit.com/r/playstation/.rss",
-    "Reddit Xbox - señal comunidad": "https://www.reddit.com/r/xbox/.rss",
-    "Reddit PCGaming - señal comunidad": "https://www.reddit.com/r/pcgaming/.rss",
-    "Reddit IndieGaming - señal indie": "https://www.reddit.com/r/indiegaming/.rss",
-    "Reddit Anime - señal anime": "https://www.reddit.com/r/anime/.rss",
-    "Reddit Manga - señal anime": "https://www.reddit.com/r/manga/.rss",
-    "Reddit JRPG - señal fandom": "https://www.reddit.com/r/JRPG/.rss",
-    "Reddit Argaming - señal LatAm": "https://www.reddit.com/r/Argaming/.rss",
+    "Reddit Gaming - seÃ±al de comunidad": "https://www.reddit.com/r/gaming/.rss",
+    "Reddit TrueGaming - seÃ±al de debate": "https://www.reddit.com/r/truegaming/.rss",
+    "Reddit PatientGamers - seÃ±al nostalgia": "https://www.reddit.com/r/patientgamers/.rss",
+    "Reddit RetroGaming - seÃ±al nostalgia": "https://www.reddit.com/r/retrogaming/.rss",
+    "Reddit Nintendo - seÃ±al comunidad": "https://www.reddit.com/r/nintendo/.rss",
+    "Reddit PlayStation - seÃ±al comunidad": "https://www.reddit.com/r/playstation/.rss",
+    "Reddit Xbox - seÃ±al comunidad": "https://www.reddit.com/r/xbox/.rss",
+    "Reddit PCGaming - seÃ±al comunidad": "https://www.reddit.com/r/pcgaming/.rss",
+    "Reddit IndieGaming - seÃ±al indie": "https://www.reddit.com/r/indiegaming/.rss",
+    "Reddit Anime - seÃ±al anime": "https://www.reddit.com/r/anime/.rss",
+    "Reddit Manga - seÃ±al anime": "https://www.reddit.com/r/manga/.rss",
+    "Reddit JRPG - seÃ±al fandom": "https://www.reddit.com/r/JRPG/.rss",
+    "Reddit Argaming - seÃ±al LatAm": "https://www.reddit.com/r/Argaming/.rss",
 }
 
 TEMAS_DEBATE = [
-    "Juegos físicos vs juegos digitales",
+    "Juegos fÃ­sicos vs juegos digitales",
     "Battle pass y microtransacciones",
     "Juegos incompletos de lanzamiento",
     "Multiplayer local vs online",
     "Remakes vs juegos nuevos",
-    "Nostalgia vs innovación",
+    "Nostalgia vs innovaciÃ³n",
     "Consolas vs PC",
     "Game Pass, PS Plus y suscripciones",
-    "Juegos que necesitan conexión permanente",
+    "Juegos que necesitan conexiÃ³n permanente",
     "IA en videojuegos",
-    "Comunidades tóxicas en juegos online",
+    "Comunidades tÃ³xicas en juegos online",
     "Precios de videojuegos",
 ]
 
 TEMAS_COMUNIDAD = [
-    "¿Los juegos físicos todavía tienen valor o ya todo se fue digital?",
-    "¿Los remakes nos emocionan porque son buenos o porque extrañamos otra época?",
-    "¿Game Pass y PS Plus cambiaron la forma en que valoramos los juegos?",
-    "¿El multiplayer local se siente más especial que jugar online?",
-    "¿Los juegos como servicio están cansando a la comunidad?",
-    "¿La IA en videojuegos puede ayudar o le quita alma al desarrollo?",
-    "¿Las ediciones deluxe y los precios actuales están alejando a los jugadores?",
-    "¿Los trailers muestran demasiado antes de que salga un juego?",
+    "Â¿Los juegos fÃ­sicos todavÃ­a tienen valor o ya todo se fue digital?",
+    "Â¿Los remakes nos emocionan porque son buenos o porque extraÃ±amos otra Ã©poca?",
+    "Â¿Game Pass y PS Plus cambiaron la forma en que valoramos los juegos?",
+    "Â¿El multiplayer local se siente mÃ¡s especial que jugar online?",
+    "Â¿Los juegos como servicio estÃ¡n cansando a la comunidad?",
+    "Â¿La IA en videojuegos puede ayudar o le quita alma al desarrollo?",
+    "Â¿Las ediciones deluxe y los precios actuales estÃ¡n alejando a los jugadores?",
+    "Â¿Los trailers muestran demasiado antes de que salga un juego?",
 ]
 
 TEMAS_ANIME = [
     "anime de temporada y el hype que se forma antes de los estrenos",
-    "regresos de animes clásicos que despiertan nostalgia",
-    "adaptaciones de manga que la comunidad espera con miedo y emoción",
-    "peleas, openings y momentos de anime que se vuelven conversación gamer",
-    "anime que conectó con gamers por sus mundos, poderes o espíritu de aventura",
+    "regresos de animes clÃ¡sicos que despiertan nostalgia",
+    "adaptaciones de manga que la comunidad espera con miedo y emociÃ³n",
+    "peleas, openings y momentos de anime que se vuelven conversaciÃ³n gamer",
+    "anime que conectÃ³ con gamers por sus mundos, poderes o espÃ­ritu de aventura",
 ]
 
 TEMAS_NOSTALGIA = [
@@ -833,15 +833,15 @@ TEMAS_NOSTALGIA = [
     "PlayStation 1",
     "PlayStation 2",
     "PlayStation 3",
-    "Xbox clásico",
+    "Xbox clÃ¡sico",
     "Xbox 360",
-    "Pokémon",
+    "PokÃ©mon",
     "Mario",
     "Kirby",
     "The Legend of Zelda",
     "Rayman",
     "Crazy Taxi",
-    "juegos físicos",
+    "juegos fÃ­sicos",
     "cartuchos",
     "discos",
     "manuales de juegos",
@@ -850,9 +850,9 @@ TEMAS_NOSTALGIA = [
     "pantallas divididas",
     "jugar con primos o amigos",
     "llegar de la escuela y prender la consola",
-    "cibercafés",
+    "cibercafÃ©s",
     "juegos que nunca terminaste",
-    "juegos que daban miedo de pequeño",
+    "juegos que daban miedo de pequeÃ±o",
 ]
 
 CONTEXTO_LOCAL_NOSTALGIA = {
@@ -894,7 +894,7 @@ CONTEXTO_LOCAL_NOSTALGIA = {
             "Kingdom Hearts, Dragon Ball y muchas tardes repitiendo juegos sin cansarse."
         ),
     },
-    "Pokémon": {
+    "PokÃ©mon": {
         "name": "Pokemon",
         "summary": (
             "Tema fuerte para comunidad: juegos portatiles, intercambios, batallas, cartas, anime, recuerdos de infancia "
@@ -971,32 +971,32 @@ FUENTES_OFICIALES_JUEGOS = {
 
 
 NICHO_PR_LATAM = {
-    "region": "Puerto Rico y Latinoamérica",
+    "region": "Puerto Rico y LatinoamÃ©rica",
     "audience": [
-        "gamers adultos que crecieron con consolas, rentals, juegos físicos, multiplayer local y tardes jugando con amistades o familia",
-        "jugadores que consumen PlayStation, Xbox, Nintendo, PC gaming, anime, tecnología, cultura geek y entretenimiento digital",
-        "comunidad que comenta más cuando el tema toca precio, nostalgia, valor real para el jugador, hype, decepción, exclusivas o cambios en la industria",
+        "gamers adultos que crecieron con consolas, rentals, juegos fÃ­sicos, multiplayer local y tardes jugando con amistades o familia",
+        "jugadores que consumen PlayStation, Xbox, Nintendo, PC gaming, anime, tecnologÃ­a, cultura geek y entretenimiento digital",
+        "comunidad que comenta mÃ¡s cuando el tema toca precio, nostalgia, valor real para el jugador, hype, decepciÃ³n, exclusivas o cambios en la industria",
     ],
     "engagement_goals": [
-        "convertir noticias calientes en conversación fácil de comentar",
+        "convertir noticias calientes en conversaciÃ³n fÃ¡cil de comentar",
         "informar primero y luego abrir debate sano",
-        "conectar noticias actuales con recuerdos, experiencias y hábitos de gamers de Puerto Rico y LatAm",
-        "evitar posts fríos; cada publicación debe tener un ángulo humano o comunitario",
+        "conectar noticias actuales con recuerdos, experiencias y hÃ¡bitos de gamers de Puerto Rico y LatAm",
+        "evitar posts frÃ­os; cada publicaciÃ³n debe tener un Ã¡ngulo humano o comunitario",
     ],
     "hot_angles": [
         "precio, valor y si realmente vale la pena",
-        "juegos físicos vs digitales",
+        "juegos fÃ­sicos vs digitales",
         "servicios como Game Pass, PS Plus, Nintendo Switch Online y suscripciones",
         "nostalgia de consolas viejas, cartuchos, discos, manuales y multiplayer local",
         "hype vs realidad cuando anuncian trailers, remakes, remasters o secuelas",
-        "tecnología explicada desde cómo afecta al gamer común",
-        "anime, cultura geek y gaming cuando mueven conversación de comunidad",
+        "tecnologÃ­a explicada desde cÃ³mo afecta al gamer comÃºn",
+        "anime, cultura geek y gaming cuando mueven conversaciÃ³n de comunidad",
     ],
     "rules": [
         "priorizar noticias hot que puedan generar comentarios, no solo anuncios informativos",
-        "si una noticia es verificada, convertirla en una pregunta o debate útil para la comunidad",
-        "si el tema es nostalgia u opinión, no presentarlo como noticia confirmada",
-        "hablar en español natural para Puerto Rico y LatAm; usar inglés solo en nombres oficiales",
+        "si una noticia es verificada, convertirla en una pregunta o debate Ãºtil para la comunidad",
+        "si el tema es nostalgia u opiniÃ³n, no presentarlo como noticia confirmada",
+        "hablar en espaÃ±ol natural para Puerto Rico y LatAm; usar inglÃ©s solo en nombres oficiales",
         "mantener respeto entre plataformas, fandoms y comunidades",
         "cerrar con una pregunta clara que invite a comentar sin sonar desesperada",
     ],
@@ -1004,36 +1004,36 @@ NICHO_PR_LATAM = {
 
 PALABRAS_HOT_NICHO = [
     "nintendo", "switch", "playstation", "ps5", "ps plus", "xbox", "game pass",
-    "steam", "pc gaming", "pokemon", "pokémon", "mario", "zelda", "kirby",
+    "steam", "pc gaming", "pokemon", "pokÃ©mon", "mario", "zelda", "kirby",
     "anime", "manga", "crunchyroll", "nvidia", "rtx", "gpu", "hardware",
     "capcom", "resident evil", "monster hunter", "street fighter", "ea", "battlefield",
     "ubisoft", "assassin", "riot", "league of legends", "valorant", "blizzard",
     "diablo", "overwatch", "warcraft", "epic games", "fortnite", "unreal engine",
     "unity", "intel", "amd", "myanimelist", "anime news network",
     "remake", "remaster", "sequel", "demo", "gratis", "free", "precio",
-    "subscription", "suscripción", "dlc", "battle pass", "microtransacciones",
-    "physical", "digital", "físico", "fisico", "multiplayer", "coop",
+    "subscription", "suscripciÃ³n", "dlc", "battle pass", "microtransacciones",
+    "physical", "digital", "fÃ­sico", "fisico", "multiplayer", "coop",
 ]
 
 SENALES_TENDENCIA = {
     "movimiento fuerte": [
-        "viral", "trending", "record", "récord", "million", "millón",
+        "viral", "trending", "record", "rÃ©cord", "million", "millÃ³n",
         "sales", "ventas", "best seller", "top played", "most played",
         "players", "jugadores", "wishlists", "lista de deseados",
     ],
     "actualidad": [
         "announces", "anuncia", "reveals", "revela", "launch", "lanza",
-        "release", "estreno", "update", "actualización", "trailer", "tráiler",
+        "release", "estreno", "update", "actualizaciÃ³n", "trailer", "trÃ¡iler",
         "demo", "beta", "early access", "acceso anticipado",
     ],
-    "conversación": [
+    "conversaciÃ³n": [
         "precio", "price", "delay", "retraso", "cancel", "cancela",
-        "physical", "físico", "digital", "subscription", "suscripción",
-        "microtransaction", "microtransacción", "exclusive", "exclusiva",
+        "physical", "fÃ­sico", "digital", "subscription", "suscripciÃ³n",
+        "microtransaction", "microtransacciÃ³n", "exclusive", "exclusiva",
     ],
     "nostalgia activa": [
         "anniversary", "aniversario", "remake", "remaster", "reboot",
-        "classic", "clásico", "retro", "collection", "colección",
+        "classic", "clÃ¡sico", "retro", "collection", "colecciÃ³n",
     ],
 }
 
@@ -1150,7 +1150,7 @@ def notificar_hallazgos_telegram(nuevos):
         return False
 
     lineas = [
-        "Gamer Signal encontró noticias nuevas para revisar:",
+        "Gamer Signal encontrÃ³ noticias nuevas para revisar:",
         "",
     ]
     for item in nuevos[:5]:
@@ -1400,7 +1400,7 @@ def mostrar_estado_apis():
     respuesta = "### Conexiones de contexto de Gamer Signal\n\n"
     respuesta += (
         "La base para noticias reales sigue siendo RSS oficiales y fuentes confiables verificadas. "
-        "Estas conexiones solo ayudan con contexto, juegos, fechas, plataformas, nostalgia y señales de conversación.\n\n"
+        "Estas conexiones solo ayudan con contexto, juegos, fechas, plataformas, nostalgia y seÃ±ales de conversaciÃ³n.\n\n"
     )
     for nombre, activo in estado.items():
         marca = "activa" if activo else "sin configurar"
@@ -1418,17 +1418,17 @@ def mostrar_estado_apis():
 def limpiar_pedido_contexto(pregunta):
     texto = pregunta.lower()
     frases = [
-        "busca informacion de", "busca información de", "busca informacion sobre", "busca información sobre",
-        "dame informacion de", "dame información de", "dame informacion sobre", "dame información sobre",
+        "busca informacion de", "busca informaciÃ³n de", "busca informacion sobre", "busca informaciÃ³n sobre",
+        "dame informacion de", "dame informaciÃ³n de", "dame informacion sobre", "dame informaciÃ³n sobre",
         "contexto de", "contexto sobre", "contexto",
         "datos de", "datos sobre", "datos",
-        "informacion de", "información de", "informacion sobre", "información sobre",
-        "busca informacion", "busca información",
-        "dame informacion", "dame información",
-        "como se juega", "cómo se juega", "como funciona", "cómo funciona",
-        "funciones de", "funciones", "mecanicas de", "mecánicas de", "mecanicas", "mecánicas",
+        "informacion de", "informaciÃ³n de", "informacion sobre", "informaciÃ³n sobre",
+        "busca informacion", "busca informaciÃ³n",
+        "dame informacion", "dame informaciÃ³n",
+        "como se juega", "cÃ³mo se juega", "como funciona", "cÃ³mo funciona",
+        "funciones de", "funciones", "mecanicas de", "mecÃ¡nicas de", "mecanicas", "mecÃ¡nicas",
         "modos de juego de", "modos de juego", "gameplay de", "gameplay",
-        "que sabes de", "qué sabes de", "que sabes", "qué sabes",
+        "que sabes de", "quÃ© sabes de", "que sabes", "quÃ© sabes",
         "historia de", "historia sobre", "historia",
         "ficha de", "ficha sobre", "ficha",
         "investiga sobre", "investiga de", "investiga",
@@ -1457,8 +1457,8 @@ def normalizar_tema_contexto(tema):
         "ps1": "PlayStation",
         "ps2": "PlayStation 2",
         "playstation 2": "PlayStation 2",
-        "pokemon": "Pokémon",
-        "pokémon": "Pokémon",
+        "pokemon": "PokÃ©mon",
+        "pokÃ©mon": "PokÃ©mon",
         "zelda": "The Legend of Zelda",
         "mario": "Mario",
         "kirby": "Kirby",
@@ -1496,8 +1496,8 @@ def fuentes_oficiales_para_tema(tema):
     texto = f"{tema_norm} {tema}".lower()
     grupos = []
 
-    if tema_norm in ["Nintendo", "GameCube", "Game Boy", "Game Boy Advance", "Nintendo 64", "Pokémon", "The Legend of Zelda"] or any(
-        palabra in texto for palabra in ["nintendo", "mario", "zelda", "kirby", "pokemon", "pokémon", "switch"]
+    if tema_norm in ["Nintendo", "GameCube", "Game Boy", "Game Boy Advance", "Nintendo 64", "PokÃ©mon", "The Legend of Zelda"] or any(
+        palabra in texto for palabra in ["nintendo", "mario", "zelda", "kirby", "pokemon", "pokÃ©mon", "switch"]
     ):
         grupos.append("Nintendo")
     if tema_norm == "PlayStation" or any(palabra in texto for palabra in ["playstation", "ps1", "ps2", "ps3", "ps4", "ps5"]):
@@ -1532,13 +1532,13 @@ def formatear_fuentes_oficiales(tema):
 
 def guia_como_se_juega(tema):
     return (
-        "**Qué mirar para explicar cómo se juega:**\n"
-        "- Género y objetivo principal del juego.\n"
+        "**QuÃ© mirar para explicar cÃ³mo se juega:**\n"
+        "- GÃ©nero y objetivo principal del juego.\n"
         "- Modos: historia, online, cooperativo, competitivo o local.\n"
-        "- Mecánicas principales: combate, exploración, progresión, construcción, carreras, RPG, puzzles o estrategia.\n"
-        "- Plataformas disponibles y si tiene crossplay, edición especial, DLC o servicio online.\n"
-        "- Qué lo hace interesante para la comunidad gamer de Puerto Rico y LatAm.\n"
-        "- Pregunta final para comentarios: ¿lo jugarías, lo recomiendas o lo dejarías pasar?\n"
+        "- MecÃ¡nicas principales: combate, exploraciÃ³n, progresiÃ³n, construcciÃ³n, carreras, RPG, puzzles o estrategia.\n"
+        "- Plataformas disponibles y si tiene crossplay, ediciÃ³n especial, DLC o servicio online.\n"
+        "- QuÃ© lo hace interesante para la comunidad gamer de Puerto Rico y LatAm.\n"
+        "- Pregunta final para comentarios: Â¿lo jugarÃ­as, lo recomiendas o lo dejarÃ­as pasar?\n"
     )
 
 
@@ -1605,7 +1605,7 @@ def crear_contexto_api(pregunta):
     respuesta += formatear_fuentes_oficiales(tema) + "\n"
     senales = buscar_senales_comunidad_tema(tema)
     if senales:
-        respuesta += "\n**Señales recientes de comunidad (no son noticia confirmada):**\n"
+        respuesta += "\n**SeÃ±ales recientes de comunidad (no son noticia confirmada):**\n"
         for senal in senales:
             titulo = titulo_publico_en_espanol(senal.get("title", ""), "debate")
             respuesta += f"- {titulo} | {senal.get('source', 'comunidad')}\n"
@@ -1619,7 +1619,7 @@ def es_pedido_estado_conexiones(texto):
         "conexiones",
         "fuentes conectadas",
         "que tengo conectado",
-        "qué tengo conectado",
+        "quÃ© tengo conectado",
         "estado api",
         "estado apis",
         "apis conectadas",
@@ -1640,25 +1640,25 @@ def es_pedido_contexto(texto):
         "datos de",
         "datos sobre",
         "informacion de",
-        "información de",
+        "informaciÃ³n de",
         "informacion sobre",
-        "información sobre",
+        "informaciÃ³n sobre",
         "busca informacion",
-        "busca información",
+        "busca informaciÃ³n",
         "dame informacion",
-        "dame información",
+        "dame informaciÃ³n",
         "como se juega",
-        "cómo se juega",
+        "cÃ³mo se juega",
         "como funciona",
-        "cómo funciona",
+        "cÃ³mo funciona",
         "funciones de",
         "mecanicas",
-        "mecánicas",
+        "mecÃ¡nicas",
         "modos de juego",
         "gameplay de",
         "investiga",
         "que sabes de",
-        "qué sabes de",
+        "quÃ© sabes de",
         "historia de",
         "ficha de",
     ]
@@ -1697,18 +1697,18 @@ def aplicar_contexto_nicho(brand):
 
     brand["niche_context"] = contexto_nicho
     brand["audience"] = (
-        f"{brand.get('audience', 'gamers')}. También debe pensar en el nicho gamer de "
-        "Puerto Rico y Latinoamérica: comunidad que consume noticias, nostalgia, anime, "
-        "tecnología, debates de industria y contenido fácil de comentar."
+        f"{brand.get('audience', 'gamers')}. TambiÃ©n debe pensar en el nicho gamer de "
+        "Puerto Rico y LatinoamÃ©rica: comunidad que consume noticias, nostalgia, anime, "
+        "tecnologÃ­a, debates de industria y contenido fÃ¡cil de comentar."
     )
     brand["rules"] = unir_unicos(brand.get("rules", []), contexto_nicho.get("rules", NICHO_PR_LATAM["rules"]))
     brand["main_topics"] = unir_unicos(
         brand.get("main_topics", []),
         [
             "temas calientes que generen debate sano",
-            "noticias convertidas en conversación comunitaria",
-            "hábitos de consumo gamer en Puerto Rico y LatAm",
-            "contenido de opinión, nostalgia y cultura geek que provoque comentarios",
+            "noticias convertidas en conversaciÃ³n comunitaria",
+            "hÃ¡bitos de consumo gamer en Puerto Rico y LatAm",
+            "contenido de opiniÃ³n, nostalgia y cultura geek que provoque comentarios",
         ],
     )
     brand["engagement_goals"] = contexto_nicho.get("engagement_goals", NICHO_PR_LATAM["engagement_goals"])
@@ -1726,17 +1726,17 @@ def get_brand_voice():
         base = {
             "brand": "El Gamer Cave",
             "tagline": "Tu tribu geek, tu hogar.",
-            "description": "Comunidad enfocada en videojuegos, cultura geek, tecnología, entretenimiento y conversación entre fanáticos.",
-            "audience": "adultos de 25 a 44 años, jugadores casuales y hardcore, fans de Nintendo, Xbox, PlayStation, PC Gaming, anime, cine, series, tecnología y cultura geek en Puerto Rico y Latinoamérica",
-            "tone": ["cercano", "conversacional", "entusiasta", "informativo", "comunitario", "gamer", "positivo", "fácil de comentar", "español natural"],
-            "avoid_tone": ["corporativo", "frío", "demasiado técnico", "arrogante", "hostil", "ofensivo"],
+            "description": "Comunidad enfocada en videojuegos, cultura geek, tecnologÃ­a, entretenimiento y conversaciÃ³n entre fanÃ¡ticos.",
+            "audience": "adultos de 25 a 44 aÃ±os, jugadores casuales y hardcore, fans de Nintendo, Xbox, PlayStation, PC Gaming, anime, cine, series, tecnologÃ­a y cultura geek en Puerto Rico y LatinoamÃ©rica",
+            "tone": ["cercano", "conversacional", "entusiasta", "informativo", "comunitario", "gamer", "positivo", "fÃ¡cil de comentar", "espaÃ±ol natural"],
+            "avoid_tone": ["corporativo", "frÃ­o", "demasiado tÃ©cnico", "arrogante", "hostil", "ofensivo"],
             "default_hashtags": ["#elgamercave", "#gaming", "#videojuegos", "#gamers", "#geekculture", "#puertorico", "#gamingpr"],
             "content_priority": [
                 "breaking news verificadas",
                 "noticias interesantes de gaming",
                 "debates de comunidad",
                 "nostalgia gamer",
-                "tecnología gaming",
+                "tecnologÃ­a gaming",
                 "desarrollo de videojuegos",
                 "anime",
                 "juegos indie",
@@ -1748,7 +1748,7 @@ def get_brand_voice():
                 "noticias interesantes de gaming",
                 "debates de comunidad",
                 "nostalgia gamer",
-                "tecnología gaming",
+                "tecnologÃ­a gaming",
                 "desarrollo de videojuegos",
                 "anime",
                 "juegos indie",
@@ -1773,7 +1773,7 @@ def get_brand_voice():
                 "consolas",
                 "accesorios",
                 "servicios digitales",
-                "innovación relacionada al gaming",
+                "innovaciÃ³n relacionada al gaming",
                 "PC gaming",
                 "VR y AR",
                 "mods",
@@ -1812,36 +1812,36 @@ def get_brand_voice():
             ],
             "rules": [
                 "el objetivo no es solo publicar; el objetivo es crear contenido que la comunidad quiera comentar, compartir, guardar y leer",
-                "maximizar comentarios, compartidos, likes, guardados, tiempo de lectura y discusión sana",
-                "priorizar contenido por potencial de engagement: breaking news, noticias interesantes, debate, nostalgia, tecnología, desarrollo, anime, indies, industria y curiosidades",
-                "no publicar solo noticias todo el día; alternar noticias, discusión, tecnología, anime, opinión, industria, indie, curiosidad y retro",
-                "buscar temas en varias categorías: gaming, anime, manga, películas, series, tecnología, IA, desarrollo, Unreal Engine, Unity, Godot, Steam, PlayStation, Nintendo, Xbox, PC gaming, VR, AR, indies, mods, hardware, esports, cosplay, coleccionismo, industria, arte, música, entrevistas y blogs de desarrolladores",
+                "maximizar comentarios, compartidos, likes, guardados, tiempo de lectura y discusiÃ³n sana",
+                "priorizar contenido por potencial de engagement: breaking news, noticias interesantes, debate, nostalgia, tecnologÃ­a, desarrollo, anime, indies, industria y curiosidades",
+                "no publicar solo noticias todo el dÃ­a; alternar noticias, discusiÃ³n, tecnologÃ­a, anime, opiniÃ³n, industria, indie, curiosidad y retro",
+                "buscar temas en varias categorÃ­as: gaming, anime, manga, pelÃ­culas, series, tecnologÃ­a, IA, desarrollo, Unreal Engine, Unity, Godot, Steam, PlayStation, Nintendo, Xbox, PC gaming, VR, AR, indies, mods, hardware, esports, cosplay, coleccionismo, industria, arte, mÃºsica, entrevistas y blogs de desarrolladores",
                 "usar primero fuentes oficiales como Steam, Nintendo, PlayStation Blog, Xbox Wire, Valve, Epic Games, Crunchyroll, Bandai Namco, Ubisoft, Capcom, Riot, Blizzard, web oficial, blog oficial o redes oficiales",
                 "usar medios confiables como IGN, GameSpot, Gematsu, VGC, Eurogamer, PC Gamer, The Verge o GamesRadar solo cuando no haya fuente oficial o para contraste",
-                "si el usuario provee fuente, link, imagen o captura, esa fuente gana sobre todo lo demás",
-                "no inventar datos, fechas, anuncios, juegos, anime, precios, estadísticas ni fuentes",
-                "si falta información, decir que falta; no completar con suposiciones",
+                "si el usuario provee fuente, link, imagen o captura, esa fuente gana sobre todo lo demÃ¡s",
+                "no inventar datos, fechas, anuncios, juegos, anime, precios, estadÃ­sticas ni fuentes",
+                "si falta informaciÃ³n, decir que falta; no completar con suposiciones",
                 "verificar noticias actuales con fuentes confiables",
                 "si es rumor, aclararlo claramente",
-                "evitar títulos engañosos",
+                "evitar tÃ­tulos engaÃ±osos",
                 "mantener objetividad en la parte informativa",
                 "priorizar comunidad sobre controversia",
                 "mantener respeto hacia todas las plataformas y jugadores",
                 "informar antes que exagerar",
-                "si ya se publicó recientemente sobre la misma noticia, anime, juego, franquicia, desarrollador o discusión, buscar otro tema salvo que exista información completamente nueva",
+                "si ya se publicÃ³ recientemente sobre la misma noticia, anime, juego, franquicia, desarrollador o discusiÃ³n, buscar otro tema salvo que exista informaciÃ³n completamente nueva",
                 "evaluar cada tema por relevancia, originalidad, potencial de comentarios, potencial de compartidos, potencial de guardados, calidad visual, variedad y frescura",
-                "si un tema no tiene suficiente valor o verificación, no inventar; convertirlo en opinión, nostalgia o debate claramente identificado",
-                "escribir los posts en español natural; solo dejar en inglés nombres oficiales de juegos, compañías o productos",
-                "no copiar resúmenes en inglés directo de las fuentes",
-                "usar exactamente cinco hashtags en minúsculas y poner #elgamercave primero",
+                "si un tema no tiene suficiente valor o verificaciÃ³n, no inventar; convertirlo en opiniÃ³n, nostalgia o debate claramente identificado",
+                "escribir los posts en espaÃ±ol natural; solo dejar en inglÃ©s nombres oficiales de juegos, compaÃ±Ã­as o productos",
+                "no copiar resÃºmenes en inglÃ©s directo de las fuentes",
+                "usar exactamente cinco hashtags en minÃºsculas y poner #elgamercave primero",
                 "no usar la palabra carrusel dentro del post",
                 "cerrar con una pregunta concreta que invite a comentar",
-                "recordar que El Gamer Cave es una comunidad, no únicamente un medio de noticias",
+                "recordar que El Gamer Cave es una comunidad, no Ãºnicamente un medio de noticias",
                 "el gancho, el cuerpo y la pregunta final deben estar alineados; si el gancho promete noticia actual, el cuerpo debe explicar el hecho actual",
-                "si el cuerpo es nostálgico, el gancho debe sonar nostálgico y no como noticia actual",
+                "si el cuerpo es nostÃ¡lgico, el gancho debe sonar nostÃ¡lgico y no como noticia actual",
                 "eliminar notas internas como 'lo importante es aterrizarlo a la comunidad' antes de entregar el post",
-                "si el usuario pide un ajuste específico, modificar solo ese elemento",
-                "no agregar logos, iconos, fechas, precios, banners o texto extra si no se pidió",
+                "si el usuario pide un ajuste especÃ­fico, modificar solo ese elemento",
+                "no agregar logos, iconos, fechas, precios, banners o texto extra si no se pidiÃ³",
             ],
             "post_structure": [
                 "hook",
@@ -1852,30 +1852,30 @@ def get_brand_voice():
                 "exactamente cinco hashtags con #elgamercave primero",
             ],
             "title_rules": [
-                "t?tulo de máximo seis palabras cuando sea posible",
+                "t?tulo de mÃ¡ximo seis palabras cuando sea posible",
                 "que se entienda en menos de dos segundos",
                 "priorizar legibilidad sobre impacto",
             ],
             "cover_rules": [
                 "la portada no es el post completo; solo debe hacer que la gente abra el post",
-                "portada con máximo t?tulo y subtítulo",
-                "no incluir fechas, precios, estadísticas, párrafos largos, banners de noticia, logos, iconos o información extra si no se piden",
+                "portada con mÃ¡ximo t?tulo y subtÃ­tulo",
+                "no incluir fechas, precios, estadÃ­sticas, pÃ¡rrafos largos, banners de noticia, logos, iconos o informaciÃ³n extra si no se piden",
                 "cada portada debe representar visualmente el tema principal y no usar fondo gen?rico",
-                "dejar márgenes seguros para Instagram 1080x1350 y evitar palabras cortadas",
-                "variar estilo visual según el tema: anime más colorido, tecnología más limpia, retro más vintage, horror más oscuro, indie más creativo e industria más minimal",
+                "dejar mÃ¡rgenes seguros para Instagram 1080x1350 y evitar palabras cortadas",
+                "variar estilo visual segÃºn el tema: anime mÃ¡s colorido, tecnologÃ­a mÃ¡s limpia, retro mÃ¡s vintage, horror mÃ¡s oscuro, indie mÃ¡s creativo e industria mÃ¡s minimal",
                 "no cambiar logos, marcas ni personajes oficiales",
             ],
             "platform_rules": {
-                "facebook": "textos más extensos para debate y comentarios",
+                "facebook": "textos mÃ¡s extensos para debate y comentarios",
                 "instagram": "texto directo, enfoque visual fuerte y CTA claro",
                 "tiktok": "gancho inmediato, mensaje r?pido y lenguaje din?mico",
-                "whatsapp": "formato corto, resumido y fácil de leer",
+                "whatsapp": "formato corto, resumido y fÃ¡cil de leer",
             },
             "visual_rules": [
                 "formato vertical 1080 x 1350 px",
                 "usar logo oficial de forma consistente solo cuando aplique o se pida",
-                "usar imágenes promocionales oficiales cuando están disponibles",
-                "no alterar logos oficiales de compañías",
+                "usar imÃ¡genes promocionales oficiales cuando estÃ¡n disponibles",
+                "no alterar logos oficiales de compaÃ±Ã­as",
                 "no cambiar el significado de artes promocionales",
                 "priorizar legibilidad m?vil sobre impacto visual",
             ],
@@ -1884,43 +1884,43 @@ def get_brand_voice():
     elif active_brand == "Daviet Gaming":
         base = {
             "brand": "Daviet Gaming",
-            "description": "Marca de contenido sobre videojuegos, tecnología, cultura gamer, anime, PC gaming y temas de comunidad.",
-            "audience": "gamers de Puerto Rico y Latinoamérica que siguen noticias, opinión, cultura gaming, anime, PC gaming, hardware y tecnología",
-            "tone": ["casual", "directo", "natural", "gamer", "con opinión", "claro", "fácil de entender", "con hype moderado", "español natural"],
-            "avoid_tone": ["demasiado formal", "corporativo", "exagerado", "genérico", "frío"],
+            "description": "Marca de contenido sobre videojuegos, tecnologÃ­a, cultura gamer, anime, PC gaming y temas de comunidad.",
+            "audience": "gamers de Puerto Rico y LatinoamÃ©rica que siguen noticias, opiniÃ³n, cultura gaming, anime, PC gaming, hardware y tecnologÃ­a",
+            "tone": ["casual", "directo", "natural", "gamer", "con opiniÃ³n", "claro", "fÃ¡cil de entender", "con hype moderado", "espaÃ±ol natural"],
+            "avoid_tone": ["demasiado formal", "corporativo", "exagerado", "genÃ©rico", "frÃ­o"],
             "default_hashtags": ["#davietgaming", "#gaming", "#videojuegos", "#pcgaming", "#gamers", "#gamingcommunity", "#tecnologia", "#puertorico"],
             "main_topics": [
                 "noticias actuales de videojuegos",
-                "tecnología gaming",
+                "tecnologÃ­a gaming",
                 "PC gaming",
                 "anime relacionado con gaming o hardware",
-                "opinión sobre la industria",
+                "opiniÃ³n sobre la industria",
                 "debates gamer",
                 "nostalgia gamer",
                 "consolas",
                 "hardware",
                 "colaboraciones especiales",
-                "tendencias de gaming y tecnología",
+                "tendencias de gaming y tecnologÃ­a",
             ],
             "rules": [
-                "no inventar información",
+                "no inventar informaciÃ³n",
                 "verificar noticias actuales antes de crear posts",
-                "no decir que algo es oficial si no está confirmado",
-                "si una noticia ya pasó hace días, darle un ángulo actualizado de forma natural",
+                "no decir que algo es oficial si no estÃ¡ confirmado",
+                "si una noticia ya pasÃ³ hace dÃ­as, darle un Ã¡ngulo actualizado de forma natural",
                 "no usar lenguaje demasiado formal",
-                "no usar frases genéricas como el mundo gamer está emocionado si no hay contexto real",
+                "no usar frases genÃ©ricas como el mundo gamer estÃ¡ emocionado si no hay contexto real",
                 "no repetir la misma estructura siempre",
                 "no usar la palabra carrusel dentro del post",
-                "escribir en español natural; solo dejar en inglés nombres oficiales de juegos, compañías o productos",
-                "hashtags siempre en minúscula",
+                "escribir en espaÃ±ol natural; solo dejar en inglÃ©s nombres oficiales de juegos, compaÃ±Ã­as o productos",
+                "hashtags siempre en minÃºscula",
             ],
             "post_structure": [
-                "título corto y llamativo",
-                "subtítulo corto",
+                "tÃ­tulo corto y llamativo",
+                "subtÃ­tulo corto",
                 "texto principal del post",
-                "opinión o ángulo de Daviet Gaming",
-                "pregunta final para generar interacción",
-                "hashtags en minúscula",
+                "opiniÃ³n o Ã¡ngulo de Daviet Gaming",
+                "pregunta final para generar interacciÃ³n",
+                "hashtags en minÃºscula",
             ],
             "visual_rules": [
                 "formato vertical 1080x1350 para Instagram",
@@ -1932,22 +1932,22 @@ def get_brand_voice():
                 "usar sombras oscuras, brillos dorados sutiles y alto contraste",
                 "fondos con espacio para texto",
                 "no saturar con demasiados elementos",
-                "no usar logos de compañías si no se pide",
+                "no usar logos de compaÃ±Ã­as si no se pide",
                 "no cambiar el logo de Daviet Gaming",
-                "evitar diseños demasiado genéricos de AI",
+                "evitar diseÃ±os demasiado genÃ©ricos de AI",
             ],
             "platform_rules": {
-                "facebook": "puede tener más contexto, opinión y debate",
-                "instagram": "directo, visual, fácil de leer y con CTA claro",
-                "tiktok": "gancho rápido y lenguaje dinámico",
+                "facebook": "puede tener mÃ¡s contexto, opiniÃ³n y debate",
+                "instagram": "directo, visual, fÃ¡cil de leer y con CTA claro",
+                "tiktok": "gancho rÃ¡pido y lenguaje dinÃ¡mico",
             },
         }
     elif active_brand == "General":
         base = {
             **base,
             "brand": "Gamer Signal",
-            "audience": "gamers de Puerto Rico y Latinoamérica",
-            "tone": ["casual", "claro", "gamer", "nostálgico"],
+            "audience": "gamers de Puerto Rico y LatinoamÃ©rica",
+            "tone": ["casual", "claro", "gamer", "nostÃ¡lgico"],
             "default_hashtags": ["#gaming", "#nostalgia", "#geek", "#latam"]
         }
 
@@ -2003,7 +2003,7 @@ NUMEROS_EN_TEXTO = {
 
 def extraer_cantidad_posts(texto):
     palabras_cantidad = [
-        "post", "posts", "publicación", "publicaciones", "publicacion",
+        "post", "posts", "publicaciÃ³n", "publicaciones", "publicacion",
         "caption", "captions", "noticia", "noticias", "tema", "temas",
         "idea", "ideas", "opciones",
     ]
@@ -2027,7 +2027,7 @@ def es_pedido_de_noticia_numerada(texto):
         for frase in [
             "de la noticia",
             "noticia #",
-            "noticia número",
+            "noticia nÃºmero",
             "noticia numero",
             "post de noticia",
             "post de la noticia",
@@ -2080,7 +2080,7 @@ def plataforma_de_item(item):
         return "xbox"
     if any(p in texto for p in ["playstation", "ps5", "ps plus", "sony"]):
         return "playstation"
-    if any(p in texto for p in ["nintendo", "switch", "mario", "zelda", "pokemon", "pokémon"]):
+    if any(p in texto for p in ["nintendo", "switch", "mario", "zelda", "pokemon", "pokÃ©mon"]):
         return "nintendo"
     if any(p in texto for p in ["steam", "pc gamer", "pc gaming", "nvidia", "amd", "intel", "gpu"]):
         return "pc"
@@ -2176,30 +2176,30 @@ def item_cumple_exclusiones(item, exclusiones):
 def crear_item_editorial_categoria(categoria, titulos_usados):
     if categoria == "indie":
         temas = [
-            "indies con demos que están ganando conversación",
+            "indies con demos que estÃ¡n ganando conversaciÃ³n",
             "juegos independientes que vale la pena seguir",
-            "propuestas indie con mecánicas diferentes",
+            "propuestas indie con mecÃ¡nicas diferentes",
             "joyas independientes que buscan espacio entre grandes lanzamientos",
         ]
         resumen = (
             "Tema editorial para descubrir juegos independientes con una propuesta clara. "
-            "No debe presentarse como tendencia confirmada sin señales recientes o fuentes verificadas."
+            "No debe presentarse como tendencia confirmada sin seÃ±ales recientes o fuentes verificadas."
         )
         fuente = "Tema editorial de juegos indie"
         estilo = "indie"
     elif categoria == "nostalgia":
         temas = TEMAS_NOSTALGIA
         resumen = (
-            "Tema nostálgico para conectar con recuerdos de infancia, consolas viejas, "
-            "juegos físicos, multiplayer local y experiencias que muchos gamers de Puerto Rico y LatAm reconocen."
+            "Tema nostÃ¡lgico para conectar con recuerdos de infancia, consolas viejas, "
+            "juegos fÃ­sicos, multiplayer local y experiencias que muchos gamers de Puerto Rico y LatAm reconocen."
         )
-        fuente = "Tema nostálgico del proyecto"
+        fuente = "Tema nostÃ¡lgico del proyecto"
         estilo = "nostalgia"
     elif categoria == "debate":
         temas = TEMAS_COMUNIDAD
         resumen = (
             "Tema de debate de comunidad. No se presenta como noticia confirmada; sirve para provocar comentarios, "
-            "opiniones y conversación gamer sin inventar datos."
+            "opiniones y conversaciÃ³n gamer sin inventar datos."
         )
         fuente = "Tema de comunidad gamer"
         estilo = "debate"
@@ -2214,19 +2214,19 @@ def crear_item_editorial_categoria(categoria, titulos_usados):
     elif categoria == "tecnologia":
         temas = ["IA en videojuegos", "hardware para PC gaming", "nuevas formas de jugar en la nube", "GPU y rendimiento para gamers"]
         resumen = (
-            "Tema de tecnología explicado desde el punto de vista gamer, con lenguaje simple y enfocado en por qué importa."
+            "Tema de tecnologÃ­a explicado desde el punto de vista gamer, con lenguaje simple y enfocado en por quÃ© importa."
         )
-        fuente = "Tema editorial de tecnología"
+        fuente = "Tema editorial de tecnologÃ­a"
         estilo = "technology"
     else:
         temas = [
             f"juegos de {ANIO_NOTICIAS}",
             "lanzamientos esperados",
-            "servicios de suscripción gaming",
+            "servicios de suscripciÃ³n gaming",
             "actualidad de consolas",
         ]
         resumen = (
-            "Tema gamer general para convertir actualidad, opinión o cultura de videojuegos en un post claro y conversacional."
+            "Tema gamer general para convertir actualidad, opiniÃ³n o cultura de videojuegos en un post claro y conversacional."
         )
         fuente = "Tema editorial gamer"
         estilo = "news"
@@ -2294,7 +2294,7 @@ def crear_varios_posts(cantidad, pregunta):
     etiquetas = {
         "gaming": "gaming/noticia",
         "indie": "indie/en movimiento",
-        "tecnologia": "tecnología",
+        "tecnologia": "tecnologÃ­a",
         "nostalgia": "nostalgia",
         "anime": "anime",
         "debate": "debate",
@@ -2328,7 +2328,7 @@ def crear_varios_posts(cantidad, pregunta):
             etiqueta = f"{categoria}/editorial"
 
         posts.append(
-            f"PUBLICACIÓN {indice} - {reparar_texto_roto(etiqueta.upper())}\n\n{post}"
+            f"PUBLICACIÃ“N {indice} - {reparar_texto_roto(etiqueta.upper())}\n\n{post}"
         )
 
     respuesta = "\n\n---\n\n".join(posts)
@@ -2351,43 +2351,43 @@ def crear_calendario_contenido(marca=None):
     marca = marca or st.session_state.get("active_brand", "Gamer Cave")
     if marca == "General":
         st.session_state.pending_calendar_request = True
-        return "¿Para cuál marca quieres el calendario: Gamer Cave o Daviet Gaming?"
+        return "Â¿Para cuÃ¡l marca quieres el calendario: Gamer Cave o Daviet Gaming?"
 
     if marca == "Daviet Gaming":
         return """
 ### Calendario semanal de Daviet Gaming
 
-**Lunes:** noticia reciente de gaming, PC o tecnología explicada de forma sencilla.
+**Lunes:** noticia reciente de gaming, PC o tecnologÃ­a explicada de forma sencilla.
 
-**Martes:** hardware, accesorios, setup o una función útil para gamers.
+**Martes:** hardware, accesorios, setup o una funciÃ³n Ãºtil para gamers.
 
-**Miércoles:** anime, cultura geek o recomendación relacionada con gaming.
+**MiÃ©rcoles:** anime, cultura geek o recomendaciÃ³n relacionada con gaming.
 
-**Jueves:** nostalgia, opinión personal o experiencia gamer.
+**Jueves:** nostalgia, opiniÃ³n personal o experiencia gamer.
 
-**Viernes:** noticia hot convertida en una pregunta para conversación.
+**Viernes:** noticia hot convertida en una pregunta para conversaciÃ³n.
 
-**Sábado:** recomendación, comparación o tema para compartir con la comunidad.
+**SÃ¡bado:** recomendaciÃ³n, comparaciÃ³n o tema para compartir con la comunidad.
 
-**Domingo:** resumen ligero, recuerdo gamer o adelanto de la próxima semana.
+**Domingo:** resumen ligero, recuerdo gamer o adelanto de la prÃ³xima semana.
 """
 
     return """
 ### Calendario semanal de El Gamer Cave
 
-**Lunes:** noticia oficial de gaming o tecnología.
+**Lunes:** noticia oficial de gaming o tecnologÃ­a.
 
-**Martes:** nostalgia gamer: consolas viejas, juegos físicos, Game Boy, GameCube o Pokémon.
+**Martes:** nostalgia gamer: consolas viejas, juegos fÃ­sicos, Game Boy, GameCube o PokÃ©mon.
 
-**Miércoles:** debate de comunidad: físico vs digital, online vs local, remakes vs originales.
+**MiÃ©rcoles:** debate de comunidad: fÃ­sico vs digital, online vs local, remakes vs originales.
 
 **Jueves:** post emocional: recuerdos de infancia, jugar con primos, controles prestados o memory cards.
 
-**Viernes:** pregunta rápida para comentarios.
+**Viernes:** pregunta rÃ¡pida para comentarios.
 
-**Sábado:** recomendación o comparación gamer.
+**SÃ¡bado:** recomendaciÃ³n o comparaciÃ³n gamer.
 
-**Domingo:** post ligero de recuerdos, ranking o “¿te acuerdas de...?”.
+**Domingo:** post ligero de recuerdos, ranking o â€œÂ¿te acuerdas de...?â€.
 """
 
 
@@ -2550,7 +2550,7 @@ def render_quick_actions():
         with col3:
             st.button("Post hot", use_container_width=True, on_click=set_quick_prompt, args=("hazme un post hot",))
         with col4:
-            st.button("5 posts", use_container_width=True, on_click=set_quick_prompt, args=("créame 5 posts hot",))
+            st.button("5 posts", use_container_width=True, on_click=set_quick_prompt, args=("crÃ©ame 5 posts hot",))
         with col5:
             st.button("Debate", use_container_width=True, on_click=set_quick_prompt, args=("debate gamer",))
         with col6:
@@ -2634,14 +2634,14 @@ def render_control_bar():
 
 def angulo_para_bucket(bucket):
     angulos = {
-        "noticia_actual": "Convertirlo en noticia clara: qué pasó, por qué importa y pregunta final.",
-        "debate": "Usarlo para abrir conversación con dos lados claros y sin imponer conclusión.",
-        "nostalgia": "Conectarlo con recuerdos gamer, consolas viejas, juegos físicos y comunidad.",
-        "tecnologia": "Explicarlo desde cómo afecta la experiencia gamer, PC, hardware o servicios.",
-        "anime": "Cruzar anime y cultura geek con gaming, hype, fandom o adaptación.",
-        "indie": "Presentarlo como descubrimiento: qué lo hace diferente y por qué vale mirarlo.",
+        "noticia_actual": "Convertirlo en noticia clara: quÃ© pasÃ³, por quÃ© importa y pregunta final.",
+        "debate": "Usarlo para abrir conversaciÃ³n con dos lados claros y sin imponer conclusiÃ³n.",
+        "nostalgia": "Conectarlo con recuerdos gamer, consolas viejas, juegos fÃ­sicos y comunidad.",
+        "tecnologia": "Explicarlo desde cÃ³mo afecta la experiencia gamer, PC, hardware o servicios.",
+        "anime": "Cruzar anime y cultura geek con gaming, hype, fandom o adaptaciÃ³n.",
+        "indie": "Presentarlo como descubrimiento: quÃ© lo hace diferente y por quÃ© vale mirarlo.",
     }
-    return angulos.get(bucket, "Convertirlo en post simple, útil y fácil de comentar.")
+    return angulos.get(bucket, "Convertirlo en post simple, Ãºtil y fÃ¡cil de comentar.")
 
 
 
@@ -2653,7 +2653,7 @@ def render_news_cards():
     st.markdown("#### Noticias recientes")
     st.markdown('<div class="news-grid">', unsafe_allow_html=True)
     for numero, item in news.items():
-        title = html_escape(item.get("title", "Sin título"))
+        title = html_escape(item.get("title", "Sin tÃ­tulo"))
         source = html_escape(item.get("source", ""))
         date_text = html_escape(item.get("date", ""))
         confidence = html_escape(item.get("confidence_level", ""))
@@ -2714,7 +2714,7 @@ def render_post_card(post):
                     color: #f8fafc;
                     font-size: 20px;
                     cursor: pointer;
-                ">⧉</button>
+                ">â§‰</button>
             </div>
             <div style="font-size:16px; white-space:normal;">{post_html}</div>
             <div id="{button_id}_status" style="
@@ -2754,14 +2754,14 @@ def render_post_card(post):
         btn.addEventListener("click", async () => {{
             try {{
                 await copyTextToClipboard(postText);
-                btn.innerText = "✓";
+                btn.innerText = "âœ“";
                 status.innerText = "Copiado";
             }} catch (error) {{
                 btn.innerText = "!";
                 status.innerText = "No se pudo copiar. Abre las opciones y usa Descargar.";
             }}
             setTimeout(() => {{
-                btn.innerText = "⧉";
+                btn.innerText = "â§‰";
                 status.innerText = "";
             }}, 1800);
         }});
@@ -2773,7 +2773,7 @@ def render_post_card(post):
 
 def dividir_posts_generados(post):
     partes = [parte.strip() for parte in post.split("\n\n---\n\n") if parte.strip()]
-    if len(partes) > 1 and all(parte.startswith("PUBLICACIÓN") for parte in partes):
+    if len(partes) > 1 and all(parte.startswith("PUBLICACIÃ“N") for parte in partes):
         return partes
     return [post]
 
@@ -2783,7 +2783,7 @@ def render_post_response(post):
     for index, parte in enumerate(partes, start=1):
         contenido = parte
         etiqueta = f"Post {index}"
-        if parte.startswith("PUBLICACIÓN") and "\n\n" in parte:
+        if parte.startswith("PUBLICACIÃ“N") and "\n\n" in parte:
             etiqueta, contenido = parte.split("\n\n", 1)
             etiqueta = etiqueta.title()
         if len(partes) > 1:
@@ -2818,7 +2818,7 @@ def render_last_post_box(key_prefix="last_post"):
         with col_save:
             if st.button("Guardar aprobado", use_container_width=True, key=f"{key_prefix}_save"):
                 archivo = guardar_post_aprobado(post, st.session_state.get("last_post_title", "post_gamer"))
-                save_feedback(st.session_state.get("last_item_id"), "post/topic", "approved", "post aprobado desde botón")
+                save_feedback(st.session_state.get("last_item_id"), "post/topic", "approved", "post aprobado desde botÃ³n")
                 st.success(f"Post guardado: {archivo}")
 
 
@@ -3105,10 +3105,10 @@ def detectar_temas(texto):
     texto = texto.lower()
     palabras = [
         "nintendo", "playstation", "xbox", "gamecube", "game boy",
-        "ps1", "ps2", "xbox 360", "wii", "pokémon", "pokemon",
+        "ps1", "ps2", "xbox 360", "wii", "pokÃ©mon", "pokemon",
         "mario", "zelda", "kirby", "sonic", "final fantasy",
         "kingdom hearts", "nvidia", "openai", "ia", "hardware",
-        "pc gaming", "juegos físicos", "multiplayer local",
+        "pc gaming", "juegos fÃ­sicos", "multiplayer local",
         "capcom", "resident evil", "monster hunter", "street fighter",
         "ea", "ubisoft", "riot", "league of legends", "valorant",
         "blizzard", "diablo", "overwatch", "warcraft", "epic games",
@@ -3121,15 +3121,15 @@ def detectar_temas(texto):
 def detectar_angulo_nostalgia(item):
     texto = f"{item.get('title', '')} {item.get('summary', '')} {item.get('source', '')}".lower()
     mapa = {
-        "remake": "infancia gamer, juegos clásicos y nostalgia.",
-        "remaster": "infancia gamer, juegos clásicos y nostalgia.",
+        "remake": "infancia gamer, juegos clÃ¡sicos y nostalgia.",
+        "remaster": "infancia gamer, juegos clÃ¡sicos y nostalgia.",
         "anniversary": "aniversarios, recuerdos y etapas importantes de la comunidad.",
         "aniversario": "aniversarios, recuerdos y etapas importantes de la comunidad.",
         "retro": "consolas, juegos y experiencias de otras generaciones.",
-        "classic collection": "colecciones de juegos clásicos y recuerdos de otras generaciones.",
-        "colección clásica": "colecciones de juegos clásicos y recuerdos de otras generaciones.",
-        "return of the classic": "regresos de juegos clásicos y recuerdos de la comunidad.",
-        "regreso del clásico": "regresos de juegos clásicos y recuerdos de la comunidad.",
+        "classic collection": "colecciones de juegos clÃ¡sicos y recuerdos de otras generaciones.",
+        "colecciÃ³n clÃ¡sica": "colecciones de juegos clÃ¡sicos y recuerdos de otras generaciones.",
+        "return of the classic": "regresos de juegos clÃ¡sicos y recuerdos de la comunidad.",
+        "regreso del clÃ¡sico": "regresos de juegos clÃ¡sicos y recuerdos de la comunidad.",
     }
     for palabra, angulo in mapa.items():
         if palabra in texto:
@@ -3149,8 +3149,8 @@ def detectar_content_angle(item):
         return "anime"
     if any(p in texto for p in [
         "vs", "debate", "digital", "dlc", "game pass", "ps plus",
-        "subscription", "suscripción", "battle pass", "microtransaction",
-        "microtransacciones", "precio", "price", "physical", "físico", "fisico",
+        "subscription", "suscripciÃ³n", "battle pass", "microtransaction",
+        "microtransacciones", "precio", "price", "physical", "fÃ­sico", "fisico",
     ]):
         return "debate"
     if any(p in texto for p in [
@@ -3184,7 +3184,7 @@ def nivel_confianza(item):
 def save_feedback(item_id, item_type, feedback_type, feedback_text):
     log = leer_json(FEEDBACK_FILE, [])
     item = st.session_state.generated_items.get(item_id, {})
-    titulo = item.get("title") or item_id or st.session_state.get("last_post_title", "post sin título")
+    titulo = item.get("title") or item_id or st.session_state.get("last_post_title", "post sin tÃ­tulo")
     fuente = item.get("source", "")
     categoria = item.get("content_angle", item_type)
     texto = feedback_text.lower()
@@ -3218,11 +3218,11 @@ def save_feedback(item_id, item_type, feedback_type, feedback_text):
         marcar_tema_usado(titulo, categoria, "rejected by user")
         accion = "decreased recommendation priority"
     elif feedback_type == "correction":
-        if "más corto" in texto or "mas corto" in texto:
-            ajustar_preferencia("style_rule", "posts más cortos", 3, feedback_text)
-        if "más nostalgia" in texto or "mas nostalgia" in texto:
+        if "mÃ¡s corto" in texto or "mas corto" in texto:
+            ajustar_preferencia("style_rule", "posts mÃ¡s cortos", 3, feedback_text)
+        if "mÃ¡s nostalgia" in texto or "mas nostalgia" in texto:
             ajustar_preferencia("preferred_category", "nostalgia gaming", 3, feedback_text)
-        if "más debate" in texto or "mas debate" in texto:
+        if "mÃ¡s debate" in texto or "mas debate" in texto:
             ajustar_preferencia("preferred_category", "debate gamer", 3, feedback_text)
         if "no digas carrusel" in texto:
             ajustar_preferencia("banned_phrase", "carrusel", 10, feedback_text)
@@ -3233,7 +3233,7 @@ def save_feedback(item_id, item_type, feedback_type, feedback_text):
             ajustar_preferencia("permanent_rule", "no inventar logos", 10, feedback_text)
         accion = "updated style and rule preferences"
 
-    if "eso ya pasó" in texto or "eso ya paso" in texto:
+    if "eso ya pasÃ³" in texto or "eso ya paso" in texto:
         marcar_tema_usado(titulo, categoria, "user said it already happened")
         ajustar_preferencia("used_or_old_topic", titulo, 5, feedback_text)
         accion = "marked topic as old or used"
@@ -3256,7 +3256,7 @@ def calcular_senales_editoriales(item):
         antiguedad = max(0, (ahora_en_puerto_rico().date() - fecha).days)
         if antiguedad <= 1:
             puntos += 12
-            razones.append("publicado en las últimas 24-48 horas")
+            razones.append("publicado en las Ãºltimas 24-48 horas")
         elif antiguedad <= 3:
             puntos += 8
             razones.append("noticia muy reciente")
@@ -3314,7 +3314,7 @@ def aplicar_preferencias(noticias):
         for palabra in PALABRAS_HOT_NICHO:
             if palabra in texto:
                 score += 2
-        if any(palabra in texto for palabra in ["precio", "suscripción", "subscription", "remake", "remaster", "digital", "físico", "fisico", "microtransacciones"]):
+        if any(palabra in texto for palabra in ["precio", "suscripciÃ³n", "subscription", "remake", "remaster", "digital", "fÃ­sico", "fisico", "microtransacciones"]):
             score += 4
         if tema_repetido(item.get("title", "")):
             score -= 100
@@ -3353,7 +3353,7 @@ def leer_feed(url):
         if not fecha:
             continue
         entradas_limpias.append({
-            "title": entrada.get("title", "Sin título"),
+            "title": entrada.get("title", "Sin tÃ­tulo"),
             "summary": entrada.get("summary", ""),
             "link": entrada.get("link", ""),
             "year": fecha.tm_year,
@@ -3372,7 +3372,7 @@ def buscar_wikipedia(tema):
         "Game Boy": ["Game Boy", "Game Boy Advance"],
         "Nintendo 64": ["Nintendo 64"],
         "PlayStation 2": ["PlayStation 2"],
-        "Pokémon": ["Pokémon"],
+        "PokÃ©mon": ["PokÃ©mon"],
         "The Legend of Zelda": ["The Legend of Zelda", "Zelda"],
     }.get(tema, [tema])
 
@@ -3391,12 +3391,12 @@ def buscar_wikipedia(tema):
                 "title": data.get("title", candidato),
                 "summary": resumen,
                 "link": data.get("content_urls", {}).get("desktop", {}).get("page", ""),
-                "source": "Wikipedia en español (solo contexto histórico)",
+                "source": "Wikipedia en espaÃ±ol (solo contexto histÃ³rico)",
                 "date": None,
                 "source_official": False,
                 "content_angle": "nostalgia",
                 "confidence_level": "support",
-                "nostalgia_angle": "Apoyo histórico para crear contenido nostálgico; no confirma noticias actuales.",
+                "nostalgia_angle": "Apoyo histÃ³rico para crear contenido nostÃ¡lgico; no confirma noticias actuales.",
             }
         except Exception:
             continue
@@ -3408,12 +3408,12 @@ def limpiar_tema_nostalgia(pregunta):
     texto = pregunta.lower()
     frases = [
         "nostalgia sobre", "nostalgia de", "retro sobre", "retro de",
-        "háblame de", "hablame de", "dame información sobre",
-        "dame informacion sobre", "información sobre", "informacion sobre",
+        "hÃ¡blame de", "hablame de", "dame informaciÃ³n sobre",
+        "dame informacion sobre", "informaciÃ³n sobre", "informacion sobre",
     ]
     for frase in frases:
         texto = texto.replace(frase, "")
-    quitar = ["nostalgia", "retro", "clásico", "clasico", "viejo", "antiguo", "sobre"]
+    quitar = ["nostalgia", "retro", "clÃ¡sico", "clasico", "viejo", "antiguo", "sobre"]
     palabras = [p for p in texto.split() if p not in quitar]
     tema = " ".join(palabras).strip()
     nombres = {
@@ -3426,8 +3426,8 @@ def limpiar_tema_nostalgia(pregunta):
         "game boy": "Game Boy",
         "gameboy": "Game Boy",
         "gamecube": "GameCube",
-        "pokemon": "Pokémon",
-        "pokémon": "Pokémon",
+        "pokemon": "PokÃ©mon",
+        "pokÃ©mon": "PokÃ©mon",
         "mario": "Mario",
         "kirby": "Kirby",
         "zelda": "The Legend of Zelda",
@@ -3450,12 +3450,12 @@ def cargar_noticias_base():
                 continue
             if not (FECHA_INICIO <= fecha <= FECHA_FINAL):
                 continue
-            titulo = limpiar_html(noticia.get("title", "Sin título"))
+            titulo = limpiar_html(noticia.get("title", "Sin tÃ­tulo"))
             resumen = limpiar_html(noticia.get("summary", ""))
             link = noticia.get("link", "")
             item = {
                 "id": str(uuid.uuid5(uuid.NAMESPACE_URL, f"{fuente}|{link}|{titulo}")),
-                "title": limpiar_html(noticia.get("title", "Sin título")),
+                "title": limpiar_html(noticia.get("title", "Sin tÃ­tulo")),
                 "summary": limpiar_html(noticia.get("summary", "")),
                 "date": str(fecha),
                 "source": fuente,
@@ -3485,7 +3485,7 @@ def cargar_senales_comunidad():
             titulo = limpiar_html(entrada.get("title", "Tema de comunidad"))
             resumen_original = limpiar_html(entrada.get("summary", ""))
             resumen = (
-                "Señal de conversación detectada en comunidad. "
+                "SeÃ±al de conversaciÃ³n detectada en comunidad. "
                 "Usar con cautela como idea de nostalgia, debate o fandom; no presentarlo como noticia confirmada."
             )
             if resumen_original:
@@ -3503,7 +3503,7 @@ def cargar_senales_comunidad():
                 "is_community_signal": True,
                 "confidence_level": "community_signal",
                 "verification_count": 0,
-                "verification_level": "señal de comunidad; no confirma noticia",
+                "verification_level": "seÃ±al de comunidad; no confirma noticia",
             }
             item["nostalgia_angle"] = detectar_angulo_nostalgia(item)
             item["content_angle"] = detectar_content_angle(item)
@@ -3589,7 +3589,7 @@ def monitor_bucket_item(item):
         return "indie"
     if angulo == "nostalgia" or detectar_angulo_nostalgia(item):
         return "nostalgia"
-    if angulo == "debate" or any(p in texto for p in ["precio", "suscripcion", "suscripción", "digital", "fisico", "físico", "game pass", "ps plus", "microtransacciones"]):
+    if angulo == "debate" or any(p in texto for p in ["precio", "suscripcion", "suscripciÃ³n", "digital", "fisico", "fÃ­sico", "game pass", "ps plus", "microtransacciones"]):
         return "debate"
     return "noticia_actual"
 
@@ -3619,7 +3619,7 @@ def monitor_brand_scores(item):
     if item.get("trend_score", 0) >= 8:
         for marca in scores:
             scores[marca] += 1
-            razones[marca].append("tiene señales hot")
+            razones[marca].append("tiene seÃ±ales hot")
 
     orden = sorted(scores, key=scores.get, reverse=True)
     return scores, razones, orden
@@ -3630,20 +3630,20 @@ def monitor_angulo_para_marca(item, marca):
     titulo = titulo_publico_en_espanol(item.get("title", ""), "news")
     if marca == "Gamer Cave":
         if bucket == "nostalgia":
-            return "Conectarlo con recuerdos de comunidad: juegos físicos, controles prestados, tardes con panas y debate sano."
+            return "Conectarlo con recuerdos de comunidad: juegos fÃ­sicos, controles prestados, tardes con panas y debate sano."
         if bucket == "debate":
-            return "Convertirlo en pregunta de comunidad con dos lados claros, sin imponer conclusión."
+            return "Convertirlo en pregunta de comunidad con dos lados claros, sin imponer conclusiÃ³n."
         if bucket == "anime":
-            return "Cruzar anime y gaming: hype, adaptación, fandom y conversación geek."
-        return "Explicar qué pasó, por qué importa y cerrar con una pregunta para la tribu geek."
+            return "Cruzar anime y gaming: hype, adaptaciÃ³n, fandom y conversaciÃ³n geek."
+        return "Explicar quÃ© pasÃ³, por quÃ© importa y cerrar con una pregunta para la tribu geek."
     if marca == "Daviet Gaming":
         if bucket == "tecnologia":
             return "Explicarlo desde el valor real para gamers: rendimiento, precio, PC, setup o experiencia."
         if bucket == "anime":
-            return "Darle un ángulo casual de cultura geek/anime con opinión corta y pregunta directa."
+            return "Darle un Ã¡ngulo casual de cultura geek/anime con opiniÃ³n corta y pregunta directa."
         if bucket == "indie":
-            return "Presentarlo como descubrimiento gamer: qué lo hace diferente y por qué vale mirarlo."
-        return "Dar contexto rápido, opinión natural y cerrar con una pregunta clara para comentarios."
+            return "Presentarlo como descubrimiento gamer: quÃ© lo hace diferente y por quÃ© vale mirarlo."
+        return "Dar contexto rÃ¡pido, opiniÃ³n natural y cerrar con una pregunta clara para comentarios."
     return f"Usarlo como tema general: {titulo}, explicado simple y con pregunta final."
 
 
@@ -3885,11 +3885,11 @@ def crear_hashtags(texto, limite=None):
         hashtags.extend(["#playstation", "#ps5"])
     if "xbox" in texto:
         hashtags.extend(["#xbox", "#xboxseriesx"])
-    if "pokemon" in texto or "pokémon" in texto:
+    if "pokemon" in texto or "pokÃ©mon" in texto:
         hashtags.append("#pokemon")
     if "pc" in texto or "steam" in texto:
         hashtags.extend(["#pcgaming", "#steam"])
-    if "hardware" in texto or "nvidia" in texto or "rtx" in texto or "gpu" in texto or "tecnología" in texto or "technology" in texto:
+    if "hardware" in texto or "nvidia" in texto or "rtx" in texto or "gpu" in texto or "tecnologÃ­a" in texto or "technology" in texto:
         hashtags.extend(["#tech", "#gamingtech", "#hardware"])
     if "anime" in texto or "manga" in texto or "crunchyroll" in texto:
         hashtags.extend(["#anime", "#geek", "#otaku", "#popculture"])
@@ -3919,20 +3919,20 @@ def texto_menciona_hashtags(texto):
 def pide_cinco_hashtags(texto):
     if not texto_menciona_hashtags(texto):
         return False
-    return any(frase in texto for frase in ["5", "cinco", "solo cinco", "solo 5", "nada mas 5", "nada más 5"])
+    return any(frase in texto for frase in ["5", "cinco", "solo cinco", "solo 5", "nada mas 5", "nada mÃ¡s 5"])
 
 
 def es_pedido_solo_hashtags(texto):
     if not texto_menciona_hashtags(texto):
         return False
-    palabras_post = ["post", "publicación", "publicacion", "caption", "noticia", "noticias"]
+    palabras_post = ["post", "publicaciÃ³n", "publicacion", "caption", "noticia", "noticias"]
     return not any(palabra in texto for palabra in palabras_post)
 
 
 def limpiar_pedido_hashtags(pregunta):
     texto = pregunta.lower()
     frases = [
-        "dame", "hazme", "creame", "créame", "crea", "crear", "generame", "genérame",
+        "dame", "hazme", "creame", "crÃ©ame", "crea", "crear", "generame", "genÃ©rame",
         "solo", "cinco", "5", "hashtags", "hashtag", "hastags", "hastag", "hashtach",
         "hastach", "para instagram", "para facebook", "instagram", "facebook",
         "para", "sobre", "de", "del", "la", "el", "los", "las",
@@ -3949,7 +3949,7 @@ def crear_respuesta_hashtags(pregunta):
     base = tema or f"{item.get('title', '')} {item.get('summary', '')}" or st.session_state.get("active_brand", "gaming")
     hashtags = crear_hashtags(base, limite=5)
     return (
-        "Listo. Guardé la regla: usar solo 5 hashtags.\n\n"
+        "Listo. GuardÃ© la regla: usar solo 5 hashtags.\n\n"
         f"{hashtags}"
     )
 
@@ -3974,34 +3974,34 @@ def reparar_texto_roto(texto):
     if not texto:
         return ""
     reemplazos = {
-        "Ã¡": "\u00e1",
-        "Ã©": "\u00e9",
-        "Ã­": "\u00ed",
-        "Ã³": "\u00f3",
-        "Ãº": "\u00fa",
-        "Ã±": "\u00f1",
-        "Ã": "\u00c1",
-        "Ã‰": "\u00c9",
-        "Ã": "\u00cd",
-        "Ã“": "\u00d3",
-        "Ãš": "\u00da",
-        "Ã‘": "\u00d1",
-        "Â¿": "\u00bf",
-        "Â¡": "\u00a1",
-        "â€“": "-",
-        "â€”": "-",
-        "â€˜": "'",
-        "â€™": "'",
-        "â€œ": '"',
-        "â€": '"',
-        "ðŸŽ®": "\U0001f3ae",
-        "ðŸ‘‡": "\U0001f447",
-        "ðŸ“¡": "\U0001f4e1",
-        "Ãº": "\u00fa",
-        "Ã³": "\u00f3",
-        "Ã­a": "\u00eda",
-        "Ã©n": "\u00e9n",
-        "Ã³n": "\u00f3n",
+        "ÃƒÂ¡": "\u00e1",
+        "ÃƒÂ©": "\u00e9",
+        "ÃƒÂ­": "\u00ed",
+        "ÃƒÂ³": "\u00f3",
+        "ÃƒÂº": "\u00fa",
+        "ÃƒÂ±": "\u00f1",
+        "ÃƒÂ": "\u00c1",
+        "Ãƒâ€°": "\u00c9",
+        "ÃƒÂ": "\u00cd",
+        "Ãƒâ€œ": "\u00d3",
+        "ÃƒÅ¡": "\u00da",
+        "Ãƒâ€˜": "\u00d1",
+        "Ã‚Â¿": "\u00bf",
+        "Ã‚Â¡": "\u00a1",
+        "Ã¢â‚¬â€œ": "-",
+        "Ã¢â‚¬â€": "-",
+        "Ã¢â‚¬Ëœ": "'",
+        "Ã¢â‚¬â„¢": "'",
+        "Ã¢â‚¬Å“": '"',
+        "Ã¢â‚¬Â": '"',
+        "Ã°Å¸Å½Â®": "\U0001f3ae",
+        "Ã°Å¸â€˜â€¡": "\U0001f447",
+        "Ã°Å¸â€œÂ¡": "\U0001f4e1",
+        "ÃƒÂº": "\u00fa",
+        "ÃƒÂ³": "\u00f3",
+        "ÃƒÂ­a": "\u00eda",
+        "ÃƒÂ©n": "\u00e9n",
+        "ÃƒÂ³n": "\u00f3n",
     }
     for malo, bueno in reemplazos.items():
         texto = texto.replace(malo, bueno)
@@ -4031,8 +4031,8 @@ def quitar_marca_de_texto(texto):
 def limpiar_pedido_post(pregunta):
     texto_lower = str(pregunta or "").lower()
     for malo, bueno in [
-        ("á", "a"), ("é", "e"), ("í", "i"), ("ó", "o"), ("ú", "u"),
         ("Ã¡", "a"), ("Ã©", "e"), ("Ã­", "i"), ("Ã³", "o"), ("Ãº", "u"),
+        ("ÃƒÂ¡", "a"), ("ÃƒÂ©", "e"), ("ÃƒÂ­", "i"), ("ÃƒÂ³", "o"), ("ÃƒÂº", "u"),
     ]:
         texto_lower = texto_lower.replace(malo, bueno)
     frases = [
@@ -4071,7 +4071,7 @@ def limpiar_pedido_post(pregunta):
     limpio = " ".join(texto_lower.split()).strip(" .,:;-")
     vacios = {
         "", "un", "una", "uno", "unos", "unas", "nuevo", "nueva",
-        "redes", "publicar", "hot", "viral", "del dia", "del día",
+        "redes", "publicar", "hot", "viral", "del dia", "del dÃ­a",
         "tema", "algo", "para mi",
     }
     return "" if limpio in vacios else limpio
@@ -4084,11 +4084,11 @@ def crear_item_desde_pedido(pregunta, estilo):
     titulo = tema[:1].upper() + tema[1:]
     texto = f"{titulo} es un tema solicitado para crear contenido gamer con enfoque {estilo}."
     if estilo in ["nostalgia", "emocional"]:
-        texto += " La idea es conectar con recuerdos de infancia, consolas viejas, juegos físicos y comunidad."
+        texto += " La idea es conectar con recuerdos de infancia, consolas viejas, juegos fÃ­sicos y comunidad."
     elif estilo == "debate":
         texto += " La idea es provocar comentarios sin sonar agresivo ni inventar datos."
     else:
-        texto += " La idea es explicarlo claro y convertirlo en un post útil para redes."
+        texto += " La idea es explicarlo claro y convertirlo en un post Ãºtil para redes."
 
     contexto_local = buscar_contexto_local(titulo)
     if contexto_local:
@@ -4101,7 +4101,7 @@ def crear_item_desde_pedido(pregunta, estilo):
         "source": "Tema solicitado por el usuario",
         "link": "",
         "date": str(ahora_en_puerto_rico().date()),
-        "content_angle": estilo if estilo != "news" else "opinión",
+        "content_angle": estilo if estilo != "news" else "opiniÃ³n",
         "nostalgia_angle": detectar_angulo_nostalgia({"title": titulo, "summary": texto}),
         "confidence_level": "manual",
         "context_source": contexto_local.get("provider", "") if contexto_local else "",
@@ -4113,13 +4113,13 @@ def crear_item_desde_pedido(pregunta, estilo):
 
 def crear_subtitulo(estilo, titulo):
     if estilo == "debate":
-        return "Un tema para prender la conversación gamer"
+        return "Un tema para prender la conversaciÃ³n gamer"
     if estilo in ["noticia", "news"]:
-        return "Lo importante es entender por qué importa ahora"
+        return "Lo importante es entender por quÃ© importa ahora"
     if estilo == "emocional":
-        return "De esos recuerdos que muchos gamers entienden rápido"
+        return "De esos recuerdos que muchos gamers entienden rÃ¡pido"
     if estilo == "corto":
-        return "Rápido, directo y listo para comentarios"
+        return "RÃ¡pido, directo y listo para comentarios"
     return "No era solo jugar, era parte de la experiencia"
 
 
@@ -4132,13 +4132,13 @@ def sugerencia_visual(estilo, texto):
             "formato vertical 1080x1350, sin logos de companias ni texto extra."
         )
     if "gamecube" in texto or "game boy" in texto or "nintendo" in texto:
-        return "Background nostálgico con consola retro, controles, cartuchos o discos sobre una mesa, luz cálida, formato vertical 1080x1350, sin texto."
+        return "Background nostÃ¡lgico con consola retro, controles, cartuchos o discos sobre una mesa, luz cÃ¡lida, formato vertical 1080x1350, sin texto."
     if "hardware" in texto or "nvidia" in texto or "amd" in texto or "msi" in texto or "asus" in texto:
-        return "Background de setup PC gaming con luces limpias, hardware como protagonista, espacio libre para título, formato vertical 1080x1350."
+        return "Background de setup PC gaming con luces limpias, hardware como protagonista, espacio libre para tÃ­tulo, formato vertical 1080x1350."
     if "game jam" in texto or "puerto rico" in texto or "gamedev" in texto:
         return "Background de comunidad gamer y desarrollo indie, laptops, controles y ambiente de evento local, formato vertical 1080x1350."
     if estilo == "debate":
-        return "Background dividido visualmente entre dos ideas opuestas, estilo gamer limpio, espacio central para título, formato vertical 1080x1350."
+        return "Background dividido visualmente entre dos ideas opuestas, estilo gamer limpio, espacio central para tÃ­tulo, formato vertical 1080x1350."
     return "Background gaming oscuro con detalles retro, consola o control como elemento principal, espacio limpio para texto, formato vertical 1080x1350."
 
 
@@ -4146,7 +4146,7 @@ def normalizar_titulo_gamer(titulo):
     reemplazos = {
         "gamecube": "GameCube",
         "game boy": "Game Boy",
-        "pokemon": "Pokémon",
+        "pokemon": "PokÃ©mon",
         "playstation": "PlayStation",
         "xbox": "Xbox",
         "nintendo": "Nintendo",
@@ -4166,21 +4166,21 @@ def enfoque_comunidad_pr_latam(titulo, texto_base, estilo):
         palabra in texto for palabra in ["lanzamiento", "release date", "calendario"]
     ):
         return (
-            "Para la comunidad, la discusión está en si otros estudios deberían mover sus fechas "
-            "o competir directamente por la atención de los jugadores."
+            "Para la comunidad, la discusiÃ³n estÃ¡ en si otros estudios deberÃ­an mover sus fechas "
+            "o competir directamente por la atenciÃ³n de los jugadores."
         )
     if estilo == "debate":
-        return "La conversación se pone buena cuando la comunidad compara experiencias sin convertirlo en pelea de plataformas."
-    if "precio" in texto or "suscripción" in texto or "game pass" in texto or "ps plus" in texto:
+        return "La conversaciÃ³n se pone buena cuando la comunidad compara experiencias sin convertirlo en pelea de plataformas."
+    if "precio" in texto or "suscripciÃ³n" in texto or "game pass" in texto or "ps plus" in texto:
         return "Para muchos gamers de Puerto Rico y LatAm, la pregunta real es si esto vale el dinero y el tiempo."
-    if "digital" in texto or "físico" in texto or "fisico" in texto:
-        return "Este tema conecta rápido porque muchos todavía recuerdan comprar, prestar o guardar juegos físicos."
+    if "digital" in texto or "fÃ­sico" in texto or "fisico" in texto:
+        return "Este tema conecta rÃ¡pido porque muchos todavÃ­a recuerdan comprar, prestar o guardar juegos fÃ­sicos."
     if "remake" in texto or "remaster" in texto or "nostalgia" in texto:
-        return "Aquí la nostalgia pesa, pero también vale preguntar si queremos recuerdos o experiencias nuevas."
+        return "AquÃ­ la nostalgia pesa, pero tambiÃ©n vale preguntar si queremos recuerdos o experiencias nuevas."
     if "anime" in texto or "manga" in texto:
-        return "Anime y gaming se cruzan mucho en nuestra comunidad, especialmente cuando hay hype, regreso de clásicos o debate de adaptación."
+        return "Anime y gaming se cruzan mucho en nuestra comunidad, especialmente cuando hay hype, regreso de clÃ¡sicos o debate de adaptaciÃ³n."
     if "hardware" in texto or "nvidia" in texto or "rtx" in texto or "gpu" in texto:
-        return "La clave es explicarlo desde el beneficio real para el gamer común, no como ficha técnica fría."
+        return "La clave es explicarlo desde el beneficio real para el gamer comÃºn, no como ficha tÃ©cnica frÃ­a."
     return (
         "Este tipo de tema conecta con la comunidad porque cada gamer puede vivirlo, "
         "recordarlo o interpretarlo de una manera diferente."
@@ -4194,13 +4194,13 @@ def revisar_coherencia_editorial(post, estilo):
     """Limpia notas internas y comprueba que el caption suene publicable."""
     texto = str(post or "").strip()
     reemplazos = {
-        "Lo importante es aterrizarlo a la comunidad: qué cambia, a quién le interesa y qué opinión puede abrir.": (
+        "Lo importante es aterrizarlo a la comunidad: quÃ© cambia, a quiÃ©n le interesa y quÃ© opiniÃ³n puede abrir.": (
             "Este tema conecta con la comunidad porque cada gamer puede vivirlo "
             "o interpretarlo de una manera diferente."
         ),
-        "La clave está en entender qué cambia, a quién le interesa y por qué puede importar para la comunidad.": (
+        "La clave estÃ¡ en entender quÃ© cambia, a quiÃ©n le interesa y por quÃ© puede importar para la comunidad.": (
             "La noticia importa por el efecto que puede tener en los jugadores "
-            "y en la conversación de la comunidad."
+            "y en la conversaciÃ³n de la comunidad."
         ),
     }
     for frase_interna, frase_publica in reemplazos.items():
@@ -4213,8 +4213,8 @@ def revisar_coherencia_editorial(post, estilo):
     cuerpo_sin_hashtags = "\n".join(
         linea for linea in texto.splitlines() if not linea.lstrip().startswith("#")
     )
-    if "?" not in cuerpo_sin_hashtags and "¿" not in cuerpo_sin_hashtags:
-        cierre = "👇 ¿Qué opinas?"
+    if "?" not in cuerpo_sin_hashtags and "Â¿" not in cuerpo_sin_hashtags:
+        cierre = "ðŸ‘‡ Â¿QuÃ© opinas?"
         partes = texto.rsplit("\n\n", 1)
         if len(partes) == 2 and partes[1].lstrip().startswith("#"):
             texto = f"{partes[0]}\n\n{cierre}\n\n{partes[1]}"
@@ -4229,86 +4229,86 @@ def pregunta_engagement(titulo, estilo):
     if ("gta 6" in texto or "grand theft auto vi" in texto) and any(
         palabra in texto for palabra in ["lanzamiento", "release date", "calendario"]
     ):
-        return "👇 ¿Crees que otros estudios deberían mover sus juegos o competir de frente?"
+        return "ðŸ‘‡ Â¿Crees que otros estudios deberÃ­an mover sus juegos o competir de frente?"
     if estilo == "debate":
-        return "👇 ¿Tú cómo lo ves: buena movida o mala decisión?"
+        return "ðŸ‘‡ Â¿TÃº cÃ³mo lo ves: buena movida o mala decisiÃ³n?"
     if estilo == "tecnologia":
-        return "👇 ¿Esto te parece un cambio útil para gamers o puro ruido técnico?"
+        return "ðŸ‘‡ Â¿Esto te parece un cambio Ãºtil para gamers o puro ruido tÃ©cnico?"
     if estilo == "indie":
-        return "👇 ¿Lo pondrías en tu radar o esperas más gameplay primero?"
+        return "ðŸ‘‡ Â¿Lo pondrÃ­as en tu radar o esperas mÃ¡s gameplay primero?"
     if estilo == "anime":
-        return "👇 ¿Este tema te da hype o prefieres esperar más información?"
-    if "precio" in texto or "suscripción" in texto or "game pass" in texto or "ps plus" in texto:
-        return "👇 ¿Lo pagarías o esperarías una mejor oferta?"
+        return "ðŸ‘‡ Â¿Este tema te da hype o prefieres esperar mÃ¡s informaciÃ³n?"
+    if "precio" in texto or "suscripciÃ³n" in texto or "game pass" in texto or "ps plus" in texto:
+        return "ðŸ‘‡ Â¿Lo pagarÃ­as o esperarÃ­as una mejor oferta?"
     if "remake" in texto or "remaster" in texto:
-        return "👇 ¿Te emociona este regreso o prefieres juegos nuevos?"
-    if "digital" in texto or "físico" in texto or "fisico" in texto:
-        return "👇 ¿Tú eres team físico o team digital?"
+        return "ðŸ‘‡ Â¿Te emociona este regreso o prefieres juegos nuevos?"
+    if "digital" in texto or "fÃ­sico" in texto or "fisico" in texto:
+        return "ðŸ‘‡ Â¿TÃº eres team fÃ­sico o team digital?"
     if "anime" in texto or "manga" in texto:
-        return "👇 ¿Este tema te da hype o lo dejarías pasar?"
+        return "ðŸ‘‡ Â¿Este tema te da hype o lo dejarÃ­as pasar?"
     if estilo in ["nostalgia", "emocional"]:
-        return "👇 ¿Qué recuerdo gamer te vino a la mente?"
-    return "👇 ¿Esto te interesa o lo dejarías pasar?"
+        return "ðŸ‘‡ Â¿QuÃ© recuerdo gamer te vino a la mente?"
+    return "ðŸ‘‡ Â¿Esto te interesa o lo dejarÃ­as pasar?"
 
 
 def crear_post_daviet(titulo, texto_base, estilo, nostalgia, hashtags):
     if estilo == "debate":
-        subtitulo = "Un tema para prender la conversación"
+        subtitulo = "Un tema para prender la conversaciÃ³n"
         opinion = (
-            "En mi opinión, este tipo de tema funciona porque no todos los gamers lo viven igual. "
+            "En mi opiniÃ³n, este tipo de tema funciona porque no todos los gamers lo viven igual. "
             "Hay quienes miran la comodidad, otros la nostalgia y otros simplemente quieren que la industria no pierda el foco."
         )
         pregunta = pregunta_engagement(titulo, estilo)
     elif estilo in ["noticia", "news"]:
         subtitulo = "Una noticia para mirar con calma"
         opinion = (
-            "Mi ángulo: más allá del anuncio, lo interesante es ver si esto realmente le aporta algo al jugador "
+            "Mi Ã¡ngulo: mÃ¡s allÃ¡ del anuncio, lo interesante es ver si esto realmente le aporta algo al jugador "
             "o si se queda solo en ruido de momento."
         )
         pregunta = pregunta_engagement(titulo, estilo)
     elif estilo == "anime":
         subtitulo = "Anime y cultura geek para comentar"
         opinion = (
-            "Mi ángulo: cuando anime, manga y gaming se cruzan, lo importante es separar el dato real del hype "
-            "y convertirlo en conversación para la comunidad."
+            "Mi Ã¡ngulo: cuando anime, manga y gaming se cruzan, lo importante es separar el dato real del hype "
+            "y convertirlo en conversaciÃ³n para la comunidad."
         )
         pregunta = pregunta_engagement(titulo, estilo)
     elif estilo == "tecnologia":
-        subtitulo = "Tecnología explicada para gamers"
+        subtitulo = "TecnologÃ­a explicada para gamers"
         opinion = (
-            "Mi ángulo: la tecnología importa cuando se entiende qué cambia para el jugador común, "
-            "no cuando se queda solo en especificaciones frías."
+            "Mi Ã¡ngulo: la tecnologÃ­a importa cuando se entiende quÃ© cambia para el jugador comÃºn, "
+            "no cuando se queda solo en especificaciones frÃ­as."
         )
         pregunta = pregunta_engagement(titulo, estilo)
     elif estilo == "indie":
         subtitulo = "Un juego para tener en el radar"
         opinion = (
-            "Mi ángulo: los indies muchas veces crecen por recomendación, demos y conversación real entre jugadores."
+            "Mi Ã¡ngulo: los indies muchas veces crecen por recomendaciÃ³n, demos y conversaciÃ³n real entre jugadores."
         )
         pregunta = pregunta_engagement(titulo, estilo)
     elif estilo == "emocional":
         subtitulo = "De esos temas que conectan con la comunidad"
         opinion = (
-            "En mi opinión, el gaming pega más fuerte cuando conecta con recuerdos, etapas y momentos que uno vivió de verdad."
+            "En mi opiniÃ³n, el gaming pega mÃ¡s fuerte cuando conecta con recuerdos, etapas y momentos que uno viviÃ³ de verdad."
         )
         pregunta = pregunta_engagement(titulo, estilo)
     elif estilo == "corto":
-        subtitulo = "Rápido y al punto"
-        opinion = "Mi ángulo: esto puede abrir una conversación buena si la comunidad se activa."
+        subtitulo = "RÃ¡pido y al punto"
+        opinion = "Mi Ã¡ngulo: esto puede abrir una conversaciÃ³n buena si la comunidad se activa."
         pregunta = pregunta_engagement(titulo, estilo)
     else:
         subtitulo = "No era solo jugar, era parte de la experiencia"
         opinion = (
-            "En mi opinión, estos temas funcionan porque mezclan nostalgia, comunidad y esa forma en que cada gamer "
+            "En mi opiniÃ³n, estos temas funcionan porque mezclan nostalgia, comunidad y esa forma en que cada gamer "
             "recuerda su propia etapa."
         )
         pregunta = pregunta_engagement(titulo, estilo)
 
     if nostalgia and estilo not in ["noticia", "news"]:
-        opinion += f" También conecta con {nostalgia}"
+        opinion += f" TambiÃ©n conecta con {nostalgia}"
     opinion += f" {enfoque_comunidad_pr_latam(titulo, texto_base, estilo)}"
 
-    return f"""🎮 {titulo}
+    return f"""ðŸŽ® {titulo}
 
 {subtitulo}
 
@@ -4328,46 +4328,46 @@ def crear_post_limpio(titulo, resumen, estilo, nostalgia, hashtags):
     if not texto_base or len(texto_base) < 35:
         texto_base = (
             f"{titulo} es un tema reciente dentro del mundo gamer. "
-            "Lo importante es mirar qué puede cambiar, a quién le interesa y qué conversación puede abrir en la comunidad."
+            "Lo importante es mirar quÃ© puede cambiar, a quiÃ©n le interesa y quÃ© conversaciÃ³n puede abrir en la comunidad."
         )
 
     if get_brand_voice().get("brand") == "Daviet Gaming":
         return crear_post_daviet(titulo, texto_base, estilo, nostalgia, hashtags)
 
     if estilo == "debate":
-        gancho = f"🎮 {titulo} es uno de esos temas que siempre divide opiniones en la comunidad."
+        gancho = f"ðŸŽ® {titulo} es uno de esos temas que siempre divide opiniones en la comunidad."
         cuerpo = (
-            "Por un lado está la comodidad de lo moderno: descargas rápidas, juegos siempre disponibles "
+            "Por un lado estÃ¡ la comodidad de lo moderno: descargas rÃ¡pidas, juegos siempre disponibles "
             "y menos espacio ocupado.\n\n"
-            "Pero también está esa parte que muchos extrañan: tener el juego en la mano, prestarlo, "
+            "Pero tambiÃ©n estÃ¡ esa parte que muchos extraÃ±an: tener el juego en la mano, prestarlo, "
             "ver la portada, leer el manual y sentir que de verdad era tuyo."
         )
         cuerpo += f"\n\n{enfoque_comunidad_pr_latam(titulo, texto_base, estilo)}"
         cierre = pregunta_engagement(titulo, estilo)
     elif estilo in ["noticia", "news", "anime", "tecnologia", "indie"]:
-        gancho = f"🎮 {titulo}"
+        gancho = f"ðŸŽ® {titulo}"
         if estilo == "anime":
             cuerpo = (
                 f"{texto_base}\n\n"
-                "Aquí la conversación está en cómo lo recibe el fandom: si hay hype real, dudas de adaptación "
-                "o simplemente curiosidad por ver hacia dónde va el tema."
+                "AquÃ­ la conversaciÃ³n estÃ¡ en cÃ³mo lo recibe el fandom: si hay hype real, dudas de adaptaciÃ³n "
+                "o simplemente curiosidad por ver hacia dÃ³nde va el tema."
             )
         elif estilo == "tecnologia":
             cuerpo = (
                 f"{texto_base}\n\n"
-                "La clave es bajarlo a tierra: qué cambia para quien juega, cuánto puede afectar la experiencia "
-                "y si de verdad vale la atención."
+                "La clave es bajarlo a tierra: quÃ© cambia para quien juega, cuÃ¡nto puede afectar la experiencia "
+                "y si de verdad vale la atenciÃ³n."
             )
         elif estilo == "indie":
             cuerpo = (
                 f"{texto_base}\n\n"
-                "Este tipo de tema funciona cuando se presenta como descubrimiento: qué lo hace diferente, "
-                "por qué puede valer la pena y qué detalle puede enganchar a la comunidad."
+                "Este tipo de tema funciona cuando se presenta como descubrimiento: quÃ© lo hace diferente, "
+                "por quÃ© puede valer la pena y quÃ© detalle puede enganchar a la comunidad."
             )
         else:
             cuerpo = (
                 f"{texto_base}\n\n"
-                "La parte que vale comentar es cómo esto puede afectar a jugadores, estudios o comunidades, "
+                "La parte que vale comentar es cÃ³mo esto puede afectar a jugadores, estudios o comunidades, "
                 "sin convertirlo en pelea de plataformas."
             )
         cierre = pregunta_engagement(titulo, estilo)
@@ -4378,7 +4378,7 @@ def crear_post_limpio(titulo, resumen, estilo, nostalgia, hashtags):
         else:
             gancho = f"\U0001F3AE {titulo} toca una fibra gamer."
         cuerpo = (
-            "Hay juegos, consolas y momentos que no solo se recuerdan por los gráficos o la tecnología, "
+            "Hay juegos, consolas y momentos que no solo se recuerdan por los grÃ¡ficos o la tecnologÃ­a, "
             "sino por la etapa de vida en la que llegaron.\n\n"
             "A veces era llegar de la escuela, prender la consola, pasar controles y repetir el mismo juego "
             "como si nunca cansara."
@@ -4386,19 +4386,19 @@ def crear_post_limpio(titulo, resumen, estilo, nostalgia, hashtags):
         cuerpo += f"\n\n{enfoque_comunidad_pr_latam(titulo, texto_base, estilo)}"
         cierre = pregunta_engagement(titulo, estilo)
     elif estilo == "corto":
-        gancho = f"🎮 {titulo}"
-        cuerpo = "Esto puede traer recuerdos, debate o una conversación buena entre gamers."
+        gancho = f"ðŸŽ® {titulo}"
+        cuerpo = "Esto puede traer recuerdos, debate o una conversaciÃ³n buena entre gamers."
         cuerpo += f"\n\n{enfoque_comunidad_pr_latam(titulo, texto_base, estilo)}"
         cierre = pregunta_engagement(titulo, estilo)
     else:
-        gancho = f"🎮 {titulo} no era solo jugar, era parte de la experiencia."
+        gancho = f"ðŸŽ® {titulo} no era solo jugar, era parte de la experiencia."
         cuerpo = (
             "Antes de los mundos abiertos gigantes, los updates eternos y el juego online en todos lados, "
-            "había momentos más simples que muchos gamers todavía recuerdan.\n\n"
-            f"Para algunos fue {titulo}. Para otros fue Mario, Pokémon, Zelda, Halo, Final Fantasy, GTA "
-            "o ese juego que se repetía mil veces sin cansarse.\n\n"
-            "Lo importante no era solo el juego, era la memoria que venía con él: la consola, el control, "
-            "los discos, los cartuchos, los primos, las amistades y esas tardes que se iban demasiado rápido."
+            "habÃ­a momentos mÃ¡s simples que muchos gamers todavÃ­a recuerdan.\n\n"
+            f"Para algunos fue {titulo}. Para otros fue Mario, PokÃ©mon, Zelda, Halo, Final Fantasy, GTA "
+            "o ese juego que se repetÃ­a mil veces sin cansarse.\n\n"
+            "Lo importante no era solo el juego, era la memoria que venÃ­a con Ã©l: la consola, el control, "
+            "los discos, los cartuchos, los primos, las amistades y esas tardes que se iban demasiado rÃ¡pido."
         )
         cuerpo += f"\n\n{enfoque_comunidad_pr_latam(titulo, texto_base, estilo)}"
         cierre = pregunta_engagement(titulo, estilo)
@@ -4455,37 +4455,37 @@ def generate_social_post(item, estilo=None):
 def limpiar_texto_publicable_final(texto):
     limpio = str(texto or "")
     reemplazos = {
-        "todavÃ­a": "todav\u00eda",
-        "tendrÃ¡": "tendr\u00e1",
-        "adaptaciÃ³n": "adaptaci\u00f3n",
-        "atenciÃ³n": "atenci\u00f3n",
-        "conversaciÃ³n": "conversaci\u00f3n",
-        "mÃ¡s": "m\u00e1s",
-        "trÃ¡iler": "tr\u00e1iler",
-        "tecnologÃ­a": "tecnolog\u00eda",
-        "quÃ©": "qu\u00e9",
-        "quiÃ©n": "qui\u00e9n",
-        "por quÃ©": "por qu\u00e9",
-        "cÃ³mo": "c\u00f3mo",
-        "estÃ¡": "est\u00e1",
-        "estÃ¡n": "est\u00e1n",
-        "fÃ­sico": "f\u00edsico",
-        "fÃ­sicos": "f\u00edsicos",
-        "grÃ¡ficos": "gr\u00e1ficos",
-        "aÃ±o": "a\u00f1o",
-        "aÃ±os": "a\u00f1os",
-        "Ã¡ngulo": "\u00e1ngulo",
-        "nostÃ¡lgico": "nost\u00e1lgico",
-        "PokÃ©mon": "Pok\u00e9mon",
-        "Â¿": "\u00bf",
-        "Â¡": "\u00a1",
-        "â€”": "-",
-        "â€“": "-",
-        "â€™": "'",
-        "â€œ": "\"",
-        "â€": "\"",
-        "ðŸŽ®": "\U0001f3ae",
-        "ðŸ‘‡": "\U0001f447",
+        "todavÃƒÂ­a": "todav\u00eda",
+        "tendrÃƒÂ¡": "tendr\u00e1",
+        "adaptaciÃƒÂ³n": "adaptaci\u00f3n",
+        "atenciÃƒÂ³n": "atenci\u00f3n",
+        "conversaciÃƒÂ³n": "conversaci\u00f3n",
+        "mÃƒÂ¡s": "m\u00e1s",
+        "trÃƒÂ¡iler": "tr\u00e1iler",
+        "tecnologÃƒÂ­a": "tecnolog\u00eda",
+        "quÃƒÂ©": "qu\u00e9",
+        "quiÃƒÂ©n": "qui\u00e9n",
+        "por quÃƒÂ©": "por qu\u00e9",
+        "cÃƒÂ³mo": "c\u00f3mo",
+        "estÃƒÂ¡": "est\u00e1",
+        "estÃƒÂ¡n": "est\u00e1n",
+        "fÃƒÂ­sico": "f\u00edsico",
+        "fÃƒÂ­sicos": "f\u00edsicos",
+        "grÃƒÂ¡ficos": "gr\u00e1ficos",
+        "aÃƒÂ±o": "a\u00f1o",
+        "aÃƒÂ±os": "a\u00f1os",
+        "ÃƒÂ¡ngulo": "\u00e1ngulo",
+        "nostÃƒÂ¡lgico": "nost\u00e1lgico",
+        "PokÃƒÂ©mon": "Pok\u00e9mon",
+        "Ã‚Â¿": "\u00bf",
+        "Ã‚Â¡": "\u00a1",
+        "Ã¢â‚¬â€": "-",
+        "Ã¢â‚¬â€œ": "-",
+        "Ã¢â‚¬â„¢": "'",
+        "Ã¢â‚¬Å“": "\"",
+        "Ã¢â‚¬Â": "\"",
+        "Ã°Å¸Å½Â®": "\U0001f3ae",
+        "Ã°Å¸â€˜â€¡": "\U0001f447",
     }
     for malo, bueno in reemplazos.items():
         limpio = limpio.replace(malo, bueno)
@@ -4599,7 +4599,7 @@ def extraer_tema_para_titulo(titulo):
     if anime_match:
         return anime_match.group(1).strip(" -:.,")
 
-    for separador in [" - ", " – ", " — ", ":"]:
+    for separador in [" - ", " â€“ ", " â€” ", ":"]:
         if separador in limpio:
             posible = limpio.split(separador, 1)[0].strip()
             if 3 <= len(posible) <= 80:
@@ -4633,15 +4633,15 @@ def titulo_publico_en_espanol(titulo, estilo):
         return limpio
 
     if "love and deepspace" in bajo:
-        return "Love and Deepspace vuelve a mover conversación entre fans"
+        return "Love and Deepspace vuelve a mover conversaciÃ³n entre fans"
     if "pre-order" in bajo or "preorder" in bajo or "preventa" in bajo:
         return f"{tema}: preventa disponible"
     if "foreign-worker" in bajo or ("visas" in bajo and "xbox" in bajo):
-        return "Microsoft responde a la conversación sobre despidos en Xbox"
+        return "Microsoft responde a la conversaciÃ³n sobre despidos en Xbox"
     if "mass xbox layoffs" in bajo or ("xbox" in bajo and "layoffs" in bajo):
         return "Los cambios en Xbox vuelven al centro del debate"
     if "concludes serialization" in bajo or "serialization" in bajo:
-        return f"{tema} termina su serialización"
+        return f"{tema} termina su serializaciÃ³n"
     if "blue box" in bajo or "ao no hako" in bajo:
         return "Blue Box termina una etapa importante para sus fans"
     if "kingdom hearts" in bajo and ("d23" in bajo or "deep dive" in bajo):
@@ -4692,8 +4692,8 @@ def titulo_visible_seguro(item, estilo="news", bucket=None):
     titulo = limpiar_texto_publicable_final(titulo)
     bajo = titulo.lower()
     marcas_espanol = [
-        "vuelve", "conversación", "termina", "serialización", "responde",
-        "despidos", "debate", "jugadores", "noticia", "tema", "adaptación",
+        "vuelve", "conversaciÃ³n", "termina", "serializaciÃ³n", "responde",
+        "despidos", "debate", "jugadores", "noticia", "tema", "adaptaciÃ³n",
         "lanzamiento", "detalles", "comunidad", "recuerdos",
     ]
     palabras_ingles_visibles = [
@@ -4732,12 +4732,12 @@ def estado_verificacion_item(item):
 
     if any(p in nivel for p in ["fuente oficial", "verificada", "3 fuentes", "2 fuentes"]):
         return ("Verde", "verificada")
-    if any(p in nivel for p in ["fuente confiable", "senal de comunidad", "señal de comunidad", "no confirma noticia"]):
+    if any(p in nivel for p in ["fuente confiable", "senal de comunidad", "seÃ±al de comunidad", "no confirma noticia"]):
         return ("Amarillo", "usar como contexto/debate")
     if "oficial" in fuente and confianza not in ["low", "manual", "editorial"]:
         return ("Verde", "fuente oficial")
     if "confiable" in fuente or "trusted" in confianza or confianza in ["medium-high", "community_signal"]:
-        return ("Amarillo", "fuente confiable o señal editorial")
+        return ("Amarillo", "fuente confiable o seÃ±al editorial")
 
     if item.get("source_official"):
         return ("Verde", "fuente oficial")
@@ -4804,33 +4804,33 @@ def resumen_publico_en_espanol(titulo, resumen, estilo):
 
     if "love and deepspace" in bajo:
         return (
-            "Love and Deepspace volvió a generar conversación entre fans. "
-            "La clave está en explicar qué provocó la reacción y por qué una comunidad puede dividirse tanto alrededor de un juego."
+            "Love and Deepspace volviÃ³ a generar conversaciÃ³n entre fans. "
+            "La clave estÃ¡ en explicar quÃ© provocÃ³ la reacciÃ³n y por quÃ© una comunidad puede dividirse tanto alrededor de un juego."
         )
     if "pre-order" in bajo or "preorder" in bajo or "preventa" in bajo:
         return (
-            f"{tema} ya aparece como opción para quienes siguen próximos lanzamientos. "
-            "Lo útil es explicar qué es, por qué puede interesar y si vale ponerlo en el radar antes de comprar."
+            f"{tema} ya aparece como opciÃ³n para quienes siguen prÃ³ximos lanzamientos. "
+            "Lo Ãºtil es explicar quÃ© es, por quÃ© puede interesar y si vale ponerlo en el radar antes de comprar."
         )
     if "layoff" in bajo or "despido" in bajo:
         return (
-            "Microsoft volvió a estar en conversación por los cambios alrededor de Xbox. "
-            "Más que convertirlo en pelea de marcas, el punto es mirar cómo estas decisiones afectan estudios, proyectos y confianza."
+            "Microsoft volviÃ³ a estar en conversaciÃ³n por los cambios alrededor de Xbox. "
+            "MÃ¡s que convertirlo en pelea de marcas, el punto es mirar cÃ³mo estas decisiones afectan estudios, proyectos y confianza."
         )
     if "serialization" in bajo or "serializ" in bajo:
         return (
-            f"{tema} llegó a un punto importante para sus lectores. "
-            "Para la comunidad anime/manga, estos cierres suelen abrir conversación sobre legado, adaptación y qué viene después."
+            f"{tema} llegÃ³ a un punto importante para sus lectores. "
+            "Para la comunidad anime/manga, estos cierres suelen abrir conversaciÃ³n sobre legado, adaptaciÃ³n y quÃ© viene despuÃ©s."
         )
-    if "physical" in bajo or "físico" in bajo or "fisico" in bajo:
+    if "physical" in bajo or "fÃ­sico" in bajo or "fisico" in bajo:
         return (
-            "El debate entre juegos físicos y digitales sigue vivo. "
-            "Muchos valoran la comodidad digital, pero otros extrañan tener la caja, prestar el juego y conservarlo como parte de su historia gamer."
+            "El debate entre juegos fÃ­sicos y digitales sigue vivo. "
+            "Muchos valoran la comodidad digital, pero otros extraÃ±an tener la caja, prestar el juego y conservarlo como parte de su historia gamer."
         )
     if "indie" in bajo or "demo" in bajo:
         return (
             f"{tema} puede servir para descubrir algo fuera de los lanzamientos gigantes. "
-            "Los indies suelen crecer por conversación de comunidad, demos y recomendaciones entre jugadores."
+            "Los indies suelen crecer por conversaciÃ³n de comunidad, demos y recomendaciones entre jugadores."
         )
     if any(p in bajo for p in ["nvidia", "gpu", "rtx", "hardware", "pc gamer", "steam deck", "processor", "cpu"]):
         return (
@@ -5056,11 +5056,11 @@ def aplicar_reglas_editoriales_fuertes(post, item=None, estilo="news"):
 def crear_debate():
     prompt = buscar_prompt("debate")
     temas = TEMAS_COMUNIDAD + TEMAS_DEBATE
-    respuesta = "Aquí tienes temas de debate geek para mover comentarios:\n\n"
+    respuesta = "AquÃ­ tienes temas de debate geek para mover comentarios:\n\n"
     for i, tema in enumerate(temas[:10], start=1):
         respuesta += f"{i}. {tema}\n"
-    respuesta += "\nÚsalos como conversación de comunidad, no como noticia confirmada."
-    respuesta += "\n\nPregunta para comentar: ¿cuál de estos temas te prende más el debate?"
+    respuesta += "\nÃšsalos como conversaciÃ³n de comunidad, no como noticia confirmada."
+    respuesta += "\n\nPregunta para comentar: Â¿cuÃ¡l de estos temas te prende mÃ¡s el debate?"
     if prompt:
         respuesta += f"\n\nReferencia usada: {prompt}"
     return respuesta
@@ -5069,7 +5069,7 @@ def crear_debate():
 def crear_nostalgia(pregunta):
     tema = limpiar_tema_nostalgia(pregunta)
     if not tema:
-        respuesta = "¿Sobre qué tema nostálgico quieres hablar?\n\n"
+        respuesta = "Â¿Sobre quÃ© tema nostÃ¡lgico quieres hablar?\n\n"
         for item in TEMAS_NOSTALGIA:
             respuesta += f"- {item}\n"
         return respuesta
@@ -5077,7 +5077,7 @@ def crear_nostalgia(pregunta):
     info = buscar_wikipedia(tema)
     contexto_local = buscar_contexto_local(tema)
     if not info and not contexto_local:
-        return f"No encontré contexto histórico suficiente sobre **{tema}**. Prueba con GameCube, Game Boy, Pokémon o PlayStation 2."
+        return f"No encontrÃ© contexto histÃ³rico suficiente sobre **{tema}**. Prueba con GameCube, Game Boy, PokÃ©mon o PlayStation 2."
 
     if not info:
         info = {
@@ -5095,9 +5095,9 @@ def crear_nostalgia(pregunta):
         contexto_extra = contexto_local.get("summary", "")
 
     return f"""
-### Contexto nostálgico: {info["title"]}
+### Contexto nostÃ¡lgico: {info["title"]}
 
-Esto no es noticia actual de {ANIO_NOTICIAS}. Es contexto histórico para hablar de nostalgia gamer.
+Esto no es noticia actual de {ANIO_NOTICIAS}. Es contexto histÃ³rico para hablar de nostalgia gamer.
 
 Importante: Wikipedia queda como apoyo de contexto, no como fuente principal para publicar noticias.
 
@@ -5108,10 +5108,10 @@ Importante: Wikipedia queda como apoyo de contexto, no como fuente principal par
 **Referencia de apoyo:** {info["source"]}
 
 **Ideas para post:**
-- ¿Por qué marcó a una generación?
-- ¿Qué recuerdos despierta en gamers de Puerto Rico y LatAm?
-- ¿Cómo se compara con el gaming actual?
-- ¿Qué pregunta puede generar comentarios?
+- Â¿Por quÃ© marcÃ³ a una generaciÃ³n?
+- Â¿QuÃ© recuerdos despierta en gamers de Puerto Rico y LatAm?
+- Â¿CÃ³mo se compara con el gaming actual?
+- Â¿QuÃ© pregunta puede generar comentarios?
 
 **Referencia Gamer Cave usada:**
 {prompt}
@@ -5164,7 +5164,7 @@ def crear_opciones_post_recientes():
     st.session_state.news_by_number = {}
     respuesta = f"### Opciones de post para {ANIO_NOTICIAS}\n\n"
     respuesta += (
-        "Te dejo ideas ya filtradas automáticamente. Las noticias pasan por verificación; "
+        "Te dejo ideas ya filtradas automÃ¡ticamente. Las noticias pasan por verificaciÃ³n; "
         "debate y nostalgia se manejan como contenido editorial, no como noticia confirmada.\n\n"
     )
 
@@ -5184,26 +5184,26 @@ def crear_opciones_post_recientes():
         nostalgia = item.get("nostalgia_angle", "")
 
         if angulo == "nostalgia" or nostalgia:
-            idea = "post nostálgico con conexión a recuerdos gamer"
+            idea = "post nostÃ¡lgico con conexiÃ³n a recuerdos gamer"
         elif angulo == "debate":
             idea = "post de debate para generar comentarios"
         elif angulo == "anime":
             idea = "post de anime conectado con cultura gamer y comunidad"
         elif angulo in ["hardware", "technology"]:
-            idea = "post de tecnología explicado para gamers"
+            idea = "post de tecnologÃ­a explicado para gamers"
         else:
             idea = "post informativo con pregunta para la comunidad"
 
         respuesta += f"**{numero}. {titulo}**\n\n"
         respuesta += f"- **Fuente:** {fuente}\n"
         respuesta += f"- **Fecha:** {fecha}\n"
-        respuesta += f"- **Verificación:** {item.get('verification_level', 'idea editorial / no es noticia confirmada')}\n"
+        respuesta += f"- **VerificaciÃ³n:** {item.get('verification_level', 'idea editorial / no es noticia confirmada')}\n"
         if item.get("verification_sources"):
             respuesta += f"- **Fuentes revisadas:** {', '.join(item['verification_sources'])}\n"
         respuesta += f"- **Idea:** {idea}\n"
-        respuesta += f"- **Ángulo:** {angulo}\n"
+        respuesta += f"- **Ãngulo:** {angulo}\n"
         if nostalgia:
-            respuesta += f"- **Conexión nostálgica:** {reparar_texto_roto(nostalgia)}\n"
+            respuesta += f"- **ConexiÃ³n nostÃ¡lgica:** {reparar_texto_roto(nostalgia)}\n"
         respuesta += f"- **Para usarla:** crea post de la noticia {numero}\n\n"
 
     return respuesta
@@ -5232,11 +5232,11 @@ def detectar_interes_editorial(texto):
         return "indie"
     if any(p in texto for p in ["anime", "manga", "otaku"]):
         return "anime"
-    if any(p in texto for p in ["tecnología", "tecnologia", "hardware", "pc gaming", "gpu"]):
+    if any(p in texto for p in ["tecnologÃ­a", "tecnologia", "hardware", "pc gaming", "gpu"]):
         return "tecnologia"
-    if any(p in texto for p in ["nostalgia", "retro", "clásico", "clasico", "remake", "remaster"]):
+    if any(p in texto for p in ["nostalgia", "retro", "clÃ¡sico", "clasico", "remake", "remaster"]):
         return "nostalgia"
-    if any(p in texto for p in ["debate", "opinión", "opinion", "controversia"]):
+    if any(p in texto for p in ["debate", "opiniÃ³n", "opinion", "controversia"]):
         return "debate"
     return None
 
@@ -5252,7 +5252,7 @@ def aplicar_marca_si_el_usuario_la_menciona(texto):
 
 
 def es_pedido_post(texto):
-    return any(palabra in texto for palabra in ["post", "instagram", "facebook", "publicación", "publicacion", "caption"])
+    return any(palabra in texto for palabra in ["post", "instagram", "facebook", "publicaciÃ³n", "publicacion", "caption"])
 
 
 def es_respuesta_marca_simple(texto):
@@ -5272,34 +5272,34 @@ def pedir_marca_para_post(pregunta):
         st.session_state.active_brand = "Gamer Cave"
         return "Lo hago para **Gamer Cave**."
     return (
-        "¿Para cuál marca lo hago?\n\n"
+        "Â¿Para cuÃ¡l marca lo hago?\n\n"
         "Puedes responder: **Gamer Cave** o **Daviet Gaming**."
     )
 
 
 def crear_lista_comandos():
-    return """### Comandos útiles
+    return """### Comandos Ãºtiles
 
 - **hazme un post para Daviet Gaming**
 - **hazme un post para Gamer Cave**
 - **hazme un post**
 - **hazme 6 posts variados**
 - **6 noticias variadas que no sean de Xbox**
-- **créame 5 posts hot**
+- **crÃ©ame 5 posts hot**
 - **noticias oficiales de gaming**
 - **opciones de post recientes**
 - **contexto de GameCube**
-- **busca información sobre Pokémon**
+- **busca informaciÃ³n sobre PokÃ©mon**
 - **datos de Zelda**
-- **cómo se juega Zelda**
+- **cÃ³mo se juega Zelda**
 - **modelos de Nintendo desde el primero hasta el actual**
 - **debate gamer**
 - **nostalgia gamer**
 - **voy a publicar estos posts**
 - **no repetir este tema**
-- **más corto**
-- **más debate**
-- **más nostalgia**
+- **mÃ¡s corto**
+- **mÃ¡s debate**
+- **mÃ¡s nostalgia**
 
 Si pides un post sin marca, te voy a preguntar si es para Gamer Cave o Daviet Gaming."""
 
@@ -5311,15 +5311,15 @@ def es_comando_de_publicacion(texto):
         "publicar estos post",
         "publicar estos posts",
         "publicar este post",
-        "ya publiqué",
+        "ya publiquÃ©",
         "ya publique",
-        "ya los publiqué",
+        "ya los publiquÃ©",
         "ya los publique",
         "marcalos como usados",
-        "márcalos como usados",
+        "mÃ¡rcalos como usados",
         "marcar como usados",
         "guardalos como usados",
-        "guárdalos como usados",
+        "guÃ¡rdalos como usados",
         "los voy a usar",
         "voy a usar estos",
         "voy a usar estos post",
@@ -5330,11 +5330,11 @@ def es_comando_de_publicacion(texto):
         "esos los voy a usar",
         "estos los voy a usar",
         "los usare",
-        "los usaré",
+        "los usarÃ©",
         "usare esos post",
-        "usaré esos post",
+        "usarÃ© esos post",
         "usare esos posts",
-        "usaré esos posts",
+        "usarÃ© esos posts",
         "me quedo con esos",
         "me quedo con estos",
         "esos van",
@@ -5362,11 +5362,11 @@ def marcar_ultimos_posts_como_publicados(texto):
             items = [item]
 
     if not items:
-        return "Todavía no tengo posts recientes para marcar como publicados. Primero crea uno o varios posts."
+        return "TodavÃ­a no tengo posts recientes para marcar como publicados. Primero crea uno o varios posts."
 
     marcas = marcas_para_publicacion(texto)
     for item in items:
-        titulo = item.get("title", "post sin título")
+        titulo = item.get("title", "post sin tÃ­tulo")
         categoria = item.get("content_angle", "post")
         marcar_publicacion_usada(
             titulo,
@@ -5376,7 +5376,7 @@ def marcar_ultimos_posts_como_publicados(texto):
         )
 
     marcas_texto = ", ".join(marcas)
-    return f"Listo. Marqué {len(items)} post(s) como usados/publicados para: {marcas_texto}."
+    return f"Listo. MarquÃ© {len(items)} post(s) como usados/publicados para: {marcas_texto}."
 
 
 def responder(pregunta):
@@ -5402,9 +5402,9 @@ def responder(pregunta):
     cantidad_posts = extraer_cantidad_posts(texto)
 
     preguntas_fecha_hora = [
-        "qué día es hoy", "que dia es hoy", "fecha de hoy",
-        "qué fecha es", "que fecha es", "qué hora es", "que hora es",
-        "día y hora", "dia y hora", "fecha y hora",
+        "quÃ© dÃ­a es hoy", "que dia es hoy", "fecha de hoy",
+        "quÃ© fecha es", "que fecha es", "quÃ© hora es", "que hora es",
+        "dÃ­a y hora", "dia y hora", "fecha y hora",
     ]
     if any(frase in texto for frase in preguntas_fecha_hora):
         return f"Ahora mismo es **{fecha_hora_actual_texto()}**."
@@ -5441,37 +5441,37 @@ def responder(pregunta):
 
     if "guardar post" in texto or "exportar post" in texto:
         if not st.session_state.get("last_post_text"):
-            return "Todavía no hay un post para guardar. Primero crea uno con: crea un post para Instagram."
+            return "TodavÃ­a no hay un post para guardar. Primero crea uno con: crea un post para Instagram."
         archivo = guardar_post_aprobado(st.session_state.last_post_text, st.session_state.get("last_post_title", "post_gamer"))
-        return f"Listo. Guardé el post en:\n\n`{archivo}`"
+        return f"Listo. GuardÃ© el post en:\n\n`{archivo}`"
 
     if texto.startswith("aprobar") or "me gusta" in texto:
         accion = save_feedback(st.session_state.last_item_id, "news/post/topic", "approved", pregunta)
         extra = ""
         if st.session_state.get("last_post_text"):
             archivo = guardar_post_aprobado(st.session_state.last_post_text, st.session_state.get("last_post_title", "post_gamer"))
-            extra = f"\n\nTambién guardé el último post aprobado en:\n\n`{archivo}`"
-        return f"Listo. Guardé tu aprobación.\n\nAcción: {accion}{extra}"
+            extra = f"\n\nTambiÃ©n guardÃ© el Ãºltimo post aprobado en:\n\n`{archivo}`"
+        return f"Listo. GuardÃ© tu aprobaciÃ³n.\n\nAcciÃ³n: {accion}{extra}"
     if texto.startswith("rechazar") or "no me gusta" in texto:
         accion = save_feedback(st.session_state.last_item_id, "news/post/topic", "rejected", pregunta)
-        return f"Listo. Guardé el rechazo.\n\nAcción: {accion}"
+        return f"Listo. GuardÃ© el rechazo.\n\nAcciÃ³n: {accion}"
     if (
         texto.startswith("corrige")
         or "no digas" in texto
-        or "más corto" in texto
+        or "mÃ¡s corto" in texto
         or "mas corto" in texto
-        or "más nostalgia" in texto
+        or "mÃ¡s nostalgia" in texto
         or "mas nostalgia" in texto
-        or "más debate" in texto
+        or "mÃ¡s debate" in texto
         or "mas debate" in texto
         or "no repetir" in texto
     ):
         accion = save_feedback(st.session_state.last_item_id, "post/topic", "correction", pregunta)
-        return f"Listo. Guardé esa corrección.\n\nAcción: {accion}"
+        return f"Listo. GuardÃ© esa correcciÃ³n.\n\nAcciÃ³n: {accion}"
     if "ver prompts" in texto:
         prompts = get_prompt_library()
         if not prompts:
-            return "No encontré prompts guardados en prompts/prompt_library.json."
+            return "No encontrÃ© prompts guardados en prompts/prompt_library.json."
         return "### Prompts guardados\n\n" + "\n\n".join(
             f"**{p.get('name', 'sin nombre')}**\n{p.get('prompt', '')}"
             for p in prompts
@@ -5479,12 +5479,12 @@ def responder(pregunta):
     if "ver voz de marca" in texto:
         brand = get_brand_voice()
         if not brand:
-            return "No encontré la voz de marca en prompts/brand_voice.json."
+            return "No encontrÃ© la voz de marca en prompts/brand_voice.json."
         return f"### Voz de marca\n\n```json\n{json.dumps(brand, ensure_ascii=False, indent=2)}\n```"
     if "memoria" in texto or "preferencias" in texto:
         prefs = get_user_preferences()
         if not prefs:
-            return "Todavía no hay preferencias guardadas."
+            return "TodavÃ­a no hay preferencias guardadas."
         return "### Memoria actual\n\n" + "\n".join(
             f"- **{p['key']}**: {p['value']} | peso: {p['weight']}"
             for p in prefs
@@ -5501,7 +5501,7 @@ def responder(pregunta):
             estilo = "noticia"
 
         tema_manual = limpiar_pedido_post(pregunta)
-        pedido_generico = tema_manual in ["", "nuevo", "nueva", "redes", "publicar", "hot", "viral", "del dia", "del día"]
+        pedido_generico = tema_manual in ["", "nuevo", "nueva", "redes", "publicar", "hot", "viral", "del dia", "del dÃ­a"]
 
         if not marca_mencionada and pedido_generico and not numero and len(marcas_visibles()) > 1:
             return pedir_marca_para_post(pregunta)
@@ -5525,17 +5525,17 @@ def responder(pregunta):
 
         if not item:
             return (
-                "No encontré una noticia verificada nueva para crear el post. "
-                "Estoy usando filtro estricto: fuente oficial o confirmación por 2+ fuentes. "
-                "Puedes pedirme un debate, nostalgia u opinión si quieres contenido editorial."
+                "No encontrÃ© una noticia verificada nueva para crear el post. "
+                "Estoy usando filtro estricto: fuente oficial o confirmaciÃ³n por 2+ fuentes. "
+                "Puedes pedirme un debate, nostalgia u opiniÃ³n si quieres contenido editorial."
             )
 
         post = generate_social_post(item, estilo)
         st.session_state.last_post_items = [item]
         return post
-    if any(p in texto for p in ["nostalgia", "retro", "clásico", "clasico", "viejo", "antiguo"]):
+    if any(p in texto for p in ["nostalgia", "retro", "clÃ¡sico", "clasico", "viejo", "antiguo"]):
         return crear_nostalgia(pregunta)
-    if any(p in texto for p in ["debate", "opinión", "opinion", "vs", "versus"]):
+    if any(p in texto for p in ["debate", "opiniÃ³n", "opinion", "vs", "versus"]):
         return crear_debate()
     cantidad_noticias = cantidad_posts if cantidad_posts > 1 else 5
     return formatear_noticias(buscar_noticias(), pregunta, cantidad_noticias)
@@ -5562,7 +5562,7 @@ if "mensajes" not in st.session_state:
     st.session_state.mensajes = [
         {
             "role": "assistant",
-            "content": "Hola. Soy Gamer Signal. Pregúntame por noticias gamer, nostalgia, debates o posts para Instagram/Facebook.",
+            "content": "Hola. Soy Gamer Signal. PregÃºntame por noticias gamer, nostalgia, debates o posts para Instagram/Facebook.",
         }
     ]
 
@@ -5655,7 +5655,7 @@ with st.sidebar:
         index=0
     )
 
-    st.caption("Tip: puedes escribir 'post de la noticia 2' para usar una noticia específica.")
+    st.caption("Tip: puedes escribir 'post de la noticia 2' para usar una noticia especÃ­fica.")
 
     if st.button("Borrar toda la memoria"):
         borrar_memoria()
@@ -5703,14 +5703,14 @@ with st.sidebar:
         for item in list(reversed(usados))[:8]:
             st.write(f"- {item.get('topic', 'tema')} ({item.get('category', 'general')})")
     else:
-        st.write("Todavía no hay temas usados.")
+        st.write("TodavÃ­a no hay temas usados.")
     st.divider()
     st.subheader("Preferencias guardadas")
     prefs = get_user_preferences()
     if prefs:
         st.json(prefs)
     else:
-        st.write("No hay preferencias guardadas todavía.")
+        st.write("No hay preferencias guardadas todavÃ­a.")
 
     render_access_log_simple()
 
@@ -5861,3 +5861,4 @@ for mensaje in st.session_state.mensajes:
 
 if chat_iniciado:
     render_last_post_box()
+
