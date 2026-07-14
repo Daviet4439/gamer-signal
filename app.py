@@ -1,7 +1,6 @@
 ﻿# -*- coding: utf-8 -*-
 
 import json
-import os
 import re
 import uuid
 import base64
@@ -9,7 +8,7 @@ from datetime import date, datetime, timedelta, timezone
 from html import unescape as html_unescape
 from html import escape as html_escape
 from pathlib import Path
-from urllib.parse import quote, urlencode
+from urllib.parse import quote
 from urllib.request import Request, urlopen
 
 import feedparser
@@ -17,9 +16,9 @@ import streamlit as st
 from streamlit.components.v1 import html as components_html
 
 
-APP_VERSION = "2026.07.14-3"
+APP_VERSION = "2026.07.14-5"
 
-st.set_page_config(page_title="Gamer Signal", page_icon="ðŸ“¡", layout="centered")
+st.set_page_config(page_title="Gamer Signal", page_icon="\U0001F4E1", layout="centered")
 
 st.markdown(
     """
@@ -64,7 +63,7 @@ st.markdown(
     }
 
     section[data-testid="stSidebar"]::after {
-        content: "â˜°";
+        content: "☰";
         position: fixed;
         top: 84px;
         left: 18px;
@@ -727,13 +726,6 @@ ASSISTANT_MASCOTS = {
     "Daviet Gaming": ASSETS_DIR / "assistant_dragon_pixel.png",
 }
 
-API_DOCS = {
-    "RAWG": "https://rawg.io/apidocs",
-    "YouTube": "https://developers.google.com/youtube/v3/docs/search/list",
-    "IGDB": "https://api-docs.igdb.com/",
-    "Wikimedia": "https://api.wikimedia.org/wiki/API_reference/Page_content/Get_page_summary",
-}
-
 FUENTES = {
     # Gaming oficial
     "PlayStation Blog oficial": "https://blog.playstation.com/feed/",
@@ -1103,87 +1095,6 @@ def guardar_json(archivo, datos):
     archivo.write_text(json.dumps(datos, ensure_ascii=False, indent=2), encoding="utf-8")
 
 
-def obtener_secreto(nombre):
-    valor = st.session_state.get(nombre)
-    if valor:
-        return valor.strip()
-
-    try:
-        valor = st.secrets.get(nombre, "")
-        if valor:
-            return str(valor).strip()
-    except Exception:
-        pass
-
-    return os.environ.get(nombre, "").strip()
-
-
-def telegram_configurado():
-    return bool(obtener_secreto("TELEGRAM_BOT_TOKEN") and obtener_secreto("TELEGRAM_CHAT_ID"))
-
-
-def enviar_telegram(mensaje):
-    token = obtener_secreto("TELEGRAM_BOT_TOKEN")
-    chat_id = obtener_secreto("TELEGRAM_CHAT_ID")
-    if not token or not chat_id:
-        return False
-
-    try:
-        data = urlencode({
-            "chat_id": chat_id,
-            "text": mensaje,
-            "disable_web_page_preview": "true",
-        }).encode("utf-8")
-        request = Request(
-            f"https://api.telegram.org/bot{token}/sendMessage",
-            data=data,
-            headers={"User-Agent": "GamerSignal/1.0"},
-        )
-        with urlopen(request, timeout=API_TIMEOUT_SECONDS) as response:
-            return 200 <= response.status < 300
-    except Exception:
-        return False
-
-
-def notificar_hallazgos_telegram(nuevos):
-    if not nuevos or not telegram_configurado():
-        return False
-
-    lineas = [
-        "Gamer Signal encontrÃ³ noticias nuevas para revisar:",
-        "",
-    ]
-    for item in nuevos[:5]:
-        titulo = titulo_publico_en_espanol(item.get("title", ""), "news")
-        fuente = item.get("source", "fuente")
-        lineas.append(f"- {titulo} ({fuente})")
-
-    lineas.append("")
-    lineas.append("Abre Gamer Signal para convertirlas en post.")
-    return enviar_telegram("\n".join(lineas))
-
-
-def api_disponible(nombre):
-    if nombre == "RAWG":
-        return bool(obtener_secreto("RAWG_API_KEY"))
-    if nombre == "YouTube":
-        return bool(obtener_secreto("YOUTUBE_API_KEY"))
-    if nombre == "IGDB":
-        return bool(obtener_secreto("IGDB_CLIENT_ID") and obtener_secreto("IGDB_CLIENT_SECRET"))
-    if nombre == "Wikimedia":
-        return True
-    return False
-
-
-def estado_apis():
-    return {
-        "RAWG": api_disponible("RAWG"),
-        "YouTube": api_disponible("YouTube"),
-        "IGDB": api_disponible("IGDB"),
-        "Wikimedia": True,
-    }
-
-
 def leer_json_url(url, headers=None, data=None, timeout=API_TIMEOUT_SECONDS):
     headers = headers or {}
     headers.setdefault("User-Agent", "GamerSignal/1.0")
@@ -1196,223 +1107,6 @@ def leer_json_url(url, headers=None, data=None, timeout=API_TIMEOUT_SECONDS):
             return json.loads(response.read().decode("utf-8"))
     except Exception:
         return None
-
-
-@st.cache_data(ttl=3600, show_spinner=False)
-def rawg_buscar_juego(tema, api_key):
-    if not api_key or not tema:
-        return None
-
-    params = urlencode({
-        "key": api_key,
-        "search": tema,
-        "page_size": 3,
-    })
-    data = leer_json_url(f"https://api.rawg.io/api/games?{params}")
-    resultados = (data or {}).get("results", [])
-    if not resultados:
-        return None
-
-    juego = resultados[0]
-    detalle = None
-    slug = juego.get("slug")
-    if slug:
-        detalle = leer_json_url(f"https://api.rawg.io/api/games/{quote(slug)}?{urlencode({'key': api_key})}")
-
-    detalle = detalle or {}
-    plataformas = [
-        p.get("platform", {}).get("name", "")
-        for p in (detalle.get("platforms") or juego.get("platforms") or [])
-        if p.get("platform", {}).get("name")
-    ]
-    generos = [
-        g.get("name", "")
-        for g in (detalle.get("genres") or juego.get("genres") or [])
-        if g.get("name")
-    ]
-
-    return {
-        "provider": "RAWG",
-        "name": detalle.get("name") or juego.get("name") or tema,
-        "released": detalle.get("released") or juego.get("released") or "",
-        "rating": detalle.get("rating") or juego.get("rating") or "",
-        "platforms": plataformas[:6],
-        "genres": generos[:5],
-        "summary": limpiar_html(detalle.get("description_raw", ""))[:420],
-        "url": detalle.get("website") or "",
-        "role": "contexto de base de datos de videojuegos",
-    }
-
-
-@st.cache_data(ttl=1800, show_spinner=False)
-def youtube_buscar_tema(tema, api_key):
-    if not api_key or not tema:
-        return None
-
-    params = urlencode({
-        "key": api_key,
-        "part": "snippet",
-        "q": f"{tema} gaming anime tecnologia",
-        "type": "video",
-        "maxResults": 3,
-        "order": "relevance",
-        "safeSearch": "moderate",
-    })
-    data = leer_json_url(f"https://www.googleapis.com/youtube/v3/search?{params}")
-    items = (data or {}).get("items", [])
-    videos = []
-    for item in items:
-        snippet = item.get("snippet", {})
-        videos.append({
-            "title": limpiar_html(snippet.get("title", "")),
-            "channel": limpiar_html(snippet.get("channelTitle", "")),
-            "published": snippet.get("publishedAt", "")[:10],
-        })
-
-    if not videos:
-        return None
-
-    return {
-        "provider": "YouTube",
-        "videos": videos,
-        "role": "senales de conversacion y tendencias; no confirma noticias por si solo",
-    }
-
-
-@st.cache_data(ttl=3300, show_spinner=False)
-def igdb_token(client_id, client_secret):
-    if not client_id or not client_secret:
-        return ""
-
-    params = urlencode({
-        "client_id": client_id,
-        "client_secret": client_secret,
-        "grant_type": "client_credentials",
-    })
-    data = leer_json_url(f"https://id.twitch.tv/oauth2/token?{params}", data=b"")
-    return (data or {}).get("access_token", "")
-
-
-@st.cache_data(ttl=3600, show_spinner=False)
-def igdb_buscar_juego(tema, client_id, client_secret):
-    if not client_id or not client_secret or not tema:
-        return None
-
-    token = igdb_token(client_id, client_secret)
-    if not token:
-        return None
-
-    tema_seguro = tema.replace('"', "")
-    body = (
-        f'search "{tema_seguro}"; '
-        "fields name,summary,first_release_date,total_rating,genres.name,platforms.name; "
-        "where version_parent = null; limit 3;"
-    )
-    headers = {
-        "Client-ID": client_id,
-        "Authorization": f"Bearer {token}",
-        "Accept": "application/json",
-    }
-    data = leer_json_url("https://api.igdb.com/v4/games", headers=headers, data=body)
-    if not data:
-        return None
-
-    juego = data[0]
-    plataformas = [p.get("name", "") for p in juego.get("platforms", []) if p.get("name")]
-    generos = [g.get("name", "") for g in juego.get("genres", []) if g.get("name")]
-    lanzamiento = ""
-    if juego.get("first_release_date"):
-        try:
-            lanzamiento = datetime.fromtimestamp(juego["first_release_date"]).date().isoformat()
-        except Exception:
-            lanzamiento = ""
-
-    return {
-        "provider": "IGDB",
-        "name": juego.get("name", tema),
-        "released": lanzamiento,
-        "rating": juego.get("total_rating", ""),
-        "platforms": plataformas[:6],
-        "genres": generos[:5],
-        "summary": limpiar_html(juego.get("summary", ""))[:420],
-        "role": "contexto de base de datos de videojuegos",
-    }
-
-
-def buscar_contexto_apis(tema):
-    contexto = []
-    rawg_key = obtener_secreto("RAWG_API_KEY")
-    youtube_key = obtener_secreto("YOUTUBE_API_KEY")
-    igdb_client_id = obtener_secreto("IGDB_CLIENT_ID")
-    igdb_client_secret = obtener_secreto("IGDB_CLIENT_SECRET")
-
-    rawg = rawg_buscar_juego(tema, rawg_key) if rawg_key else None
-    if rawg:
-        contexto.append(rawg)
-
-    igdb = igdb_buscar_juego(tema, igdb_client_id, igdb_client_secret) if igdb_client_id and igdb_client_secret else None
-    if igdb:
-        contexto.append(igdb)
-
-    youtube = youtube_buscar_tema(tema, youtube_key) if youtube_key else None
-    if youtube:
-        contexto.append(youtube)
-
-    return contexto
-
-
-def resumir_contexto_apis(contextos):
-    if not contextos:
-        return ""
-
-    partes = []
-    for ctx in contextos:
-        proveedor = ctx.get("provider", "API")
-        if proveedor in ["RAWG", "IGDB"]:
-            detalle = []
-            if ctx.get("released"):
-                detalle.append(f"lanzamiento: {ctx['released']}")
-            if ctx.get("platforms"):
-                detalle.append("plataformas: " + ", ".join(ctx["platforms"][:4]))
-            if ctx.get("genres"):
-                detalle.append("generos: " + ", ".join(ctx["genres"][:3]))
-            if ctx.get("summary"):
-                detalle.append("contexto: " + recortar_texto(ctx["summary"], 220))
-            if detalle:
-                partes.append(f"{proveedor}: {ctx.get('name', 'tema')} | " + " | ".join(detalle))
-        elif proveedor == "YouTube":
-            titulos = [
-                f"{video.get('title')} ({video.get('channel')})"
-                for video in ctx.get("videos", [])[:3]
-                if video.get("title")
-            ]
-            if titulos:
-                partes.append("YouTube: temas/videos relacionados: " + "; ".join(titulos))
-
-    if not partes:
-        return ""
-
-    return " Contexto extra revisado por APIs: " + " ".join(partes)
-
-
-def mostrar_estado_apis():
-    estado = estado_apis()
-    respuesta = "### Conexiones de contexto de Gamer Signal\n\n"
-    respuesta += (
-        "La base para noticias reales sigue siendo RSS oficiales y fuentes confiables verificadas. "
-        "Estas conexiones solo ayudan con contexto, juegos, fechas, plataformas, nostalgia y seÃ±ales de conversaciÃ³n.\n\n"
-    )
-    for nombre, activo in estado.items():
-        marca = "activa" if activo else "sin configurar"
-        respuesta += f"- **{nombre}:** {marca}\n"
-    respuesta += (
-        "\nUso recomendado:\n"
-        "- RSS oficiales: noticias reales y verificadas.\n"
-        "- RAWG/IGDB: contexto de juegos, plataformas, fechas y datos historicos.\n"
-        "- YouTube: senales de conversacion; no confirma noticias por si solo.\n"
-        "- Wikimedia: contexto historico/nostalgia, no confirmacion de noticias.\n"
-    )
-    return respuesta
 
 
 def limpiar_pedido_contexto(pregunta):
@@ -1553,7 +1247,7 @@ def buscar_senales_comunidad_tema(tema, limite=5):
     return resultados[:limite]
 
 
-def crear_contexto_api(pregunta):
+def crear_contexto_editorial(pregunta):
     tema = limpiar_pedido_contexto(pregunta)
     if not tema:
         tema = limpiar_pedido_post(pregunta)
@@ -1610,22 +1304,7 @@ def crear_contexto_api(pregunta):
             titulo = titulo_publico_en_espanol(senal.get("title", ""), "debate")
             respuesta += f"- {titulo} | {senal.get('source', 'comunidad')}\n"
     respuesta += "Nota: esto ayuda con contexto. Para noticias actuales sigo usando filtro estricto de fuentes oficiales o 2+ fuentes confiables."
-    return respuesta
-
-
-def es_pedido_estado_conexiones(texto):
-    frases = [
-        "estado de conexiones",
-        "conexiones",
-        "fuentes conectadas",
-        "que tengo conectado",
-        "quÃ© tengo conectado",
-        "estado api",
-        "estado apis",
-        "apis conectadas",
-        "api status",
-    ]
-    return any(frase in texto for frase in frases)
+    return limpiar_gramatica_post_final(respuesta)
 
 
 def es_pedido_contexto(texto):
@@ -4345,7 +4024,7 @@ def revisar_coherencia_editorial(post, estilo):
         linea for linea in texto.splitlines() if not linea.lstrip().startswith("#")
     )
     if "?" not in cuerpo_sin_hashtags and "Â¿" not in cuerpo_sin_hashtags:
-        cierre = "ðŸ‘‡ Â¿QuÃ© opinas?"
+        cierre = "👇 ¿Qué opinas?"
         partes = texto.rsplit("\n\n", 1)
         if len(partes) == 2 and partes[1].lstrip().startswith("#"):
             texto = f"{partes[0]}\n\n{cierre}\n\n{partes[1]}"
@@ -4374,98 +4053,26 @@ def pregunta_engagement(titulo, estilo):
     if ("gta 6" in texto or "grand theft auto vi" in texto) and any(
         palabra in texto for palabra in ["lanzamiento", "release date", "calendario"]
     ):
-        return "ðŸ‘‡ Â¿Crees que otros estudios deberÃ­an mover sus juegos o competir de frente?"
+        return "👇 ¿Crees que otros estudios deberían mover sus juegos o competir de frente?"
     if estilo == "debate":
-        return "ðŸ‘‡ Â¿TÃº cÃ³mo lo ves: buena movida o mala decisiÃ³n?"
+        return "👇 ¿Tú cómo lo ves: buena movida o mala decisión?"
     if estilo == "tecnologia":
-        return "ðŸ‘‡ Â¿Esto te parece un cambio Ãºtil para gamers o puro ruido tÃ©cnico?"
+        return "👇 ¿Esto te parece un cambio útil para gamers o puro ruido técnico?"
     if estilo == "indie":
-        return "ðŸ‘‡ Â¿Lo pondrÃ­as en tu radar o esperas mÃ¡s gameplay primero?"
+        return "👇 ¿Lo pondrías en tu radar o esperas más gameplay primero?"
     if estilo == "anime":
-        return "ðŸ‘‡ Â¿Este tema te da hype o prefieres esperar mÃ¡s informaciÃ³n?"
+        return "👇 ¿Este tema te da hype o prefieres esperar más información?"
     if "precio" in texto or "suscripciÃ³n" in texto or "game pass" in texto or "ps plus" in texto:
-        return "ðŸ‘‡ Â¿Lo pagarÃ­as o esperarÃ­as una mejor oferta?"
+        return "👇 ¿Lo pagarías o esperarías una mejor oferta?"
     if "remake" in texto or "remaster" in texto:
-        return "ðŸ‘‡ Â¿Te emociona este regreso o prefieres juegos nuevos?"
+        return "👇 ¿Te emociona este regreso o prefieres juegos nuevos?"
     if "digital" in texto or "fÃ­sico" in texto or "fisico" in texto:
-        return "ðŸ‘‡ Â¿TÃº eres team fÃ­sico o team digital?"
+        return "👇 ¿Tú eres team físico o team digital?"
     if "anime" in texto or "manga" in texto:
-        return "ðŸ‘‡ Â¿Este tema te da hype o lo dejarÃ­as pasar?"
+        return "👇 ¿Este tema te da hype o lo dejarías pasar?"
     if estilo in ["nostalgia", "emocional"]:
-        return "ðŸ‘‡ Â¿QuÃ© recuerdo gamer te vino a la mente?"
-    return "ðŸ‘‡ Â¿Esto te interesa o lo dejarÃ­as pasar?"
-
-
-def crear_post_daviet(titulo, texto_base, estilo, nostalgia, hashtags):
-    if estilo == "debate":
-        subtitulo = "Un tema para prender la conversaciÃ³n"
-        opinion = (
-            "En mi opiniÃ³n, este tipo de tema funciona porque no todos los gamers lo viven igual. "
-            "Hay quienes miran la comodidad, otros la nostalgia y otros simplemente quieren que la industria no pierda el foco."
-        )
-        pregunta = pregunta_engagement(titulo, estilo)
-    elif estilo in ["noticia", "news"]:
-        subtitulo = "Una noticia para mirar con calma"
-        opinion = (
-            "Mi Ã¡ngulo: mÃ¡s allÃ¡ del anuncio, lo interesante es ver si esto realmente le aporta algo al jugador "
-            "o si se queda solo en ruido de momento."
-        )
-        pregunta = pregunta_engagement(titulo, estilo)
-    elif estilo == "anime":
-        subtitulo = "Anime y cultura geek para comentar"
-        opinion = (
-            "Mi Ã¡ngulo: cuando anime, manga y gaming se cruzan, lo importante es separar el dato real del hype "
-            "y convertirlo en conversaciÃ³n para la comunidad."
-        )
-        pregunta = pregunta_engagement(titulo, estilo)
-    elif estilo == "tecnologia":
-        subtitulo = "TecnologÃ­a explicada para gamers"
-        opinion = (
-            "Mi Ã¡ngulo: la tecnologÃ­a importa cuando se entiende quÃ© cambia para el jugador comÃºn, "
-            "no cuando se queda solo en especificaciones frÃ­as."
-        )
-        pregunta = pregunta_engagement(titulo, estilo)
-    elif estilo == "indie":
-        subtitulo = "Un juego para tener en el radar"
-        opinion = (
-            "Mi Ã¡ngulo: los indies muchas veces crecen por recomendaciÃ³n, demos y conversaciÃ³n real entre jugadores."
-        )
-        pregunta = pregunta_engagement(titulo, estilo)
-    elif estilo == "emocional":
-        subtitulo = "De esos temas que conectan con la comunidad"
-        opinion = (
-            "En mi opiniÃ³n, el gaming pega mÃ¡s fuerte cuando conecta con recuerdos, etapas y momentos que uno viviÃ³ de verdad."
-        )
-        pregunta = pregunta_engagement(titulo, estilo)
-    elif estilo == "corto":
-        subtitulo = "RÃ¡pido y al punto"
-        opinion = "Mi Ã¡ngulo: esto puede abrir una conversaciÃ³n buena si la comunidad se activa."
-        pregunta = pregunta_engagement(titulo, estilo)
-    else:
-        subtitulo = "No era solo jugar, era parte de la experiencia"
-        opinion = (
-            "En mi opiniÃ³n, estos temas funcionan porque mezclan nostalgia, comunidad y esa forma en que cada gamer "
-            "recuerda su propia etapa."
-        )
-        pregunta = pregunta_engagement(titulo, estilo)
-
-    detalle = detalle_contextual_para_post(titulo, texto_base, estilo)
-    if detalle:
-        opinion = detalle
-    if nostalgia and estilo not in ["noticia", "news"]:
-        opinion += f" TambiÃ©n conecta con {nostalgia}"
-
-    return f"""ðŸŽ® {titulo}
-
-{subtitulo}
-
-{texto_base}
-
-{opinion}
-
-{pregunta}
-
-{hashtags}"""
+        return "👇 ¿Qué recuerdo gamer te vino a la mente?"
+    return "👇 ¿Esto te interesa o lo dejarías pasar?"
 
 
 def limpiar_primer_parrafo_repetido(texto, titulo):
@@ -5756,7 +5363,7 @@ def responder(pregunta):
         return crear_opciones_post_recientes()
 
     if es_pedido_contexto(texto):
-        return crear_contexto_api(pregunta)
+        return crear_contexto_editorial(pregunta)
 
     if "comandos" in texto or "lista de comandos" in texto or "ayuda" in texto:
         return crear_lista_comandos()
@@ -5887,9 +5494,13 @@ if "mensajes" not in st.session_state:
     st.session_state.mensajes = [
         {
             "role": "assistant",
-            "content": "Hola. Soy Gamer Signal. PregÃºntame por noticias gamer, nostalgia, debates o posts para Instagram/Facebook.",
+            "content": "Hola. Soy Gamer Signal. Pregúntame por noticias gamer, nostalgia, debates o posts para Instagram/Facebook.",
         }
     ]
+else:
+    for mensaje in st.session_state.mensajes:
+        if mensaje.get("role") == "assistant" and "content" in mensaje:
+            mensaje["content"] = limpiar_gramatica_post_final(mensaje["content"])
 
 if "generated_items" not in st.session_state:
     st.session_state.generated_items = {}
@@ -6186,7 +5797,10 @@ for mensaje in st.session_state.mensajes:
         if mensaje.get("type") == "post":
             render_post_response(mensaje["content"])
         else:
-            st.write(mensaje["content"])
+            contenido = mensaje["content"]
+            if mensaje["role"] == "assistant":
+                contenido = limpiar_gramatica_post_final(contenido)
+            st.write(contenido)
 
 if chat_iniciado:
     render_last_post_box()
