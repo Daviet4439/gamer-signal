@@ -17,7 +17,7 @@ import streamlit as st
 from streamlit.components.v1 import html as components_html
 
 
-APP_VERSION = "2026.07.13-2253"
+APP_VERSION = "2026.07.13-6"
 
 st.set_page_config(page_title="Gamer Signal", page_icon="ðŸ“¡", layout="centered")
 
@@ -3973,7 +3973,31 @@ def limpiar_html(texto):
 def reparar_texto_roto(texto):
     if not texto:
         return ""
+    texto = str(texto)
     reemplazos = {
+        "Ã¡": "\u00e1",
+        "Ã©": "\u00e9",
+        "Ã­": "\u00ed",
+        "Ã³": "\u00f3",
+        "Ãº": "\u00fa",
+        "Ã±": "\u00f1",
+        "ÃÁ": "\u00c1",
+        "Ã‰": "\u00c9",
+        "ÃÍ": "\u00cd",
+        "Ã“": "\u00d3",
+        "Ãš": "\u00da",
+        "ÃÑ": "\u00d1",
+        "Â¿": "\u00bf",
+        "Â¡": "\u00a1",
+        "â€œ": '"',
+        "â€": '"',
+        "â€˜": "'",
+        "â€™": "'",
+        "â€“": "-",
+        "â€”": "-",
+        "ðŸŽ®": "\U0001f3ae",
+        "ðŸ‘‡": "\U0001f447",
+        "ðŸ“¡": "\U0001f4e1",
         "ÃƒÂ¡": "\u00e1",
         "ÃƒÂ©": "\u00e9",
         "ÃƒÂ­": "\u00ed",
@@ -4495,7 +4519,7 @@ def limpiar_texto_publicable_final(texto):
     limpio = re.sub(r"\bappeared first on\b.*?(?:\.|\n|$)", "", limpio, flags=re.IGNORECASE | re.DOTALL)
     limpio = re.sub(r"\n{3,}", "\n\n", limpio)
     limpio = re.sub(r"[ \t]{2,}", " ", limpio)
-    return limpio.strip()
+    return reparar_texto_roto(limpio).strip()
 
 
 def parece_texto_ingles(texto):
@@ -4652,6 +4676,12 @@ def titulo_publico_en_espanol(titulo, estilo):
         return "Apple abre nuevas betas para usuarios y desarrolladores"
     if "space dragons" in bajo and "retro" in bajo:
         return "Space Dragons mezcla gameplay moderno con estilo retro"
+    if "classics from sneg" in bajo or ("sneg" in bajo and "classic" in bajo):
+        return "Cl\u00e1sicos de SNEG vuelven al radar retro"
+    if "the alters" in bajo:
+        return "The Alters abre conversaci\u00f3n entre jugadores"
+    if "the sinking city 2" in bajo:
+        return "The Sinking City 2 ya se mueve entre fans del misterio"
     if re.search(r"\bgta\s*6\b|grand theft auto\s*vi", bajo):
         return "GTA 6 vuelve a mover la conversaci\u00f3n gamer"
     if "physical gaming crown" in bajo or "physical" in bajo and "gaming" in bajo:
@@ -4722,6 +4752,11 @@ def titulo_visible_seguro(item, estilo="news", bucket=None):
     if bucket in ["indie"]:
         return f"{tema}: indie para tener en el radar"
     return f"{tema}: noticia para comentar"
+
+
+def limpiar_para_ui(texto):
+    """Texto seguro para mostrar en tarjetas: sin mojibake ni HTML raro."""
+    return limpiar_texto_publicable_final(reparar_texto_roto(texto))
 
 
 def estado_verificacion_item(item):
@@ -5765,17 +5800,19 @@ def render_daily_radar_panel():
         logo = html_escape(logo_data_url(marca), quote=True)
         if items:
             item = items[0]
-            titulo = html_escape(titulo_visible_seguro(item, "news"))
-            fuente = html_escape(item.get("source", "fuente"))
+            titulo = html_escape(limpiar_para_ui(titulo_visible_seguro(item, "news")))
+            fuente = html_escape(limpiar_para_ui(item.get("source", "fuente")))
             color, verificacion = estado_verificacion_item(item)
-            angulo = html_escape(item.get("angle", fallback))
+            color = limpiar_para_ui(color)
+            verificacion = limpiar_para_ui(verificacion)
+            angulo = html_escape(limpiar_para_ui(item.get("angle", fallback)))
             contenido = (
                 f'<div class="daily-radar-item"><strong>{titulo}</strong><br>{fuente}</div>'
-                f'<div class="daily-radar-angle">Verificacion: {html_escape(color)} - {html_escape(verificacion)}</div>'
+                f'<div class="daily-radar-angle">Verificaci\u00f3n: {html_escape(color)} - {html_escape(verificacion)}</div>'
                 f'<div class="daily-radar-angle">{angulo}</div>'
             )
         else:
-            contenido = f'<div class="daily-radar-item">{html_escape(fallback)}</div>'
+            contenido = f'<div class="daily-radar-item">{html_escape(limpiar_para_ui(fallback))}</div>'
         brand_cards.append(
             f'<div class="daily-radar-card daily-radar-brand-card">'
             f'<div class="daily-radar-brand-heading">'
@@ -5791,13 +5828,15 @@ def render_daily_radar_panel():
         items = memoria.get("buckets", {}).get(bucket, [])[:1]
         if items:
             item = items[0]
-            titulo = html_escape(titulo_visible_seguro(item, "news", bucket))
-            fuente = html_escape(item.get("source", "fuente"))
+            titulo = html_escape(limpiar_para_ui(titulo_visible_seguro(item, "news", bucket)))
+            fuente = html_escape(limpiar_para_ui(item.get("source", "fuente")))
             color, verificacion = estado_verificacion_item(item)
+            color = limpiar_para_ui(color)
+            verificacion = limpiar_para_ui(verificacion)
             contenido = (
                 f'<div class="daily-radar-item"><strong>{titulo}</strong><br>{fuente}</div>'
-                f'<div class="daily-radar-angle">Verificacion: {html_escape(color)} - {html_escape(verificacion)}</div>'
-                f'<div class="daily-radar-angle">{html_escape(angulo_para_bucket(bucket))}</div>'
+                f'<div class="daily-radar-angle">Verificaci\u00f3n: {html_escape(color)} - {html_escape(verificacion)}</div>'
+                f'<div class="daily-radar-angle">{html_escape(limpiar_para_ui(angulo_para_bucket(bucket)))}</div>'
             )
         else:
             contenido = '<div class="daily-radar-item">Buscando una oportunidad buena, no cualquier noticia.</div>'
