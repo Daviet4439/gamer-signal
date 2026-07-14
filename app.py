@@ -17,7 +17,7 @@ import streamlit as st
 from streamlit.components.v1 import html as components_html
 
 
-APP_VERSION = "2026.07.13-4"
+APP_VERSION = "2026.07.13-5"
 
 st.set_page_config(page_title="Gamer Signal", page_icon="📡", layout="centered")
 
@@ -449,6 +449,17 @@ st.markdown(
         color: rgba(255, 215, 0, 0.78);
         font-size: 12px;
         line-height: 1.35;
+    }
+
+    .post-section-title {
+        text-align: center;
+        color: var(--gc-white);
+        font-family: "Orbitron", "Inter", sans-serif;
+        font-size: 24px;
+        font-weight: 900;
+        line-height: 1.2;
+        margin: 30px auto 16px auto;
+        letter-spacing: 0;
     }
 
     @media (max-width: 760px) {
@@ -2776,7 +2787,10 @@ def render_post_response(post):
             etiqueta, contenido = parte.split("\n\n", 1)
             etiqueta = etiqueta.title()
         if len(partes) > 1:
-            st.markdown(f"#### {etiqueta}")
+            st.markdown(
+                f'<h4 class="post-section-title">{html_escape(etiqueta)}</h4>',
+                unsafe_allow_html=True,
+            )
         render_post_card(contenido.strip())
 
 
@@ -3664,6 +3678,11 @@ def monitor_actualizar_memoria_marca(log):
             "bucket": bucket,
             "trend_score": item.get("trend_score", 0),
             "verification_level": item.get("verification_level", ""),
+            "confidence_level": item.get("confidence_level", ""),
+            "source_official": item.get("source_official", False),
+            "source_trusted": item.get("source_trusted", False),
+            "is_community_signal": item.get("is_community_signal", False),
+            "verification_count": item.get("verification_count", 0),
         }
         if bucket in memoria["buckets"] and len(memoria["buckets"][bucket]) < 12:
             memoria["buckets"][bucket].append(resumen)
@@ -4498,6 +4517,10 @@ def parece_texto_ingles(texto):
         "teaser trailer", "could inherit", "by default", "physical gaming crown",
         "monthly games", "free play days", "drops its", "recommendation",
         "enhancements detailed", "finally addresses", "plot hole",
+        "ends after", "weekly shonen jump", "fan event", "deep dive",
+        "a kick in the teeth", "fired workers", "public betas",
+        "apple platforms", "builds transformative gameplay", "retro style",
+        "breaking up with", "behind mass", "foreign-worker visas",
     ]
     if any(frase in texto_analisis for frase in frases_ingles):
         return True
@@ -4514,6 +4537,9 @@ def parece_texto_ingles(texto):
         "mass", "layoffs", "breaking", "love", "deepspace", "concludes",
         "serialization", "available", "hands-on", "president", "weighs",
         "recommendation", "recommended", "drops", "increases",
+        "ends", "after", "weekly", "shonen", "jump", "feature",
+        "deep", "dive", "fired", "workers", "public", "betas",
+        "platforms", "builds", "transformative", "retro", "style",
     ]
     return sum(1 for palabra in palabras if palabra in texto_analisis) >= 2
 
@@ -4616,6 +4642,16 @@ def titulo_publico_en_espanol(titulo, estilo):
         return "Los cambios en Xbox vuelven al centro del debate"
     if "concludes serialization" in bajo or "serialization" in bajo:
         return f"{tema} termina su serialización"
+    if "blue box" in bajo or "ao no hako" in bajo:
+        return "Blue Box termina una etapa importante para sus fans"
+    if "kingdom hearts" in bajo and ("d23" in bajo or "deep dive" in bajo):
+        return "Kingdom Hearts tendra una presentacion especial para fans"
+    if "a kick in the teeth" in bajo or "fired workers" in bajo:
+        return "Los despidos en la industria vuelven al debate"
+    if "public betas" in bajo or ("ios" in bajo and "macos" in bajo):
+        return "Apple abre nuevas betas para usuarios y desarrolladores"
+    if "space dragons" in bajo and "retro" in bajo:
+        return "Space Dragons mezcla gameplay moderno con estilo retro"
     if re.search(r"\bgta\s*6\b|grand theft auto\s*vi", bajo):
         return "GTA 6 vuelve a mover la conversaci\u00f3n gamer"
     if "physical gaming crown" in bajo or "physical" in bajo and "gaming" in bajo:
@@ -4690,6 +4726,19 @@ def titulo_visible_seguro(item, estilo="news", bucket=None):
 
 def estado_verificacion_item(item):
     item = item or {}
+    nivel = str(item.get("verification_level", "")).lower()
+    fuente = str(item.get("source", "")).lower()
+    confianza = str(item.get("confidence_level", "")).lower()
+
+    if any(p in nivel for p in ["fuente oficial", "verificada", "3 fuentes", "2 fuentes"]):
+        return ("Verde", "verificada")
+    if any(p in nivel for p in ["fuente confiable", "senal de comunidad", "señal de comunidad", "no confirma noticia"]):
+        return ("Amarillo", "usar como contexto/debate")
+    if "oficial" in fuente and confianza not in ["low", "manual", "editorial"]:
+        return ("Verde", "fuente oficial")
+    if "confiable" in fuente or "trusted" in confianza or confianza in ["medium-high", "community_signal"]:
+        return ("Amarillo", "fuente confiable o señal editorial")
+
     if item.get("source_official"):
         return ("Verde", "fuente oficial")
     if item.get("verification_count", 0) >= 2:
