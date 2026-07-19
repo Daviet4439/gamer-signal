@@ -17,7 +17,7 @@ import streamlit as st
 from streamlit.components.v1 import html as components_html
 
 
-APP_VERSION = "2026.07.18-9"
+APP_VERSION = "2026.07.19-1"
 
 st.set_page_config(page_title="Gamer Signal", page_icon="\U0001F4E1", layout="centered")
 
@@ -7853,6 +7853,11 @@ def crear_opciones_post_recientes():
         respuesta += f"- Fuente: {item.get('source', '')}\n"
         respuesta += f"- Para usarla: **post de la noticia {numero}**\n\n"
     return limpiar_gramatica_post_final(respuesta)
+
+
+from editorial_engine_final import install_editorial_engine
+
+install_editorial_engine(globals())
 
 
 preparar_memoria()

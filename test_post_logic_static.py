@@ -5,6 +5,9 @@ from pathlib import Path
 APP = Path(__file__).with_name("app.py")
 SOURCE = APP.read_text(encoding="utf-8-sig")
 TREE = ast.parse(SOURCE)
+ENGINE = Path(__file__).with_name("editorial_engine_final.py")
+ENGINE_SOURCE = ENGINE.read_text(encoding="utf-8-sig")
+ENGINE_TREE = ast.parse(ENGINE_SOURCE)
 
 
 def function_source(name):
@@ -17,6 +20,10 @@ def function_source(name):
     return ast.get_source_segment(SOURCE, matches[-1]) or ""
 
 
+def engine_source_contains(name):
+    return f"def {name}" in ENGINE_SOURCE
+
+
 def test_parallel_feeds_exist():
     assert "ThreadPoolExecutor" in SOURCE
     assert "def leer_feeds_en_paralelo" in SOURCE
@@ -24,12 +31,14 @@ def test_parallel_feeds_exist():
 
 
 def test_final_editorial_engine_is_last_layer():
-    assert "Motor editorial final" in SOURCE
-    assert 'APP_VERSION = "2026.07.18-9"' in SOURCE
-    src = function_source("generate_social_post")
-    assert "crear_post_limpio" in src
-    assert "aplicar_reglas_editoriales_fuertes" in src
-    assert "st.session_state.last_post_text = post" in src
+    assert 'APP_VERSION = "2026.07.19-1"' in SOURCE
+    assert "from editorial_engine_final import install_editorial_engine" in SOURCE
+    assert "install_editorial_engine(globals())" in SOURCE
+    assert "Motor editorial final" in ENGINE_SOURCE
+    assert engine_source_contains("generate_social_post")
+    assert "crear_post_limpio" in ENGINE_SOURCE
+    assert "aplicar_reglas_editoriales_fuertes" in ENGINE_SOURCE
+    assert "st.session_state.last_post_text = post" in ENGINE_SOURCE
 
 
 def test_no_dangerous_question_replacement_in_final_cleaner():
@@ -40,15 +49,16 @@ def test_no_dangerous_question_replacement_in_final_cleaner():
 
 
 def test_multi_post_uses_variety_and_real_category():
-    src = function_source("crear_varios_posts")
+    src = ENGINE_SOURCE
     assert "_categoria_final_item" in src
     assert "seleccionar_noticias_variadas" in src
-    assert "PUBLICACI\\u00d3N" in src
+    assert "PUBLICACIÓN" in src
+    assert "categoria_de_publicacion" in src
 
 
 def test_final_caption_blocks_old_filler_phrases():
-    src = function_source("caption_necesita_regenerarse")
-    final_src = SOURCE.split("# Motor editorial saneado", 1)[-1]
+    src = ENGINE_SOURCE
+    final_src = ENGINE_SOURCE
     banned = [
         "lo importante es explicar",
         "lo interesante es mirar",
@@ -56,13 +66,13 @@ def test_final_caption_blocks_old_filler_phrases():
         "el feed no trae suficiente detalle",
         "tema reciente dentro del mundo gamer",
     ]
-    assert "FRASES_PLANTILLA_BLOQUEADAS" in src
+    assert "FILLER_PHRASES" in src
     for phrase in banned:
         assert phrase in final_src
 
 
 def test_final_layer_does_not_depend_on_specific_titles():
-    final_src = SOURCE.split("# Motor editorial saneado", 1)[-1]
+    final_src = ENGINE_SOURCE
     forbidden = [
         "diablo 4 recibe",
         "kingdom hearts 4 podr",
