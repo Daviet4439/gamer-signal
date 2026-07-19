@@ -17,7 +17,7 @@ import streamlit as st
 from streamlit.components.v1 import html as components_html
 
 
-APP_VERSION = "2026.07.19-2"
+APP_VERSION = "2026.07.19-3"
 
 st.set_page_config(page_title="Gamer Signal", page_icon="\U0001F4E1", layout="centered")
 
@@ -743,8 +743,8 @@ FUENTES = {
     "GOG News oficial": "https://www.gog.com/news/feed",
 
     # Anime oficial/confiable
-    "Crunchyroll News oficial": "https://www.crunchyroll.com/newsrss",
-    "Anime News Network confiable": "https://www.animenewsnetwork.com/all/rss.xmlann-edition=us",
+    "Crunchyroll News oficial": "https://www.crunchyroll.com/news/rss",
+    "Anime News Network confiable": "https://www.animenewsnetwork.com/all/rss.xml?ann-edition=us",
     "MyAnimeList News confiable": "https://myanimelist.net/rss/news.xml",
     "Anime Corner confiable": "https://animecorner.me/feed/",
     "VIZ Blog oficial": "https://www.viz.com/blog/rss",
@@ -765,24 +765,32 @@ FUENTES = {
     "Gematsu confiable": "https://www.gematsu.com/feed/",
     "PC Gamer confiable": "https://www.pcgamer.com/rss/",
     "Rock Paper Shotgun confiable": "https://www.rockpapershotgun.com/feed",
+    "GamesIndustry.biz confiable": "https://www.gamesindustry.biz/feed",
+    "Siliconera confiable": "https://www.siliconera.com/feed/",
+    "Nintendo Life confiable": "https://www.nintendolife.com/feeds/latest",
     "Engadget confiable": "https://www.engadget.com/rss.xml",
     "TechCrunch AI confiable": "https://techcrunch.com/category/artificial-intelligence/feed/",
 }
 
 FUENTES_COMUNIDAD = {
-    "Reddit Gaming - se\u00f1al de comunidad": "https://www.reddit.com/r/gaming/.rss",
-    "Reddit TrueGaming - se\u00f1al de debate": "https://www.reddit.com/r/truegaming/.rss",
-    "Reddit PatientGamers - se\u00f1al nostalgia": "https://www.reddit.com/r/patientgamers/.rss",
-    "Reddit RetroGaming - se\u00f1al nostalgia": "https://www.reddit.com/r/retrogaming/.rss",
-    "Reddit Nintendo - se\u00f1al comunidad": "https://www.reddit.com/r/nintendo/.rss",
-    "Reddit PlayStation - se\u00f1al comunidad": "https://www.reddit.com/r/playstation/.rss",
-    "Reddit Xbox - se\u00f1al comunidad": "https://www.reddit.com/r/xbox/.rss",
-    "Reddit PCGaming - se\u00f1al comunidad": "https://www.reddit.com/r/pcgaming/.rss",
-    "Reddit IndieGaming - se\u00f1al indie": "https://www.reddit.com/r/indiegaming/.rss",
-    "Reddit Anime - se\u00f1al anime": "https://www.reddit.com/r/anime/.rss",
-    "Reddit Manga - se\u00f1al anime": "https://www.reddit.com/r/manga/.rss",
-    "Reddit JRPG - se\u00f1al fandom": "https://www.reddit.com/r/JRPG/.rss",
-    "Reddit Argaming - se\u00f1al LatAm": "https://www.reddit.com/r/Argaming/.rss",
+    "Reddit Gaming - se\u00f1al de comunidad": "https://www.reddit.com/r/gaming/top/.rss?t=day",
+    "Reddit Games - se\u00f1al de comunidad": "https://www.reddit.com/r/Games/top/.rss?t=day",
+    "Reddit TrueGaming - se\u00f1al de debate": "https://www.reddit.com/r/truegaming/top/.rss?t=week",
+    "Reddit PatientGamers - se\u00f1al nostalgia": "https://www.reddit.com/r/patientgamers/top/.rss?t=week",
+    "Reddit RetroGaming - se\u00f1al nostalgia": "https://www.reddit.com/r/retrogaming/top/.rss?t=week",
+    "Reddit Nintendo - se\u00f1al comunidad": "https://www.reddit.com/r/nintendo/top/.rss?t=week",
+    "Reddit PlayStation - se\u00f1al comunidad": "https://www.reddit.com/r/playstation/top/.rss?t=week",
+    "Reddit Xbox - se\u00f1al comunidad": "https://www.reddit.com/r/xbox/top/.rss?t=week",
+    "Reddit PCGaming - se\u00f1al comunidad": "https://www.reddit.com/r/pcgaming/top/.rss?t=week",
+    "Reddit IndieGaming - se\u00f1al indie": "https://www.reddit.com/r/indiegaming/top/.rss?t=week",
+    "Reddit IndieDev - se\u00f1al indie/dev": "https://www.reddit.com/r/IndieDev/top/.rss?t=week",
+    "Reddit Anime - se\u00f1al anime": "https://www.reddit.com/r/anime/top/.rss?t=day",
+    "Reddit Manga - se\u00f1al anime": "https://www.reddit.com/r/manga/top/.rss?t=week",
+    "Reddit JRPG - se\u00f1al fandom": "https://www.reddit.com/r/JRPG/top/.rss?t=week",
+    "Reddit FanTheories - teor\u00edas geek": "https://www.reddit.com/r/FanTheories/top/.rss?t=week",
+    "Reddit GamingLeaksAndRumours - rumores comunidad": "https://www.reddit.com/r/GamingLeaksAndRumours/top/.rss?t=day",
+    "Reddit Argaming - se\u00f1al LatAm": "https://www.reddit.com/r/Argaming/top/.rss?t=week",
+    "Reddit VideojuegosMX - se\u00f1al M\u00e9xico": "https://www.reddit.com/r/videojuegosMX/top/.rss?t=week",
 }
 
 TEMAS_DEBATE = [
@@ -959,6 +967,21 @@ FUENTES_OFICIALES_JUEGOS = {
         ("Capcom oficial", "https://www.capcom-games.com/", "juegos y anuncios oficiales de Capcom"),
         ("Blizzard oficial", "https://www.blizzard.com/games", "juegos, temporadas y soporte oficial de Blizzard"),
         ("Riot Games oficial", "https://www.riotgames.com/", "juegos, esports y noticias oficiales de Riot"),
+    ],
+    "AnimeStudios": [
+        ("Crunchyroll News oficial", "https://www.crunchyroll.com/news", "noticias oficiales, trailers, fechas y anuncios de anime"),
+        ("Anime News Network confiable", "https://www.animenewsnetwork.com/", "contraste de noticias de anime, manga e industria"),
+        ("MyAnimeList News confiable", "https://myanimelist.net/news", "contexto de anime, manga, staff, estudios y fechas"),
+        ("MangaPlus oficial", "https://mangaplus.shueisha.co.jp/updates", "actualizaciones oficiales de manga disponible en MangaPlus"),
+        ("Aniplex oficial", "https://www.aniplex.co.jp/", "pagina oficial para confirmar proyectos, trailers y franquicias"),
+        ("Bandai Namco Filmworks oficial", "https://www.bnfw.co.jp/", "pagina oficial para confirmar producciones y anuncios"),
+        ("KADOKAWA Anime oficial", "https://www.kadokawa.co.jp/global/", "pagina oficial para contexto de anime, manga y publicaciones"),
+        ("Toei Animation oficial", "https://corp.toei-anim.co.jp/en/press/", "comunicados y anuncios oficiales de Toei Animation"),
+        ("MAPPA oficial", "https://www.mappa.co.jp/en/", "pagina oficial del estudio para confirmar proyectos y staff"),
+        ("ufotable oficial", "https://www.ufotable.com/", "pagina oficial del estudio para confirmar producciones"),
+        ("Kyoto Animation oficial", "https://www.kyotoanimation.co.jp/en/", "pagina oficial del estudio para contexto de proyectos"),
+        ("Production I.G oficial", "https://www.production-ig.co.jp/", "pagina oficial del estudio para producciones y anuncios"),
+        ("Studio Trigger oficial", "https://www.st-trigger.co.jp/", "pagina oficial del estudio para noticias y proyectos"),
     ],
 }
 
@@ -1310,9 +1333,11 @@ def fuentes_oficiales_para_tema(tema):
         grupos.append("PC")
     if any(palabra in texto for palabra in ["ea", "ubisoft", "capcom", "blizzard", "riot", "resident evil", "monster hunter", "diablo", "overwatch", "valorant"]):
         grupos.append("Publishers")
+    if any(palabra in texto for palabra in ["anime", "manga", "crunchyroll", "toei", "mappa", "ufotable", "kyoto animation", "production i.g", "trigger", "shonen", "otaku"]):
+        grupos.append("AnimeStudios")
 
     if not grupos:
-        grupos = ["Nintendo", "PlayStation", "Xbox", "PC", "Publishers"]
+        grupos = ["Nintendo", "PlayStation", "Xbox", "PC", "Publishers", "AnimeStudios"]
 
     fuentes = []
     for grupo in grupos:
@@ -1334,13 +1359,13 @@ def formatear_fuentes_oficiales(tema):
 
 def guia_como_se_juega(tema):
     return (
-        "**Qu? mirar para explicar c\u00f3mo se juega:**\n"
+        "**Qu\u00e9 mirar para explicar c\u00f3mo se juega:**\n"
         "- G\u00e9nero y objetivo principal del juego.\n"
         "- Modos: historia, online, cooperativo, competitivo o local.\n"
-        "- Mec?nicas principales: combate, exploraci\u00f3n, progresi\u00f3n, construcci?n, carreras, RPG, puzzles o estrategia.\n"
+        "- Mec\u00e1nicas principales: combate, exploraci\u00f3n, progresi\u00f3n, construcci\u00f3n, carreras, RPG, puzzles o estrategia.\n"
         "- Plataformas disponibles y si tiene crossplay, edici\u00f3n especial, DLC o servicio online.\n"
-        "- Qu? lo hace interesante para la comunidad gamer de Puerto Rico y LatAm.\n"
-        "- Pregunta final para comentarios: \u00bflo jugar?as?, lo recomiendas o lo dejar?as pasar\n"
+        "- Qu\u00e9 lo hace interesante para la comunidad gamer de Puerto Rico y LatAm.\n"
+        "- Pregunta final para comentarios: \u00bflo jugar\u00edas?, lo recomiendas o lo dejar\u00edas pasar\n"
     )
 
 
@@ -1407,7 +1432,7 @@ def crear_contexto_editorial(pregunta):
     respuesta += formatear_fuentes_oficiales(tema) + "\n"
     senales = buscar_senales_comunidad_tema(tema)
     if senales:
-        respuesta += "\n**Se?ales recientes de comunidad (no son noticia confirmada):**\n"
+        respuesta += "\n**Se\u00f1ales recientes de comunidad (no son noticia confirmada):**\n"
         for senal in senales:
             titulo = titulo_publico_en_espanol(senal.get("title", ""), "debate")
             respuesta += f"- {titulo} | {senal.get('source', 'comunidad')}\n"
@@ -2128,7 +2153,7 @@ def crear_calendario_contenido(marca=None):
     marca = marca or st.session_state.get("active_brand", "Gamer Cave")
     if marca == "General":
         st.session_state.pending_calendar_request = True
-        return "\u00bfPara cu?l marca quieres el calendario: Gamer Cave o Daviet Gaming"
+        return "\u00bfPara cu\u00e1l marca quieres el calendario: Gamer Cave o Daviet Gaming?"
 
     if marca == "Daviet Gaming":
         return """
@@ -2136,17 +2161,17 @@ def crear_calendario_contenido(marca=None):
 
 **Lunes:** noticia reciente de gaming, PC o tecnolog\u00eda explicada de forma sencilla.
 
-**Martes:** hardware, accesorios, setup o una funci?n ?til para gamers.
+**Martes:** hardware, accesorios, setup o una funci\u00f3n \u00fatil para gamers.
 
-**Mi?rcoles:** anime, cultura geek o recomendaci?n relacionada con gaming.
+**Mi\u00e9rcoles:** anime, cultura geek o recomendaci\u00f3n relacionada con gaming.
 
 **Jueves:** nostalgia, opini\u00f3n personal o experiencia gamer.
 
 **Viernes:** noticia hot convertida en una pregunta para conversaci\u00f3n.
 
-**S?bado:** recomendaci?n, comparaci?n o tema para compartir con la comunidad.
+**S\u00e1bado:** recomendaci\u00f3n, comparaci\u00f3n o tema para compartir con la comunidad.
 
-**Domingo:** resumen ligero, recuerdo gamer o adelanto de la pr?xima semana.
+**Domingo:** resumen ligero, recuerdo gamer o adelanto de la pr\u00f3xima semana.
 """
 
     return """
@@ -2156,15 +2181,15 @@ def crear_calendario_contenido(marca=None):
 
 **Martes:** nostalgia gamer: consolas viejas, juegos f\u00edsicos, Game Boy, GameCube o Pok\u00e9mon.
 
-**Mi?rcoles:** debate de comunidad: f\u00edsico vs digital, online vs local, remakes vs originales.
+**Mi\u00e9rcoles:** debate de comunidad: f\u00edsico vs digital, online vs local, remakes vs originales.
 
 **Jueves:** post emocional: recuerdos de infancia, jugar con primos, controles prestados o memory cards.
 
-**Viernes:** pregunta r?pida para comentarios.
+**Viernes:** pregunta r\u00e1pida para comentarios.
 
-**S?bado:** recomendaci?n o comparaci?n gamer.
+**S\u00e1bado:** recomendaci\u00f3n o comparaci\u00f3n gamer.
 
-**Domingo:** post ligero de recuerdos, ranking o "?te acuerdas de...".
+**Domingo:** post ligero de recuerdos, ranking o "\u00bfte acuerdas de...".
 """
 
 
@@ -2412,13 +2437,13 @@ def render_control_bar():
 def angulo_para_bucket(bucket):
     angulos = {
         "noticia_actual": "Convertirlo en noticia clara: qu\u00e9 pas\u00f3, por qu\u00e9 importa y pregunta final.",
-        "debate": "Usarlo para abrir conversaci\u00f3n con dos lados claros y sin imponer conclusi?n.",
+        "debate": "Usarlo para abrir conversaci\u00f3n con dos lados claros y sin imponer conclusi\u00f3n.",
         "nostalgia": "Conectarlo con recuerdos gamer, consolas viejas, juegos f\u00edsicos y comunidad.",
         "tecnologia": "Explicarlo desde c\u00f3mo afecta la experiencia gamer, PC, hardware o servicios.",
         "anime": "Cruzar anime y cultura geek con gaming, hype, fandom o adaptaci\u00f3n.",
         "indie": "Presentarlo como descubrimiento: qu\u00e9 lo hace diferente y por qu\u00e9 vale mirarlo.",
     }
-    return angulos.get(bucket, "Convertirlo en post simple, ?til y f\u00e1cil de comentar.")
+    return angulos.get(bucket, "Convertirlo en post simple, \u00fatil y f\u00e1cil de comentar.")
 
 
 
@@ -3273,8 +3298,8 @@ def cargar_senales_comunidad():
             titulo = limpiar_html(entrada.get("title", "Tema de comunidad"))
             resumen_original = limpiar_html(entrada.get("summary", ""))
             resumen = (
-                "Se?al de conversaci\u00f3n detectada en comunidad. "
-                "Usar con cautela como idea de nostalgia, debate o fandom; no presentarlo como noticia confirmada."
+                "Se\u00f1al de conversaci\u00f3n detectada en comunidad. "
+                "Usar con cautela como idea de nostalgia, teor\u00eda, debate o fandom; no presentarlo como noticia confirmada."
             )
             if resumen_original:
                 resumen += " " + recortar_texto(resumen_original, 180)
@@ -3295,11 +3320,14 @@ def cargar_senales_comunidad():
             }
             item["nostalgia_angle"] = detectar_angulo_nostalgia(item)
             item["content_angle"] = detectar_content_angle(item)
-            if "nostalgia" in fuente.lower() or item["nostalgia_angle"]:
+            fuente_baja = fuente.lower()
+            if "nostalgia" in fuente_baja or "retro" in fuente_baja or item["nostalgia_angle"]:
                 item["content_angle"] = "nostalgia"
-            elif "debate" in fuente.lower() or "truegaming" in fuente.lower():
+            elif any(p in fuente_baja for p in ["debate", "truegaming", "fantheories", "rumores", "leaks"]):
                 item["content_angle"] = "debate"
-            elif "anime" in fuente.lower() or "manga" in fuente.lower():
+            elif "indie" in fuente_baja:
+                item["content_angle"] = "indie"
+            elif "anime" in fuente_baja or "manga" in fuente_baja or "jrpg" in fuente_baja:
                 item["content_angle"] = "anime"
             senales.append(item)
     return senales
@@ -3369,15 +3397,32 @@ def monitor_revisar_fuentes(force=False):
 def monitor_bucket_item(item):
     angulo = categoria_de_item(item)
     texto = f"{item.get('title', '')} {item.get('summary', '')} {item.get('source', '')}".lower()
-    if angulo == "anime" or "anime" in texto or "manga" in texto or "crunchyroll" in texto:
+    if angulo == "anime" or any(p in texto for p in [
+        "anime", "manga", "crunchyroll", "myanimelist", "anime news network",
+        "anime corner", "toei", "mappa", "ufotable", "kyoto animation",
+        "production i.g", "studio trigger", "shonen", "otaku"
+    ]):
         return "anime"
-    if angulo in ["tecnologia", "hardware", "technology"] or any(p in texto for p in ["nvidia", "rtx", "gpu", "hardware", "pc gaming", "steam deck", "unreal engine", "unity"]):
+    if angulo in ["tecnologia", "hardware", "technology"] or any(p in texto for p in [
+        "nvidia", "rtx", "gpu", "hardware", "pc gaming", "steam deck",
+        "unreal engine", "unity", "amd", "intel", "geforce", "radeon",
+        "ios", "android", "switch 2", "handheld", "portable pc"
+    ]):
         return "tecnologia"
-    if angulo == "indie" or any(p in texto for p in SENALES_INDIE):
+    if angulo == "indie" or any(p in texto for p in SENALES_INDIE) or any(p in texto for p in [
+        "indiedev", "indie dev", "demo", "early access", "steam next fest",
+        "itch.io", "solo developer", "small studio"
+    ]):
         return "indie"
     if angulo == "nostalgia" or detectar_angulo_nostalgia(item):
         return "nostalgia"
-    if angulo == "debate" or any(p in texto for p in ["precio", "suscripcion", "suscripci\u00f3n", "digital", "fisico", "f\u00edsico", "game pass", "ps plus", "microtransacciones"]):
+    if angulo == "debate" or any(p in texto for p in [
+        "precio", "suscripcion", "suscripci\u00f3n", "digital", "fisico", "f\u00edsico",
+        "game pass", "ps plus", "microtransacciones", "opinion", "hot take",
+        "unpopular opinion", "theory", "teoria", "teor\u00eda", "fan theory",
+        "rumor", "rumour", "leak", "conspiracy", "speculation", "controversy",
+        "debate", "thoughts", "community"
+    ]):
         return "debate"
     return "noticia_actual"
 
@@ -3420,7 +3465,7 @@ def monitor_angulo_para_marca(item, marca):
         if bucket == "nostalgia":
             return "Conectarlo con recuerdos de comunidad: juegos f\u00edsicos, controles prestados, tardes con panas y debate sano."
         if bucket == "debate":
-            return "Convertirlo en pregunta de comunidad con dos lados claros, sin imponer conclusi?n."
+            return "Convertirlo en pregunta de comunidad con dos lados claros, sin imponer conclusi\u00f3n."
         if bucket == "anime":
             return "Cruzar anime y gaming: hype, adaptaci\u00f3n, fandom y conversaci\u00f3n geek."
         return "Explicar qu\u00e9 pas\u00f3, por qu\u00e9 importa y cerrar con una pregunta para la tribu geek."
@@ -3930,7 +3975,7 @@ def crear_item_desde_pedido(pregunta, estilo):
     elif estilo == "debate":
         texto += " La idea es provocar comentarios sin sonar agresivo ni inventar datos."
     else:
-        texto += " La idea es explicarlo claro y convertirlo en un post ?til para redes."
+        texto += " La idea es explicarlo claro y convertirlo en un post \u00fatil para redes."
 
     contexto_local = buscar_contexto_local(titulo)
     if contexto_local:
@@ -5090,13 +5135,13 @@ def pedir_marca_para_post(pregunta):
         st.session_state.active_brand = "Gamer Cave"
         return "Lo hago para **Gamer Cave**."
     return (
-        "\u00bfPara cu?l marca lo hago\n\n"
+        "\u00bfPara cu\u00e1l marca lo hago?\n\n"
         "Puedes responder: **Gamer Cave** o **Daviet Gaming**."
     )
 
 
 def crear_lista_comandos():
-    return """### Comandos ?tiles
+    return """### Comandos \u00fatiles
 
 - **hazme un post para Daviet Gaming**
 - **hazme un post para Gamer Cave**
@@ -8038,6 +8083,130 @@ with st.sidebar:
 
     render_access_log_simple()
 
+RADAR_BUCKET_FALLBACKS = {
+    "noticia_actual": {
+        "title": "Tema gamer actual para vigilar",
+        "summary": "Oportunidad editorial para buscar una fuente oficial o confiable antes de convertirla en noticia.",
+        "source": "Radar editorial Gamer Signal",
+        "angle": "Usarlo solo cuando aparezca una fuente fuerte: qu\u00e9 pas\u00f3, por qu\u00e9 importa y pregunta final.",
+    },
+    "debate": {
+        "title": "Teor\u00eda geek para abrir debate",
+        "summary": "Tema de comunidad para presentar dos lados, aclarando que no es noticia confirmada.",
+        "source": "Se\u00f1al de comunidad / teor\u00eda fandom",
+        "angle": "Plantearlo como conversaci\u00f3n: qu\u00e9 piensa la comunidad, qu\u00e9 evidencia hay y qu\u00e9 dudas quedan.",
+    },
+    "nostalgia": {
+        "title": "Recuerdo gamer que puede mover comentarios",
+        "summary": "Tema nost\u00e1lgico para conectar con juegos f\u00edsicos, consolas viejas y experiencias de infancia.",
+        "source": "Memoria editorial Gamer Signal",
+        "angle": "Conectarlo con una escena concreta: cartuchos, discos, controles prestados o multiplayer local.",
+    },
+    "tecnologia": {
+        "title": "Tecnolog\u00eda gamer para explicar simple",
+        "summary": "Tema para bajar hardware, servicios o funciones a lenguaje claro para jugadores.",
+        "source": "Radar editorial Gamer Signal",
+        "angle": "Explicarlo desde el impacto real: rendimiento, precio, comodidad, acceso o experiencia.",
+    },
+    "anime": {
+        "title": "Anime/geek para conectar con fandom",
+        "summary": "Tema de anime, manga o casa productora para buscar confirmaci\u00f3n en fuentes oficiales/confiables.",
+        "source": "Radar anime / fuentes de estudios",
+        "angle": "Cruzar fandom, hype, adaptaci\u00f3n, estudio, staff o fecha sin inventar detalles.",
+    },
+    "indie": {
+        "title": "Indie para poner en el radar",
+        "summary": "Tema para descubrir juegos peque\u00f1os, demos o proyectos que puedan crecer por recomendaci\u00f3n.",
+        "source": "Radar editorial Gamer Signal",
+        "angle": "Presentarlo como descubrimiento: qu\u00e9 lo hace diferente y por qu\u00e9 vale mirarlo.",
+    },
+}
+
+
+def crear_item_radar_editorial(bucket):
+    data = RADAR_BUCKET_FALLBACKS.get(bucket, RADAR_BUCKET_FALLBACKS["noticia_actual"])
+    categoria = "gaming" if bucket == "noticia_actual" else bucket
+    return {
+        "id": f"radar-editorial-{bucket}",
+        "title": data["title"],
+        "summary": data["summary"],
+        "source": data["source"],
+        "date": str(ahora_en_puerto_rico().date()),
+        "link": "",
+        "content_angle": categoria,
+        "monitor_bucket": bucket,
+        "is_editorial": True,
+        "is_community_signal": bucket in ["debate", "nostalgia"],
+        "source_official": False,
+        "source_trusted": False,
+        "confidence_level": "editorial",
+        "verification_count": 0,
+        "verification_level": "idea editorial / no es noticia confirmada",
+        "angle": data["angle"],
+    }
+
+
+def titulo_crudo_sigue_en_ingles(texto):
+    texto = limpiar_para_ui(limpiar_texto_publicable_final(texto or ""))
+    bajo = f" {texto.lower()} "
+    patrones = [
+        " i was ", " i am ", " will ", " could ", " gets ", " getting ",
+        " joins ", " following ", " after ", " before ", " worth ", " checking ",
+        " weekend guide ", " release date ", " hands-on ", " unveils ",
+        " reveals ", " announced ", " update will ", " are set for ",
+    ]
+    return any(p in bajo for p in patrones)
+
+
+def titulo_radar_seguro(item, bucket):
+    item = item or {}
+    try:
+        titulo = titulo_visible_seguro(item, "news", bucket)
+    except Exception:
+        titulo = item.get("title", "")
+    titulo = limpiar_gramatica_post_final(limpiar_para_ui(titulo))
+    try:
+        pobre = titulo_generico_o_pobre(titulo)
+    except Exception:
+        pobre = len(titulo.strip()) < 10
+
+    if pobre or titulo_crudo_sigue_en_ingles(titulo) or parece_texto_ingles(titulo):
+        try:
+            convertido = titulo_publico_en_espanol(item.get("title", ""), bucket)
+            convertido = limpiar_gramatica_post_final(limpiar_para_ui(convertido))
+        except Exception:
+            convertido = ""
+        try:
+            convertido_pobre = titulo_generico_o_pobre(convertido)
+        except Exception:
+            convertido_pobre = len(convertido.strip()) < 10
+        if convertido and not convertido_pobre and not titulo_crudo_sigue_en_ingles(convertido) and not parece_texto_ingles(convertido):
+            titulo = convertido
+        else:
+            titulo = RADAR_BUCKET_FALLBACKS.get(bucket, RADAR_BUCKET_FALLBACKS["noticia_actual"])["title"]
+
+    return limpiar_gramatica_post_final(titulo)
+
+
+def contenido_radar_item(item, bucket, fallback_angle=None):
+    item = item or crear_item_radar_editorial(bucket)
+    titulo = html_escape(titulo_radar_seguro(item, bucket))
+    fuente = html_escape(limpiar_para_ui(item.get("source", "fuente")))
+    if item.get("is_editorial"):
+        color, verificacion = "Editorial", "idea para crear contenido; no es noticia confirmada"
+    else:
+        color, verificacion = estado_verificacion_item(item)
+    color = limpiar_para_ui(color)
+    verificacion = limpiar_para_ui(verificacion)
+    angulo = item.get("angle") or fallback_angle or angulo_para_bucket(bucket)
+    angulo = html_escape(limpiar_para_ui(limpiar_gramatica_post_final(angulo)))
+    return (
+        f'<div class="daily-radar-item"><strong>{titulo}</strong><br>{fuente}</div>'
+        f'<div class="daily-radar-angle">Verificaci\u00f3n: {html_escape(color)} - {html_escape(verificacion)}</div>'
+        f'<div class="daily-radar-angle">{angulo}</div>'
+    )
+
+
 def render_daily_radar_panel():
     left, center, right = st.columns([1, 1.6, 1])
     with center:
@@ -8090,17 +8259,8 @@ def render_daily_radar_panel():
         logo = html_escape(logo_data_url(marca), quote=True)
         if items:
             item = items[0]
-            titulo = html_escape(limpiar_para_ui(titulo_visible_seguro(item, "news")))
-            fuente = html_escape(limpiar_para_ui(item.get("source", "fuente")))
-            color, verificacion = estado_verificacion_item(item)
-            color = limpiar_para_ui(color)
-            verificacion = limpiar_para_ui(verificacion)
-            angulo = html_escape(limpiar_para_ui(item.get("angle", fallback)))
-            contenido = (
-                f'<div class="daily-radar-item"><strong>{titulo}</strong><br>{fuente}</div>'
-                f'<div class="daily-radar-angle">Verificaci\u00f3n: {html_escape(color)} - {html_escape(verificacion)}</div>'
-                f'<div class="daily-radar-angle">{angulo}</div>'
-            )
+            bucket = item.get("bucket") or item.get("monitor_bucket") or monitor_bucket_item(item)
+            contenido = contenido_radar_item(item, bucket, fallback)
         else:
             contenido = f'<div class="daily-radar-item">{html_escape(limpiar_para_ui(fallback))}</div>'
         brand_cards.append(
@@ -8118,18 +8278,9 @@ def render_daily_radar_panel():
         items = memoria.get("buckets", {}).get(bucket, [])[:1]
         if items:
             item = items[0]
-            titulo = html_escape(limpiar_para_ui(titulo_visible_seguro(item, "news", bucket)))
-            fuente = html_escape(limpiar_para_ui(item.get("source", "fuente")))
-            color, verificacion = estado_verificacion_item(item)
-            color = limpiar_para_ui(color)
-            verificacion = limpiar_para_ui(verificacion)
-            contenido = (
-                f'<div class="daily-radar-item"><strong>{titulo}</strong><br>{fuente}</div>'
-                f'<div class="daily-radar-angle">Verificaci\u00f3n: {html_escape(color)} - {html_escape(verificacion)}</div>'
-                f'<div class="daily-radar-angle">{html_escape(limpiar_para_ui(angulo_para_bucket(bucket)))}</div>'
-            )
+            contenido = contenido_radar_item(item, bucket)
         else:
-            contenido = '<div class="daily-radar-item">Buscando una oportunidad buena, no cualquier noticia.</div>'
+            contenido = contenido_radar_item(crear_item_radar_editorial(bucket), bucket)
         cards.append(
             f'<div class="daily-radar-card">'
             f'<div class="daily-radar-brand">{html_escape(label)}</div>'

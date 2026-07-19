@@ -31,7 +31,7 @@ def test_parallel_feeds_exist():
 
 
 def test_final_editorial_engine_is_last_layer():
-    assert 'APP_VERSION = "2026.07.19-2"' in SOURCE
+    assert 'APP_VERSION = "2026.07.19-3"' in SOURCE
     assert "from editorial_engine_final import install_editorial_engine" in SOURCE
     assert "install_editorial_engine(globals())" in SOURCE
     assert "Motor editorial final" in ENGINE_SOURCE
@@ -92,6 +92,21 @@ def test_final_layer_does_not_depend_on_specific_titles():
         assert phrase not in final_src.lower()
 
 
+def test_radar_sources_and_fallbacks_are_present():
+    assert "https://www.crunchyroll.com/news/rss" in SOURCE
+    assert "https://www.animenewsnetwork.com/all/rss.xml?ann-edition=us" in SOURCE
+    assert "Reddit FanTheories - teor" in SOURCE
+    assert "Reddit GamingLeaksAndRumours - rumores comunidad" in SOURCE
+    assert "Reddit VideojuegosMX - se" in SOURCE
+    assert "AnimeStudios" in SOURCE
+    assert "Toei Animation oficial" in SOURCE
+    assert "MAPPA oficial" in SOURCE
+    assert "RADAR_BUCKET_FALLBACKS" in SOURCE
+    assert "crear_item_radar_editorial" in SOURCE
+    assert "titulo_radar_seguro" in SOURCE
+    assert "Buscando una oportunidad buena, no cualquier noticia." not in SOURCE
+
+
 if __name__ == "__main__":
     test_parallel_feeds_exist()
     test_final_editorial_engine_is_last_layer()
@@ -100,4 +115,5 @@ if __name__ == "__main__":
     test_final_editorial_customs_exists()
     test_final_caption_blocks_old_filler_phrases()
     test_final_layer_does_not_depend_on_specific_titles()
+    test_radar_sources_and_fallbacks_are_present()
     print("static checks ok")
