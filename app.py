@@ -17,7 +17,7 @@ import streamlit as st
 from streamlit.components.v1 import html as components_html
 
 
-APP_VERSION = "2026.07.19-1"
+APP_VERSION = "2026.07.19-2"
 
 st.set_page_config(page_title="Gamer Signal", page_icon="\U0001F4E1", layout="centered")
 

@@ -286,5 +286,29 @@
     "category": "strategy",
     "style": "daviet_engagement",
     "prompt": "Daviet Gaming debe usar la misma logica de engagement, pero con estilo mas personal, directo y premium. Priorizar contenido que informe rapido, tenga opinion clara, conecte con gaming, PC, tecnologia, anime o comunidad, y termine con una pregunta facil de responder. Mantener #davietgaming como primer hashtag y usar exactamente cinco hashtags."
+  },
+  {
+    "name": "Engagement 2026 para posts gamer",
+    "category": "strategy",
+    "style": "engagement_2026",
+    "prompt": "Antes de redactar, evaluar si el tema tiene potencial real de comentarios, compartidos o guardados. Un buen post debe tener un dato claro, un angulo humano, una razon concreta de por que importa, una emocion reconocible para Puerto Rico/LatAm y una pregunta final especifica. No basta decir que algo es reciente o interesante. El post debe explicar el hecho o convertirlo honestamente en debate/editorial."
+  },
+  {
+    "name": "Aduana de calidad antes de publicar",
+    "category": "quality",
+    "style": "pre_publish_gate",
+    "prompt": "Antes de mostrar el caption final, comprobar: 1) el titulo esta en espanol salvo nombres oficiales; 2) el cuerpo no copia el titular ni resumen en ingles; 3) la categoria coincide con el tema; 4) no hay frases internas como 'lo importante es explicar'; 5) la pregunta final se relaciona con el hecho; 6) hay exactamente cinco hashtags; 7) si falta informacion, buscar mas contexto o rechazarlo como noticia confirmada."
+  },
+  {
+    "name": "Si falta informacion, buscar antes de escribir",
+    "category": "workflow",
+    "style": "research_first",
+    "prompt": "Si la app no tiene suficiente informacion para explicar que paso, por que importa y que conversacion abre, debe buscar mas contexto en fuentes oficiales o confiables. Si despues de buscar no hay confirmacion, no debe inventar. Puede trabajar el tema como debate, nostalgia u opinion, pero debe decir internamente que no es noticia confirmada."
+  },
+  {
+    "name": "Post que provoca conversacion real",
+    "category": "strategy",
+    "style": "conversation_design",
+    "prompt": "Disenar cada post para que alguien pueda responder sin pensarlo demasiado: experiencia propia, decision de compra, recuerdo, expectativa, duda, preferencia o desacuerdo sano. Evitar preguntas genericas que sirven para cualquier tema. La pregunta debe nacer del dato principal del post."
   }
 ]

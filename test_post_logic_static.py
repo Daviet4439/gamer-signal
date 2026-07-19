@@ -31,7 +31,7 @@ def test_parallel_feeds_exist():
 
 
 def test_final_editorial_engine_is_last_layer():
-    assert 'APP_VERSION = "2026.07.19-1"' in SOURCE
+    assert 'APP_VERSION = "2026.07.19-2"' in SOURCE
     assert "from editorial_engine_final import install_editorial_engine" in SOURCE
     assert "install_editorial_engine(globals())" in SOURCE
     assert "Motor editorial final" in ENGINE_SOURCE
@@ -54,6 +54,14 @@ def test_multi_post_uses_variety_and_real_category():
     assert "seleccionar_noticias_variadas" in src
     assert "PUBLICACIÓN" in src
     assert "categoria_de_publicacion" in src
+
+
+def test_final_editorial_customs_exists():
+    assert "Aduana editorial final" in ENGINE_SOURCE
+    assert "ENGLISH_BLOCKERS_FINAL" in ENGINE_SOURCE
+    assert "ACTION_PATTERNS_FINAL" in ENGINE_SOURCE
+    assert "creatividad_ia" in ENGINE_SOURCE
+    assert "enjoy our weekend guide" in ENGINE_SOURCE
 
 
 def test_final_caption_blocks_old_filler_phrases():
@@ -89,6 +97,7 @@ if __name__ == "__main__":
     test_final_editorial_engine_is_last_layer()
     test_no_dangerous_question_replacement_in_final_cleaner()
     test_multi_post_uses_variety_and_real_category()
+    test_final_editorial_customs_exists()
     test_final_caption_blocks_old_filler_phrases()
     test_final_layer_does_not_depend_on_specific_titles()
     print("static checks ok")

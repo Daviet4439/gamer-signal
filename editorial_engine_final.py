@@ -1259,6 +1259,541 @@ def install_editorial_engine(g):
             respuesta += f"- Para usarla: **post de la noticia {numero}**\n\n"
         return limpiar_gramatica_post_final(respuesta)
 
+    # ------------------------------------------------------------------
+    # Aduana editorial final
+    # ------------------------------------------------------------------
+    # Estas funciones reemplazan las versiones anteriores antes de exportar
+    # el motor. La meta es que ningun caption final salga con titulares
+    # crudos en ingles, frases de relleno, categoria desconectada o hashtags
+    # que no tengan relacion con el tema.
+
+    ENGLISH_BLOCKERS_FINAL = [
+        "release date", "available today", "coming soon", "coming to",
+        "getting an anime", "gets tv anime", "anime adaptation",
+        "new trailer", "teaser trailer", "new visual", "public betas",
+        "mass layoffs", "foreign-worker", "weekly shonen jump",
+        "patron vote", "drown you in", "unveils", "could come sooner",
+        "joins the", "turns tough", "physical gaming", "hands-on",
+        "deep dive", "concludes serialization", "ends serialization",
+        "gameplay mechanic", "changes rewards", "new information",
+        "a conversation about", "changing retail strategies",
+        "enjoy our weekend guide", "worth checking out", "human-crafted",
+        "ai slop", "are set for more layoffs", "after launching",
+        "indie games worth", "worth watching", "worth checking",
+        "will ", " could ", " is ", " are ", " with ", " after ",
+        " following ", " before ", " only two months ",
+    ]
+
+    SPANISH_MARKERS_FINAL = {
+        "que", "para", "con", "como", "cuando", "porque", "esto", "esta",
+        "este", "juego", "jugadores", "comunidad", "noticia", "tema",
+        "puede", "vale", "mirar", "abre", "conecta", "fandom", "anime",
+        "manga", "tecnologia", "tecnología", "nostalgia", "debate",
+    }
+
+    ACTION_PATTERNS_FINAL = [
+        ("preservacion", r"\b(preservation|preservacion|preservación|classic|cl[aá]sico|collection|remaster|remake)\b"),
+        ("industria", r"\b(layoff|layoffs|despidos|workers|fired|studio closes|acquisition|adquisici[oó]n|industria|union|sindicato)\b"),
+        ("creatividad_ia", r"\b(ai slop|human[- ]crafted|inteligencia artificial|artificial intelligence|creatividad humana|ia generativa)\b"),
+        ("fisico_digital", r"\b(physical|digital|f[ií]sico|f[ií]sicos|cartucho|disco|manual|ownership|propiedad)\b"),
+        ("cierre", r"\b(concludes|ends|final chapter|termina|finaliza|cierra|serialization|serializaci[oó]n)\b"),
+        ("adaptacion", r"\b(getting an anime|gets tv anime|anime adaptation|adaptaci[oó]n al anime|tendr[aá] anime)\b"),
+        ("avance", r"\b(trailer|teaser|new visual|visual|gameplay|hands[- ]on|preview|avance|tr[aá]iler)\b"),
+        ("actualizacion", r"\b(update|patch|version|versi[oó]n|temporada|season|actualizaci[oó]n|new details|nuevos detalles)\b"),
+        ("preventa", r"\b(pre[- ]?order|preventa|reserva)\b"),
+        ("lanzamiento", r"\b(release date|launch|launches|coming soon|coming in|llega|lanzamiento|estreno)\b"),
+        ("senal", r"\b(could come|news could|sooner than|may get|might get|podr[ií]a|rumor|leak|se[ñn]al)\b"),
+        ("tecnologia", r"\b(gpu|rtx|nvidia|amd|intel|hardware|ios|macos|apple|ram|cloud|unreal engine|godot|unity|engine)\b"),
+        ("mecanica", r"\b(turns tough|bosses|powerful friends|mechanic|mec[aá]nica|builds|system)\b"),
+    ]
+
+    def _spanish_hits(texto):
+        tokens = re.findall(r"[a-záéíóúñ]+", limpiar_texto_publicable_final(texto).lower())
+        return sum(1 for token in tokens if token in SPANISH_MARKERS_FINAL)
+
+    def parece_texto_ingles(texto):
+        limpio = limpiar_texto_publicable_final(texto)
+        bajo = f" {limpio.lower()} "
+        if not bajo.strip():
+            return False
+        if any(frase in bajo for frase in ENGLISH_BLOCKERS_FINAL):
+            return True
+        tokens = re.findall(r"[a-z][a-z'-]+", bajo)
+        if not tokens:
+            return False
+        english_hits = sum(1 for token in tokens if token in ENGLISH_WORDS)
+        spanish_hits = _spanish_hits(limpio)
+        if len(tokens) >= 7 and english_hits >= 3 and spanish_hits <= 1:
+            return True
+        if english_hits >= 5 and english_hits > spanish_hits:
+            return True
+        return "'s" in bajo and english_hits >= 2 and spanish_hits == 0
+
+    def detectar_accion_titulo(titulo, resumen=""):
+        texto = limpiar_texto_publicable_final(f"{titulo} {resumen}").lower()
+        for accion, patron in ACTION_PATTERNS_FINAL:
+            if re.search(patron, texto, flags=re.IGNORECASE):
+                return accion
+        return "noticia"
+
+    def extraer_tema_para_titulo(titulo):
+        limpio = limpiar_texto_publicable_final(titulo)
+        if not limpio:
+            return "Tema gamer"
+        for patron in [
+            r"(?:manga|anime|web manga)\s+'([^']{2,90})'",
+            r'(?:manga|anime|web manga)\s+"([^"]{2,90})"',
+            r"'([^']{2,90})'",
+            r'"([^"]{2,90})"',
+        ]:
+            match = re.search(patron, limpio, flags=re.IGNORECASE)
+            if match:
+                return _limpiar_tema_titulo(match.group(1))
+        match = re.search(
+            r",\s*([A-Z0-9][A-Za-z0-9:'’&.\- ]{2,70})\s+"
+            r"(embraces|gets|will|could|is|are|launches|unveils|reveals|joins)\b",
+            limpio,
+            flags=re.IGNORECASE,
+        )
+        if match:
+            return _limpiar_tema_titulo(match.group(1))
+        bajo = limpio.lower()
+        separadores = [
+            " release date", " is getting", " gets tv anime", " gets ",
+            " will get", " could get", " could come", " news could",
+            " update ", " patch ", " joins ", " turns ", " becomes ",
+            " concludes ", " ends ", " unveils ", " reveals ", " revealed ",
+            " announces ", " announced ", " launches ", " launch ",
+            " coming ", " drops ", " increases ", " refutes ", " responds ",
+            " available ", " hands-on", " hands on", " deep dive", " report",
+            " details", " builds ", " goes ", " adds ", " opens ",
+            " embraces ", " are set ", " is set ",
+        ]
+        for sep in separadores:
+            idx = bajo.find(sep)
+            if idx > 1:
+                return _limpiar_tema_titulo(limpio[:idx])
+        if ": " in limpio:
+            first, second = limpio.split(": ", 1)
+            if first.lower() in ["pre-order", "preorder", "review", "preview", "xbox", "playstation", "nintendo"]:
+                return _limpiar_tema_titulo(second[:80])
+            if len(first) <= 45:
+                return _limpiar_tema_titulo(first)
+        for sep in [" - ", " | "]:
+            if sep in limpio:
+                parte = limpio.split(sep, 1)[0]
+                if 2 <= len(parte.strip()) <= 90:
+                    return _limpiar_tema_titulo(parte)
+        return _limpiar_tema_titulo(limpio[:85])
+
+    def _tema_necesita_generico(tema):
+        if not tema:
+            return True
+        bajo = tema.lower()
+        genericos = {"tema gamer", "novedad gamer", "xbox", "playstation", "nintendo", "gaming"}
+        return bajo in genericos or (parece_texto_ingles(tema) and len(tema.split()) > 8)
+
+    def formatear_titulo_es(titulo):
+        titulo = limpiar_texto_publicable_final(titulo)
+        palabras_cortas = {
+            "a", "al", "ante", "con", "contra", "de", "del", "desde",
+            "en", "entre", "hacia", "la", "las", "lo", "los", "o",
+            "para", "por", "que", "se", "sin", "sobre", "un", "una",
+            "sí", "y",
+        }
+        partes = []
+        for i, palabra in enumerate(titulo.split()):
+            limpia = palabra.strip()
+            if not limpia:
+                continue
+            if re.search(r"[A-Z]{2,}|[0-9]|[#/]", limpia):
+                partes.append(limpia)
+                continue
+            bajo = limpia.lower()
+            if i > 0 and bajo in palabras_cortas:
+                partes.append(bajo)
+            elif limpia.isupper() or limpia.istitle():
+                partes.append(bajo[:1].upper() + bajo[1:])
+            else:
+                partes.append(limpia)
+        resultado = " ".join(partes).strip()
+        ajustes = {
+            "Tecnología que sí Cambia la Experiencia Gamer": "Tecnología que sí cambia la experiencia gamer",
+            "Novedad Gamer": "Novedad gamer",
+            "Tema Gamer": "Tema gamer",
+        }
+        return ajustes.get(resultado, resultado)
+
+    def titulo_publico_en_espanol(titulo, estilo="news"):
+        original = limpiar_texto_publicable_final(titulo)
+        if not original:
+            return "Tema gamer para comentar"
+        categoria = _categoria_final_item({"title": original, "summary": ""}, estilo)
+        accion = detectar_accion_titulo(original)
+        tema = extraer_tema_para_titulo(original)
+        if _tema_necesita_generico(tema):
+            tema = {
+                "anime": "Tema anime",
+                "tecnologia": "Tecnología gamer",
+                "indie": "Juego indie",
+                "debate": "Tema de industria",
+                "nostalgia": "Tema retro",
+            }.get(categoria, "Novedad gamer")
+        if not parece_texto_ingles(original) and accion == "noticia" and len(original) <= 82:
+            return formatear_titulo_es(call("normalizar_titulo_gamer", lambda x: x)(original))
+        plantillas = {
+            "preservacion": "{tema} vuelve al radar por preservación y nostalgia",
+            "industria": "{tema} abre conversación sobre la industria",
+            "creatividad_ia": "{tema} abre debate sobre creatividad e IA",
+            "fisico_digital": "Juegos físicos vs digitales vuelve al debate",
+            "cierre": "{tema} termina una etapa importante",
+            "adaptacion": "{tema} tendrá adaptación al anime",
+            "avance": "{tema} muestra nuevo material",
+            "actualizacion": "{tema} recibe una actualización para comentar",
+            "preventa": "{tema} abre etapa de preventa",
+            "lanzamiento": "{tema} pone su lanzamiento en el radar",
+            "senal": "{tema}: posible novedad para seguir de cerca",
+            "tecnologia": "{tema}: tecnología gamer bajo la lupa",
+            "mecanica": "{tema} presenta una mecánica para comentar",
+            "noticia": "{tema}: noticia gamer para comentar",
+        }
+        salida = plantillas.get(accion, plantillas["noticia"]).format(tema=tema)
+        if categoria == "anime" and accion == "noticia":
+            salida = f"{tema}: tema anime para comentar"
+        elif categoria == "tecnologia" and accion == "noticia":
+            salida = f"{tema}: tecnología gamer bajo la lupa"
+        elif categoria == "indie" and accion == "noticia":
+            salida = f"{tema}: indie para poner en el radar"
+        elif categoria == "nostalgia" and accion == "noticia":
+            salida = f"{tema}: nostalgia gamer para comentar"
+        elif categoria == "debate" and accion == "noticia":
+            salida = f"{tema}: tema para debatir"
+        return formatear_titulo_es(salida)
+
+    def titulo_visible_seguro(item, estilo="news", bucket=None):
+        return titulo_publico_en_espanol((item or {}).get("title", ""), bucket or estilo)
+
+    def _resumen_fuente_util(resumen, titulo_es=""):
+        resumen = limpiar_texto_publicable_final(resumen)
+        if not resumen or resumen.lower().startswith("tema editorial"):
+            return ""
+        bajo = f" {resumen.lower()} "
+        tiene_espanol_claro = (
+            bool(re.search(r"[áéíóúñ¿¡]", resumen.lower()))
+            or any(frase in bajo for frase in [" que ", " para ", " porque ", " puede ", " comunidad ", " jugadores ", " conversación "])
+        )
+        if len(resumen) < 70 or parece_texto_ingles(resumen) or _spanish_hits(resumen) < 3 or not tiene_espanol_claro:
+            return ""
+        bajo = resumen.lower()
+        if any(frase in bajo for frase in FILLER_PHRASES) or linea_no_publicable(resumen):
+            return ""
+        if titulo_es and bajo.startswith(titulo_es.lower()):
+            return ""
+        return call("recortar_texto", lambda t, n: str(t)[:n])(resumen, 260)
+
+    def resumen_publico_en_espanol(titulo, resumen, estilo="news"):
+        tema = formatear_titulo_es(extraer_tema_para_titulo(titulo))
+        accion = detectar_accion_titulo(titulo, resumen)
+        categoria = _estilo_a_categoria_seguro(estilo)
+        if categoria not in ["gaming", "tecnologia", "anime", "indie", "debate", "nostalgia"]:
+            categoria = _categoria_final_item({"title": titulo, "summary": resumen}, estilo)
+        fuente_util = _resumen_fuente_util(resumen, titulo_publico_en_espanol(titulo, estilo))
+        if fuente_util:
+            return fuente_util
+        if accion == "preservacion":
+            return f"{tema} sirve para hablar de algo que muchos gamers valoran: conservar juegos, volver a clásicos y no perder parte de la historia del medio."
+        if accion == "industria":
+            return f"{tema} toca el lado menos cómodo de la industria: decisiones que pueden afectar estudios, trabajadores, proyectos y la confianza de la comunidad."
+        if accion == "creatividad_ia":
+            return f"{tema} abre una conversación bien actual: cuánto espacio debe tener la creatividad humana cuando la industria usa cada vez más herramientas de IA."
+        if accion == "fisico_digital":
+            return "El debate entre juegos físicos y digitales sigue vivo porque mezcla comodidad, propiedad, nostalgia y la forma en que cada gamer guarda sus recuerdos."
+        if accion == "cierre":
+            return f"{tema} llega a un cierre importante para su comunidad. Cuando una historia termina, también empieza la conversación sobre legado y qué viene después."
+        if accion == "adaptacion":
+            return f"{tema} tendrá una adaptación al anime, y eso siempre prende conversación entre fans: expectativas, fidelidad al material original y miedo a que no le hagan justicia."
+        if accion == "avance":
+            return f"El nuevo material de {tema} sirve para medir expectativa: tono, visuales, jugabilidad y si realmente convence a la comunidad."
+        if accion == "actualizacion":
+            return f"{tema} recibe cambios o novedades que vale mirar con calma para saber si mejoran la experiencia o si se sienten como más de lo mismo."
+        if accion == "preventa":
+            return f"{tema} ya está entrando en etapa de preventa, un momento donde muchos jugadores empiezan a decidir si se apuntan desde temprano o esperan más información."
+        if accion == "lanzamiento":
+            return f"{tema} vuelve al radar por su lanzamiento. La conversación está en si trae algo fuerte para la comunidad o si conviene esperar más detalles."
+        if accion == "senal":
+            return f"Alrededor de {tema} hay señales que pueden emocionar, pero conviene hablarlo con cuidado hasta que exista confirmación clara."
+        if accion == "tecnologia" or categoria == "tecnologia":
+            return f"{tema} vale mirarlo desde el lado gamer: rendimiento, acceso, precio, compatibilidad o experiencia real."
+        if accion == "mecanica":
+            return f"{tema} presenta una mecánica que puede cambiar la forma de jugar, el reto o la manera en que la comunidad discute estrategias."
+        if categoria == "anime":
+            return f"{tema} cruza anime y cultura geek con una pregunta simple: si realmente hay emoción, dudas o curiosidad dentro del fandom."
+        if categoria == "indie":
+            return f"{tema} puede entrar en el radar si tiene una propuesta clara, una mecánica distinta o algo que la comunidad quiera recomendar de boca en boca."
+        if categoria == "nostalgia":
+            return f"{tema} conecta con recuerdos, clásicos y esa parte de la comunidad que todavía valora otras generaciones."
+        if categoria == "debate":
+            return f"{tema} tiene más de un lado para mirar, por eso funciona mejor cuando se presenta sin pelea de plataformas."
+        return f"{tema} llega como una novedad para mirar con calma y comentar qué puede significar para la comunidad gamer."
+
+    def detalle_contextual_para_post(titulo, texto_base, estilo="news"):
+        accion = detectar_accion_titulo(titulo, texto_base)
+        categoria = _estilo_a_categoria_seguro(estilo)
+        if categoria not in ["gaming", "tecnologia", "anime", "indie", "debate", "nostalgia"]:
+            categoria = _categoria_final_item({"title": titulo, "summary": texto_base}, estilo)
+        if accion == "preservacion":
+            return "La preservación importa porque muchos juegos pierden acceso con el tiempo, aunque sigan siendo parte de la memoria gamer."
+        if accion == "industria":
+            return "Este tipo de tema conviene hablarlo con calma, mirando el impacto real sin convertirlo en guerra de marcas."
+        if accion == "creatividad_ia":
+            return "La conversación se pone interesante cuando no se trata de atacar la tecnología, sino de preguntar qué queremos proteger de la creatividad humana."
+        if accion == "adaptacion":
+            return "Aquí la comunidad suele dividirse entre emoción, cautela y ese miedo natural a que una adaptación cambie demasiado lo que hizo especial al original."
+        if accion == "actualizacion":
+            return "La pregunta real es si esto cambia la experiencia o si se siente como más de lo mismo."
+        if accion == "avance":
+            return "Cuando sale nuevo material, la comunidad mira detalles pequeños: jugabilidad, fecha, tono y si la expectativa se sostiene."
+        if accion == "mecanica":
+            return "Cuando una mecánica cambia cómo enfrentamos un juego, la conversación se va rápido a si mejora el reto o rompe la experiencia."
+        if accion == "senal":
+            return "Aquí lo mejor es mantener los pies en la tierra: comentar la posibilidad sin venderla como hecho cerrado."
+        if categoria == "tecnologia":
+            return "Lo mejor es bajarlo a tierra: cómo afecta jugar, crear contenido, comprar hardware o usar servicios."
+        if categoria == "indie":
+            return "Los indies crecen mucho por recomendación de comunidad: cuando una idea se siente diferente, la gente la pasa de boca en boca."
+        if categoria == "anime":
+            return "Anime y gaming se cruzan cuando hay emoción, adaptaciones, fandoms comparando expectativas o teorías."
+        if categoria == "nostalgia":
+            return "La nostalgia pega más cuando se siente concreta: una consola, un control, un cartucho, un disco o una tarde jugando con panas."
+        if categoria == "debate":
+            return "La conversación funciona mejor cuando presenta dos lados claros y deja que la comunidad cuente su experiencia."
+        return "El valor está en conectar el dato con una pregunta que la comunidad realmente quiera contestar."
+
+    def pregunta_engagement(titulo, estilo="news"):
+        accion = detectar_accion_titulo(titulo)
+        categoria = _categoria_final_item({"title": titulo, "summary": ""}, estilo)
+        if accion == "preservacion":
+            return "👇 ¿Qué clásico te gustaría ver mejor preservado?"
+        if accion == "industria":
+            return "👇 ¿Cómo ves este tipo de decisiones en la industria?"
+        if accion == "creatividad_ia":
+            return "👇 ¿Prefieres contenido hecho por personas aunque tarde más, o te da igual si usa IA?"
+        if accion == "fisico_digital":
+            return "👇 ¿Tú prefieres juegos físicos o digitales?"
+        if accion == "adaptacion":
+            return "👇 ¿Esta adaptación te da hype o prefieres esperar más información?"
+        if accion == "actualizacion":
+            return "👇 ¿Esto te anima a volver o lo dejarías pasar?"
+        if accion == "avance":
+            return "👇 ¿Este avance te subió la emoción o necesitas ver más?"
+        if accion in ["lanzamiento", "preventa"]:
+            return "👇 ¿Lo pondrías en tu lista o esperarías más detalles?"
+        if categoria == "tecnologia":
+            return "👇 ¿Esto te parece útil para gamers o todavía necesitas ver más?"
+        if categoria == "anime":
+            return "👇 ¿Este tema te emociona o prefieres esperar más información?"
+        if categoria == "indie":
+            return "👇 ¿Lo pondrías en tu radar o esperas ver más gameplay primero?"
+        if categoria == "nostalgia":
+            return "👇 ¿Qué recuerdo gamer te vino a la mente?"
+        if categoria == "debate":
+            return "👇 ¿Tú cómo lo ves: buena movida o mala decisión?"
+        return "👇 ¿Esto te interesa o lo dejarías pasar?"
+
+    def limpiar_gramatica_post_final(texto):
+        texto = limpiar_texto_publicable_final(texto)
+        reemplazos = {
+            "PUBLICACIÃ“N": "PUBLICACIÓN",
+            "PUBLICACIÃ³N": "PUBLICACIÓN",
+            "TECNOLOGÃA": "TECNOLOGÍA",
+            "TecnologÃ­a": "Tecnología",
+            "tecnologÃ­a": "tecnología",
+            "PregÃºntame": "Pregúntame",
+            "aÃ±o": "año",
+            "seÃ±al": "señal",
+            "fÃ­sico": "físico",
+            "fÃ­sicos": "físicos",
+            "clÃ¡sico": "clásico",
+            "clÃ¡sicos": "clásicos",
+            "conversaciÃ³n": "conversación",
+            "informaciÃ³n": "información",
+            "adaptaciÃ³n": "adaptación",
+            "opiniÃ³n": "opinión",
+            "mÃ¡s": "más",
+            "estÃ¡": "está",
+            "estÃ¡n": "están",
+            "todavÃ­a": "todavía",
+            "tÃº": "tú",
+            "quÃ©": "qué",
+            "cÃ³mo": "cómo",
+            "Â¿": "¿",
+            "ðŸŽ®": "🎮",
+            "ðŸ‘‡": "👇",
+        }
+        for malo, bueno in reemplazos.items():
+            texto = texto.replace(malo, bueno)
+        texto = re.sub(r"\b(PUBLICACIÓN\s+\d+\s+-\s+)TECNOLOGíA\b", r"\1TECNOLOGÍA", texto)
+        texto = re.sub(r"[ \t]{2,}", " ", texto)
+        texto = re.sub(r"\n{3,}", "\n\n", texto)
+        lineas = []
+        for linea in texto.splitlines():
+            limpia = linea.rstrip()
+            if limpia.startswith("?"):
+                limpia = "¿" + limpia[1:]
+            if limpia.startswith("¿") and not limpia.endswith("?"):
+                limpia += "?"
+            lineas.append(limpia)
+        return "\n".join(lineas).strip()
+
+    def linea_no_publicable(linea):
+        texto = limpiar_texto_publicable_final(linea).strip().lower()
+        if not texto:
+            return False
+        prefijos = [
+            "fuente:", "fuentes:", "link:", "fecha:", "confianza:", "id para feedback:",
+            "referencia interna", "referencia usada", "sugerencia visual:", "prompt:",
+            "acción:", "accion:", "verificación:", "verificacion:", "nota interna:",
+            "ángulo recomendado:", "angulo recomendado:", "para usarla:",
+        ]
+        return any(texto.startswith(prefijo) for prefijo in prefijos) or any(
+            frase in texto for frase in FILLER_PHRASES
+        )
+
+    def limpiar_lineas_para_caption(texto):
+        lineas = []
+        for linea in limpiar_texto_publicable_final(texto).splitlines():
+            if re.search(r"https?://|www\.", linea, flags=re.IGNORECASE):
+                continue
+            linea = quitar_prefijos_editoriales(linea).strip()
+            if linea_no_publicable(linea):
+                continue
+            if parece_texto_ingles(linea) and _spanish_hits(linea) < 2:
+                continue
+            lineas.append(linea)
+        return re.sub(r"\n{3,}", "\n\n", "\n".join(lineas)).strip()
+
+    def caption_necesita_regenerarse(texto, item=None, estilo="news"):
+        item = item or {}
+        texto_limpio = limpiar_texto_publicable_final(texto)
+        bajo = texto_limpio.lower()
+        if any(frase in bajo for frase in FILLER_PHRASES):
+            return True
+        cuerpo = "\n".join(linea for linea in texto_limpio.splitlines() if not linea.strip().startswith("#"))
+        if parece_texto_ingles(cuerpo):
+            return True
+        categoria = _categoria_final_item(item, estilo)
+        accion = detectar_accion_titulo(item.get("title", ""), item.get("summary", ""))
+        if categoria != "indie" and any(p in bajo for p in ["juegos independientes", "demos que pueden crecer"]):
+            return True
+        if categoria not in ["nostalgia", "debate"] and any(p in bajo for p in ["juegos físicos", "manual", "prestarlo", "cartucho"]):
+            return True
+        if categoria != "tecnologia" and any(p in bajo for p in ["ruido técnico", "cambio útil"]):
+            return True
+        if accion != "fisico_digital" and "juegos físicos vs digitales" in bajo and "fisico" not in _event_text(item).lower():
+            return True
+        return False
+
+    def crear_hashtags(texto, limite=None):
+        limite = 5 if limite is None else min(5, max(1, int(limite)))
+        texto_limpio = limpiar_texto_publicable_final(texto).lower()
+        brand = call("get_brand_voice")().get("brand", st.session_state.get("active_brand", "Gamer Cave"))
+        tags = ["#davietgaming" if brand == "Daviet Gaming" else "#elgamercave"]
+
+        def add(*nuevos):
+            for tag in nuevos:
+                if tag not in tags and len(tags) < limite:
+                    tags.append(tag)
+
+        if any(k in texto_limpio for k in ["anime", "manga", "crunchyroll", "shonen", "otaku"]):
+            add("#anime", "#manga")
+        if any(k in texto_limpio for k in ["nintendo", "switch", "mario", "zelda", "kirby", "pokemon", "pokémon"]):
+            add("#nintendo", "#nintendoswitch")
+        if any(k in texto_limpio for k in ["playstation", "ps5", "ps plus"]):
+            add("#playstation", "#ps5")
+        if any(k in texto_limpio for k in ["xbox", "game pass"]):
+            add("#xbox", "#xboxseriesx")
+        if any(k in texto_limpio for k in ["pc", "steam", "gog", "gpu", "nvidia", "amd", "intel", "hardware", "tecnología", "tecnologia", "unreal engine", "godot", "unity"]):
+            add("#pcgaming", "#gamingtech")
+        if any(k in texto_limpio for k in ["indie", "independent", "independiente", "next fest"]):
+            add("#indiegames", "#indiegaming")
+        if any(k in texto_limpio for k in ["retro", "nostalgia", "classic", "clásico", "remake", "remaster", "gamecube", "game boy", "preservation", "preservación"]):
+            add("#nostalgia", "#retrogaming")
+        for clave, tag in [
+            ("diablo", "#diablo"),
+            ("kingdom hearts", "#kingdomhearts"),
+            ("call of duty", "#callofduty"),
+            ("pokemon", "#pokemon"),
+            ("pokémon", "#pokemon"),
+            ("castlevania", "#castlevania"),
+        ]:
+            if clave in texto_limpio:
+                add(tag)
+        add("#gaming", "#videojuegos", "#gamers", "#geekculture")
+        return " ".join(tags[:limite])
+
+    def crear_post_limpio(titulo, resumen, estilo, nostalgia="", hashtags=""):
+        titulo_es = titulo_publico_en_espanol(titulo, estilo)
+        resumen_es = resumen_publico_en_espanol(titulo, resumen, estilo)
+        detalle = detalle_contextual_para_post(titulo, resumen or resumen_es, estilo)
+        pregunta = pregunta_engagement(titulo, estilo)
+        hashtags = crear_hashtags(f"{titulo} {resumen}", 5)
+        partes = [f"🎮 {titulo_es}", resumen_es]
+        if detalle and detalle.lower() not in " ".join(partes).lower():
+            partes.append(detalle)
+        if nostalgia and _estilo_a_categoria_seguro(estilo) in ["nostalgia", "debate"]:
+            nostalgia = limpiar_texto_publicable_final(nostalgia)
+            if nostalgia and not parece_texto_ingles(nostalgia) and nostalgia.lower() not in " ".join(partes).lower():
+                partes.append(nostalgia)
+        partes.extend([pregunta, hashtags])
+        return limpiar_gramatica_post_final(limpiar_lineas_para_caption("\n\n".join(partes)))
+
+    def aplicar_reglas_editoriales_fuertes(post, item=None, estilo="news"):
+        item = item or {}
+        titulo = limpiar_texto_publicable_final(item.get("title", "Tema gamer"))
+        resumen = limpiar_texto_publicable_final(item.get("summary", ""))
+        texto = limpiar_lineas_para_caption(post)
+        if caption_necesita_regenerarse(texto, item, estilo):
+            texto = crear_post_limpio(titulo, resumen, estilo, item.get("nostalgia_angle", ""), crear_hashtags(f"{titulo} {resumen}", 5))
+        texto = limpiar_lineas_para_caption(texto)
+        texto = asegurar_hashtags_editoriales(texto, titulo, resumen)
+        texto = asegurar_pregunta_final(texto, titulo, estilo)
+        texto = limpiar_gramatica_post_final(texto)
+        if caption_necesita_regenerarse(texto, item, estilo):
+            texto = crear_post_limpio(titulo, "", estilo, "", "")
+        return limpiar_gramatica_post_final(texto)
+
+    def generate_social_post(item, estilo=None):
+        item = dict(item or {})
+        fact_sheet = crear_fact_sheet(item)
+        clasificacion = clasificar_evento(item)
+        categoria = _categoria_final_item(item)
+        estilo = estilo or st.session_state.get("post_style", "all")
+        if estilo == "all":
+            estilo = seleccionar_angulo_editorial(item)
+        estilo = call("estilo_seguro_para_item", lambda _item, _estilo: _estilo)(item, estilo)
+        if estilo == "noticia":
+            estilo = "news"
+        titulo = fact_sheet["event"]["title"]
+        resumen = fact_sheet["event"]["summary"]
+        item.update({
+            "id": fact_sheet["event"]["id"],
+            "title": titulo,
+            "summary": resumen,
+            "content_angle": categoria,
+            "editorial_format": estilo,
+            "fact_sheet": fact_sheet,
+            "classification": clasificacion,
+            "score_result": calcular_score_multidimensional(item),
+            "nostalgia_angle": call("detectar_angulo_nostalgia", lambda _item: "")(item),
+        })
+        st.session_state.generated_items[item["id"]] = dict(item)
+        st.session_state.last_item_id = item["id"]
+        post = crear_post_limpio(titulo, resumen, estilo, item.get("nostalgia_angle", ""), crear_hashtags(f"{titulo} {resumen}", 5))
+        post = aplicar_reglas_editoriales_fuertes(post, item, estilo)
+        st.session_state.last_post_text = post
+        st.session_state.last_post_title = titulo_publico_en_espanol(titulo, estilo)
+        return post
+
     replacements = {
         "reparar_texto_roto": reparar_texto_roto,
         "limpiar_texto_publicable_final": limpiar_texto_publicable_final,

@@ -67,6 +67,42 @@ SAMPLES = [
         "date": "2026-07-17",
         "source_official": True,
     },
+    {
+        "id": "real_tama",
+        "title": "Web Manga 'Real mo Tama ni wa Uso wo Tsuku' Gets TV Anime in 2027",
+        "summary": "A new anime adaptation was announced with early production details.",
+        "source": "Anime Corner confiable",
+        "date": "2026-07-17",
+        "source_trusted": True,
+        "verification_count": 2,
+    },
+    {
+        "id": "utopias",
+        "title": "Utopias: indie games worth watching",
+        "summary": "Enjoy our weekend guide to the best indie games worth checking out.",
+        "source": "PC Gamer confiable",
+        "date": "2026-07-17",
+        "source_trusted": True,
+        "verification_count": 2,
+    },
+    {
+        "id": "ai_slop",
+        "title": "In An Era Of AI Slop, Meccha Chameleon Embraces Human-Crafted Chaos",
+        "summary": "The game highlights human-crafted creative work during a wider AI conversation.",
+        "source": "GameSpot confiable",
+        "date": "2026-07-17",
+        "source_trusted": True,
+        "verification_count": 2,
+    },
+    {
+        "id": "zaum",
+        "title": "ZA/UM are set for more layoffs only two months after launching Zero Parades: For Dead Spies",
+        "summary": "Studio job cuts are being discussed after a recent project launch.",
+        "source": "VGC confiable",
+        "date": "2026-07-17",
+        "source_trusted": True,
+        "verification_count": 2,
+    },
 ]
 
 
@@ -117,6 +153,14 @@ def assert_clean_caption(texto):
         "puede servir para descubrir algo fuera",
         "el feed no trae suficiente detalle",
         "xbox: novedad para la comunidad gamer",
+        "enjoy our weekend guide",
+        "worth checking out",
+        "are set for more layoffs",
+        "human-crafted chaos",
+        "gets tv anime",
+        "could come sooner than you think",
+        "indie games worth watching",
+        "in an era of ai slop",
     ]
     for frase in prohibidas:
         assert frase not in bajo, frase
@@ -165,8 +209,39 @@ def test_multi_post_variety_filters_placeholders():
     assert_clean_caption(respuesta)
 
 
+def test_screenshot_regressions_are_blocked():
+    env = make_env()
+    install_editorial_engine(env)
+
+    thief = env["generate_social_post"](SAMPLES[4], "nostalgia")
+    assert_clean_caption(thief)
+    assert "actualización" not in thief.lower()
+    assert "#nintendo" not in thief.lower()
+    assert "#playstation" not in thief.lower()
+
+    anime = env["generate_social_post"](SAMPLES[5], "anime")
+    assert_clean_caption(anime)
+    assert "Gets TV Anime" not in anime
+    assert "tendrá adaptación al anime" in anime
+
+    indie = env["generate_social_post"](SAMPLES[6], "indie")
+    assert_clean_caption(indie)
+    assert "Enjoy our weekend" not in indie
+
+    ai_post = env["generate_social_post"](SAMPLES[7], "debate")
+    assert_clean_caption(ai_post)
+    assert "Human-Crafted Chaos" not in ai_post
+    assert "creatividad" in ai_post.lower()
+
+    industry_post = env["generate_social_post"](SAMPLES[8], "debate")
+    assert_clean_caption(industry_post)
+    assert "are set for more layoffs" not in industry_post.lower()
+    assert "industria" in industry_post.lower()
+
+
 if __name__ == "__main__":
     test_titles_are_spanish_and_contextual()
     test_posts_are_clean_and_brand_specific()
     test_multi_post_variety_filters_placeholders()
+    test_screenshot_regressions_are_blocked()
     print("dynamic editorial checks ok")
