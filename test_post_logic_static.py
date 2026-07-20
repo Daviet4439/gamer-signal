@@ -31,7 +31,7 @@ def test_parallel_feeds_exist():
 
 
 def test_final_editorial_engine_is_last_layer():
-    assert 'APP_VERSION = "2026.07.19-3"' in SOURCE
+    assert 'APP_VERSION = "2026.07.20-1"' in SOURCE
     assert "from editorial_engine_final import install_editorial_engine" in SOURCE
     assert "install_editorial_engine(globals())" in SOURCE
     assert "Motor editorial final" in ENGINE_SOURCE
@@ -107,6 +107,13 @@ def test_radar_sources_and_fallbacks_are_present():
     assert "Buscando una oportunidad buena, no cualquier noticia." not in SOURCE
 
 
+def test_extraer_numero_requires_explicit_news_reference():
+    src = function_source("extraer_numero")
+    assert "palabra.isdigit()" not in src
+    assert "noticia|publicaci" in src
+    assert "Diablo 4" not in src
+
+
 if __name__ == "__main__":
     test_parallel_feeds_exist()
     test_final_editorial_engine_is_last_layer()
@@ -116,4 +123,5 @@ if __name__ == "__main__":
     test_final_caption_blocks_old_filler_phrases()
     test_final_layer_does_not_depend_on_specific_titles()
     test_radar_sources_and_fallbacks_are_present()
+    test_extraer_numero_requires_explicit_news_reference()
     print("static checks ok")

@@ -17,7 +17,7 @@ import streamlit as st
 from streamlit.components.v1 import html as components_html
 
 
-APP_VERSION = "2026.07.19-3"
+APP_VERSION = "2026.07.20-1"
 
 st.set_page_config(page_title="Gamer Signal", page_icon="\U0001F4E1", layout="centered")
 
@@ -1788,9 +1788,34 @@ def buscar_prompt(category=None, style=None):
 
 
 def extraer_numero(texto):
-    for palabra in texto.replace("#", " ").split():
-        if palabra.isdigit():
-            return int(palabra)
+    texto = limpiar_texto_publicable_final(texto).lower()
+    patrones = [
+        r"\b(?:post\s+de\s+la\s+)?(?:noticia|publicaci[oó]n|opci[oó]n|item)\s*(?:n[uú]mero|num\.?|#)?\s*(\d{1,2})\b",
+        r"\b(?:post\s+de\s+la\s+)?(?:noticia|publicaci[oó]n|opci[oó]n|item)\s+(uno|una|dos|tres|cuatro|cinco|seis|siete|ocho)\b",
+        r"\b(primera|segunda|tercera|cuarta|quinta|sexta|s[eé]ptima|octava)\s+(?:noticia|publicaci[oó]n|opci[oó]n|item)\b",
+    ]
+    ordinales = {
+        "primera": 1,
+        "segunda": 2,
+        "tercera": 3,
+        "cuarta": 4,
+        "quinta": 5,
+        "sexta": 6,
+        "septima": 7,
+        "séptima": 7,
+        "octava": 8,
+    }
+    for patron in patrones:
+        match = re.search(patron, texto)
+        if not match:
+            continue
+        valor = match.group(1).lower()
+        if valor.isdigit():
+            return int(valor)
+        if valor in NUMEROS_EN_TEXTO:
+            return NUMEROS_EN_TEXTO[valor]
+        if valor in ordinales:
+            return ordinales[valor]
     return None
 
 
