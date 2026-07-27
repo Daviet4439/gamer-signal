@@ -17,7 +17,7 @@ import streamlit as st
 from streamlit.components.v1 import html as components_html
 
 
-APP_VERSION = "2026.07.20-2"
+APP_VERSION = "2026.07.26-1"
 
 st.set_page_config(page_title="Gamer Signal", page_icon="\U0001F4E1", layout="centered")
 
@@ -763,13 +763,24 @@ FUENTES = {
     "GameSpot confiable": "https://www.gamespot.com/feeds/mashup/",
     "VGC confiable": "https://www.videogameschronicle.com/feed/",
     "Gematsu confiable": "https://www.gematsu.com/feed/",
+    "Eurogamer confiable": "https://www.eurogamer.net/feed",
     "PC Gamer confiable": "https://www.pcgamer.com/rss/",
+    "GamesRadar confiable": "https://www.gamesradar.com/rss/",
     "Rock Paper Shotgun confiable": "https://www.rockpapershotgun.com/feed",
+    "VG247 confiable": "https://www.vg247.com/feed",
+    "Vandal confiable (espanol)": "https://vandal.elespanol.com/xml.cgi",
+    "Gamereactor confiable (espanol)": "https://www.gamereactor.es/rss/rss.php",
     "GamesIndustry.biz confiable": "https://www.gamesindustry.biz/feed",
     "Siliconera confiable": "https://www.siliconera.com/feed/",
     "Nintendo Life confiable": "https://www.nintendolife.com/feeds/latest",
+    "Ars Technica confiable": "https://feeds.arstechnica.com/arstechnica/index",
     "Engadget confiable": "https://www.engadget.com/rss.xml",
     "TechCrunch AI confiable": "https://techcrunch.com/category/artificial-intelligence/feed/",
+
+    # Descubrimiento indie. Estas fuentes requieren el mismo filtro editorial
+    # que cualquier medio no oficial antes de presentarse como noticia.
+    "itch.io indie confiable": "https://itch.io/updates.xml",
+    "IndieDB indie confiable": "https://www.indiedb.com/rss/articles",
 }
 
 FUENTES_COMUNIDAD = {

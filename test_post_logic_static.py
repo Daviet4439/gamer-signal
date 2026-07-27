@@ -83,7 +83,7 @@ def test_parallel_feeds_exist():
 
 
 def test_final_editorial_engine_is_last_layer():
-    assert 'APP_VERSION = "2026.07.20-2"' in SOURCE
+    assert 'APP_VERSION = "2026.07.26-1"' in SOURCE
     assert "from editorial_engine_final import install_editorial_engine" in SOURCE
     assert "install_editorial_engine(globals())" in SOURCE
     assert "Motor editorial final" in ENGINE_SOURCE
@@ -169,6 +169,31 @@ def test_radar_sources_and_fallbacks_are_present():
     assert "Buscando una oportunidad buena, no cualquier noticia." not in SOURCE
 
 
+def test_source_catalog_keeps_reporting_and_community_separate():
+    required_reporting_sources = [
+        "Eurogamer confiable",
+        "GamesRadar confiable",
+        "VG247 confiable",
+        "Vandal confiable (espanol)",
+        "Gamereactor confiable (espanol)",
+        "Ars Technica confiable",
+        "itch.io indie confiable",
+        "IndieDB indie confiable",
+    ]
+    for source in required_reporting_sources:
+        assert f'"{source}"' in SOURCE
+
+    community_sources = [
+        "Reddit Gaming - se\\u00f1al de comunidad",
+        "Reddit Games - se\\u00f1al de comunidad",
+        "Reddit PatientGamers - se\\u00f1al nostalgia",
+    ]
+    for source in community_sources:
+        assert source in SOURCE
+    assert '"is_community_signal": True' in SOURCE
+    assert '"source_trusted": False' in SOURCE
+
+
 def test_extraer_numero_requires_explicit_news_reference():
     src = function_source("extraer_numero")
     assert "palabra.isdigit()" not in src
@@ -186,5 +211,6 @@ if __name__ == "__main__":
     test_final_caption_blocks_old_filler_phrases()
     test_final_layer_does_not_depend_on_specific_titles()
     test_radar_sources_and_fallbacks_are_present()
+    test_source_catalog_keeps_reporting_and_community_separate()
     test_extraer_numero_requires_explicit_news_reference()
     print("static checks ok")
