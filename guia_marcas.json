@@ -1,0 +1,28 @@
+{
+  "GAMER_CAVE": {
+    "nombre": "El Gamer Cave",
+    "descripcion": "Plataforma de contenido de gaming, anime, tecnología y cultura geek",
+    "tono": "Conversacional y natural, como alguien que realmente es parte de estas comunidades, no corporativo ni estilo noticiero formal. Informativo, entretenido, fácil de consumir. Humor ligero permitido sin exagerar.",
+    "etiquetas": [
+      "NOTICIA",
+      "ANÁLISIS",
+      "DEBATE",
+      "HISTORIA",
+      "EN VIVO",
+      "COMUNIDAD"
+    ],
+    "reglas": "Nunca decir que se está 'creando contenido para El Gamer Cave'; hablar directo a la audiencia como si ya fuera parte de ella."
+  },
+  "DAVIET_GAMING": {
+    "nombre": "Daviet Gaming",
+    "descripcion": "Marca personal del creador, más directa y personal que El Gamer Cave",
+    "tono": "Conversacional, directo, con personalidad propia de Daviet como creador individual, no como plataforma de comunidad.",
+    "etiquetas": [
+      "OPINIÓN",
+      "GAMEPLAY",
+      "REVIEW",
+      "NOTICIA",
+      "EN VIVO"
+    ]
+  }
+}

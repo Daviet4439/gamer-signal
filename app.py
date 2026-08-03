@@ -17,7 +17,7 @@ import streamlit as st
 from streamlit.components.v1 import html as components_html
 
 
-APP_VERSION = "2026.07.26-1"
+APP_VERSION = "2026.08.03-ollama-1"
 
 st.set_page_config(page_title="Gamer Signal", page_icon="\U0001F4E1", layout="centered")
 
@@ -4579,6 +4579,222 @@ from editorial_engine_final import install_editorial_engine
 install_editorial_engine(globals())
 
 
+APP_DIR = Path(__file__).resolve().parent
+BRAND_GUIDE_FILE = APP_DIR / "guia_marcas.json"
+GOOD_EXAMPLES_FILES = [
+    APP_DIR / "ejemplos_buenos.json",
+    APP_DIR / "prompts" / "ejemplos_buenos.json",
+]
+OLLAMA_GENERATE_URL = "http://localhost:11434/api/generate"
+OLLAMA_MODEL = "llama3.2"
+
+
+def clave_marca_ollama(marca=None):
+    marca = marca or st.session_state.get("active_brand", "Gamer Cave")
+    marca_normalizada = re.sub(r"[^A-Z]", "_", str(marca).upper()).strip("_")
+    return "DAVIET_GAMING" if marca_normalizada in {"DAVIET_GAMING", "DAVIETGAMING"} else "GAMER_CAVE"
+
+
+@st.cache_data(show_spinner=False)
+def cargar_guia_marcas():
+    with BRAND_GUIDE_FILE.open("r", encoding="utf-8") as archivo:
+        guia = json.load(archivo)
+    for clave in ["GAMER_CAVE", "DAVIET_GAMING"]:
+        if clave not in guia or not isinstance(guia[clave], dict):
+            raise ValueError(f"Falta la guía de marca {clave} en guia_marcas.json")
+    return guia
+
+
+def cargar_ejemplos_buenos(marca_clave):
+    """Carga ejemplos aprobados si existe un archivo de feedback compatible."""
+    for ruta in GOOD_EXAMPLES_FILES:
+        if not ruta.exists():
+            continue
+        try:
+            with ruta.open("r", encoding="utf-8") as archivo:
+                datos = json.load(archivo)
+        except (OSError, json.JSONDecodeError):
+            continue
+
+        if isinstance(datos, dict):
+            ejemplos = datos.get(marca_clave, datos.get(marca_clave.replace("_", " ").title(), []))
+        elif isinstance(datos, list):
+            ejemplos = [
+                ejemplo for ejemplo in datos
+                if isinstance(ejemplo, dict)
+                and clave_marca_ollama(ejemplo.get("marca", "")) == marca_clave
+            ]
+        else:
+            ejemplos = []
+
+        if ejemplos:
+            return ejemplos[:5]
+    return []
+
+
+def fuentes_verificadas_de_item(item):
+    fuentes = item.get("verification_sources") or item.get("sources_reviewed") or []
+    if isinstance(fuentes, str):
+        fuentes = [fuentes]
+    fuentes = [str(fuente).strip() for fuente in fuentes if str(fuente).strip()]
+    fuente_principal = str(item.get("source", "")).strip()
+    if fuente_principal and fuente_principal not in fuentes:
+        fuentes.insert(0, fuente_principal)
+    return fuentes or ["Fuente verificada por Gamer Signal"]
+
+
+def construir_prompt_ollama(item, marca_clave):
+    guia = cargar_guia_marcas()[marca_clave]
+    ejemplos = cargar_ejemplos_buenos(marca_clave)
+    bloque_ejemplos = ""
+    if ejemplos:
+        bloque_ejemplos = (
+            "\nEstos son ejemplos aprobados para afinar el estilo. No copies sus datos; "
+            "úsalos únicamente como referencia de voz:\n"
+            + json.dumps(ejemplos, ensure_ascii=False, indent=2)
+            + "\n"
+        )
+
+    titular = limpiar_texto_publicable_final(item.get("title", "Sin título"))
+    resumen = limpiar_texto_publicable_final(item.get("summary", ""))
+    fuentes = ", ".join(fuentes_verificadas_de_item(item))
+    return f"""Eres Daviet. Esta es la guía de estilo de {marca_clave}:
+{json.dumps(guia, ensure_ascii=False, indent=2)}
+{bloque_ejemplos}
+Ahora analiza esta noticia verificada y responde SOLO en JSON, sin bloques Markdown ni texto adicional.
+Noticia: {titular} - {resumen}
+Fuentes verificadas: {fuentes}
+
+El post debe estar completamente en español, ser conversacional, tener máximo 3 o 4 oraciones y no sonar corporativo ni como una IA.
+Usa únicamente una etiqueta permitida por la guía de la marca.
+
+{{"etiqueta": "...", "post": "..."}}"""
+
+
+def extraer_json_ollama(texto):
+    texto = str(texto or "").strip()
+    texto = re.sub(r"^```(?:json)?\s*|\s*```$", "", texto, flags=re.IGNORECASE)
+    try:
+        return json.loads(texto)
+    except json.JSONDecodeError:
+        inicio = texto.find("{")
+        fin = texto.rfind("}")
+        if inicio >= 0 and fin > inicio:
+            return json.loads(texto[inicio:fin + 1])
+        raise
+
+
+def generar_post_ollama(item, marca=None):
+    marca_clave = clave_marca_ollama(marca)
+    guia = cargar_guia_marcas()[marca_clave]
+    payload = {
+        "model": OLLAMA_MODEL,
+        "prompt": construir_prompt_ollama(item, marca_clave),
+        "stream": False,
+        "format": "json",
+        "options": {"temperature": 0.45},
+    }
+    request = Request(
+        OLLAMA_GENERATE_URL,
+        data=json.dumps(payload, ensure_ascii=False).encode("utf-8"),
+        headers={"Content-Type": "application/json"},
+        method="POST",
+    )
+    try:
+        with urlopen(request, timeout=120) as response:
+            envoltura = json.loads(response.read().decode("utf-8"))
+        resultado = extraer_json_ollama(envoltura.get("response", ""))
+    except Exception as error:
+        raise RuntimeError(
+            "No pude conectar con Ollama. Confirma que Ollama esté abierto y que "
+            "llama3.2 esté instalado en esta computadora."
+        ) from error
+
+    etiqueta = limpiar_texto_publicable_final(resultado.get("etiqueta", "")).upper()
+    post = limpiar_texto_publicable_final(resultado.get("post", ""))
+    etiquetas_permitidas = {str(valor).upper() for valor in guia.get("etiquetas", [])}
+    if etiqueta not in etiquetas_permitidas:
+        etiqueta = "NOTICIA" if "NOTICIA" in etiquetas_permitidas else next(iter(etiquetas_permitidas))
+    if not post:
+        raise RuntimeError("Ollama respondió sin el texto del post. Intenta generarlo otra vez.")
+    return {"etiqueta": etiqueta, "post": post, "marca": marca_clave}
+
+
+def render_boton_copiar_texto(texto, identificador):
+    texto_json = json.dumps(texto, ensure_ascii=False).replace("</", "<\\/")
+    button_id = f"copy_{re.sub(r'[^a-zA-Z0-9_]', '_', identificador)}_{uuid.uuid4().hex}"
+    components_html(
+        f"""
+        <button id="{button_id}" style="padding:7px 14px;cursor:pointer;">Copiar</button>
+        <span id="{button_id}_status" style="margin-left:8px;font-family:Arial,sans-serif;font-size:13px;"></span>
+        <script>
+        const button = document.getElementById("{button_id}");
+        const status = document.getElementById("{button_id}_status");
+        const text = {texto_json};
+        button.addEventListener("click", async () => {{
+            try {{
+                if (navigator.clipboard && window.isSecureContext) {{
+                    await navigator.clipboard.writeText(text);
+                }} else {{
+                    const area = document.createElement("textarea");
+                    area.value = text;
+                    document.body.appendChild(area);
+                    area.select();
+                    document.execCommand("copy");
+                    area.remove();
+                }}
+                status.textContent = "Copiado";
+            }} catch (error) {{
+                status.textContent = "No se pudo copiar";
+            }}
+        }});
+        </script>
+        """,
+        height=42,
+    )
+
+
+def render_lista_noticias_con_ollama(items, key_prefix):
+    items = [dict(item) for item in items if noticia_verificada_para_publicar(item)]
+    if not items:
+        st.write("No encontré noticias verificadas con ese filtro.")
+        return
+
+    st.write(f"Noticias verificadas encontradas: {len(items)}")
+    resultados = st.session_state.setdefault("ollama_news_posts", {})
+    marca = st.session_state.get("active_brand", "Gamer Cave")
+    marca_clave = clave_marca_ollama(marca)
+
+    for numero, item in enumerate(items, start=1):
+        item_id = str(item.get("id") or uuid.uuid5(uuid.NAMESPACE_URL, f"{item.get('source')}|{item.get('title')}"))
+        resultado_key = f"{marca_clave}:{item_id}"
+        titulo = titulo_visible_seguro(item, categoria_de_item(item))
+        resumen = resumen_publico_en_espanol(
+            item.get("title", ""), item.get("summary", ""), categoria_de_item(item)
+        )
+        st.markdown(f"### Noticia {numero}: {titulo}")
+        st.write(f"Fecha: {item.get('date', '')}")
+        st.write(f"Fuente: {item.get('source', '')}")
+        st.write(resumen)
+
+        if st.button("Generar post", key=f"{key_prefix}_generate_{numero}_{item_id}"):
+            with st.spinner(f"Generando para {marca} con Ollama..."):
+                try:
+                    resultados[resultado_key] = generar_post_ollama(item, marca)
+                except RuntimeError as error:
+                    resultados[resultado_key] = {"error": str(error), "marca": marca_clave}
+
+        resultado = resultados.get(resultado_key)
+        if resultado:
+            if resultado.get("error"):
+                st.error(resultado["error"])
+            else:
+                st.write(resultado["etiqueta"])
+                st.write(resultado["post"])
+                render_boton_copiar_texto(resultado["post"], resultado_key)
+        st.divider()
+
+
 preparar_memoria()
 registrar_acceso_simple()
 
@@ -4991,25 +5207,40 @@ if st.session_state.quick_prompt:
 
 if pregunta:
     st.session_state.mensajes.append({"role": "user", "content": pregunta})
+    st.session_state.news_by_number = {}
     respuesta = responder(pregunta)
     es_post = bool(st.session_state.get("last_post_text")) and respuesta == st.session_state.last_post_text
-    st.session_state.mensajes.append({
+    noticias_respuesta = [
+        dict(item)
+        for _, item in sorted(st.session_state.get("news_by_number", {}).items())
+        if isinstance(item, dict)
+    ]
+    es_lista_noticias = bool(noticias_respuesta) and not es_post
+    mensaje_respuesta = {
         "role": "assistant",
         "content": respuesta,
-        "type": "post" if es_post else "text",
-    })
+        "type": "post" if es_post else ("news" if es_lista_noticias else "text"),
+    }
+    if es_lista_noticias:
+        mensaje_respuesta["news_items"] = noticias_respuesta
+    st.session_state.mensajes.append(mensaje_respuesta)
 
 chat_iniciado = any(mensaje.get("role") == "user" for mensaje in st.session_state.mensajes)
 
 render_control_bar()
 render_daily_radar_panel()
 
-for mensaje in st.session_state.mensajes:
+for indice_mensaje, mensaje in enumerate(st.session_state.mensajes):
     avatar = assistant_mascot_avatar() if mensaje["role"] == "assistant" else None
     chat_ctx = st.chat_message(mensaje["role"], avatar=avatar) if avatar else st.chat_message(mensaje["role"])
     with chat_ctx:
         if mensaje.get("type") == "post":
             render_post_response(mensaje["content"])
+        elif mensaje.get("type") == "news":
+            render_lista_noticias_con_ollama(
+                mensaje.get("news_items", []),
+                key_prefix=f"news_message_{indice_mensaje}",
+            )
         else:
             contenido = mensaje["content"]
             if mensaje["role"] == "assistant":

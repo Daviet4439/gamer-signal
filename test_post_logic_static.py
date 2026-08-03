@@ -1,4 +1,6 @@
 import ast
+import json
+import re
 from pathlib import Path
 
 
@@ -83,7 +85,7 @@ def test_parallel_feeds_exist():
 
 
 def test_final_editorial_engine_is_last_layer():
-    assert 'APP_VERSION = "2026.07.26-1"' in SOURCE
+    assert re.search(r'APP_VERSION\s*=\s*"\d{4}\.\d{2}\.\d{2}[^\"]*"', SOURCE)
     assert "from editorial_engine_final import install_editorial_engine" in SOURCE
     assert "install_editorial_engine(globals())" in SOURCE
     assert "Motor editorial final" in ENGINE_SOURCE
@@ -91,6 +93,20 @@ def test_final_editorial_engine_is_last_layer():
     assert "crear_post_limpio" in ENGINE_SOURCE
     assert "aplicar_reglas_editoriales_fuertes" in ENGINE_SOURCE
     assert "st.session_state.last_post_text = post" in ENGINE_SOURCE
+
+
+def test_ollama_brand_guide_and_news_actions_exist():
+    guide_path = ROOT / "guia_marcas.json"
+    assert guide_path.exists()
+    guide = json.loads(guide_path.read_text(encoding="utf-8"))
+    assert set(guide) == {"GAMER_CAVE", "DAVIET_GAMING"}
+    assert "NOTICIA" in guide["GAMER_CAVE"]["etiquetas"]
+    assert "OPINIÓN" in guide["DAVIET_GAMING"]["etiquetas"]
+    assert "def construir_prompt_ollama" in SOURCE
+    assert "def generar_post_ollama" in SOURCE
+    assert "def render_lista_noticias_con_ollama" in SOURCE
+    assert 'st.button("Generar post"' in SOURCE
+    assert '"format": "json"' in SOURCE
 
 
 def test_no_dangerous_question_replacement_in_final_cleaner():
