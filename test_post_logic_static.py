@@ -112,7 +112,16 @@ def test_ollama_brand_guide_and_news_actions_exist():
     assert "es_tema_gaming_anime_geek(item)" in SOURCE
     assert "noticia_con_confianza_media_alta(item)" in SOURCE
     assert "¿Esta noticia es sobre video juegos, anime, o cultura geek gamer?" in SOURCE
-    assert '"format": "json"' in SOURCE
+    assert 'OLLAMA_CHAT_URL = "https://ollama.com/api/chat"' in SOURCE
+    assert 'OLLAMA_MODEL = "gpt-oss:20b"' in SOURCE
+    assert '"Authorization": f"Bearer {obtener_ollama_api_key()}"' in SOURCE
+    assert 'st.secrets.get("OLLAMA_API_KEY", "")' in SOURCE
+    assert '(envoltura.get("message") or {}).get("content", "")' in SOURCE
+    assert '"messages": [{"role": "user", "content": str(prompt)}]' in SOURCE
+    assert "http://localhost:11434" not in SOURCE
+    assert '"format": "json"' not in SOURCE
+    assert "def probar_conexion_ollama_cloud" in SOURCE
+    assert "def cargar_metodologia_posts" in SOURCE
 
 
 def test_brand_selector_is_visible_and_text_only():

@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import json
+import os
 import re
 import uuid
 import base64
@@ -17,7 +18,7 @@ import streamlit as st
 from streamlit.components.v1 import html as components_html
 
 
-APP_VERSION = "2026.08.03-ollama-2"
+APP_VERSION = "2026.08.03-ollama-cloud-1"
 
 st.set_page_config(page_title="Gamer Signal", page_icon="\U0001F4E1", layout="centered")
 
@@ -4643,12 +4644,74 @@ install_editorial_engine(globals())
 
 APP_DIR = Path(__file__).resolve().parent
 BRAND_GUIDE_FILE = APP_DIR / "guia_marcas.json"
+POST_METHODOLOGY_FILE = APP_DIR / "metodologia_posts.json"
 GOOD_EXAMPLES_FILES = [
     APP_DIR / "ejemplos_buenos.json",
     APP_DIR / "prompts" / "ejemplos_buenos.json",
 ]
-OLLAMA_GENERATE_URL = "http://localhost:11434/api/generate"
-OLLAMA_MODEL = "llama3.2"
+OLLAMA_CHAT_URL = "https://ollama.com/api/chat"
+# En la API directa de ollama.com los modelos cloud se nombran sin el sufijo
+# "-cloud" que usa el cliente local de Ollama.
+OLLAMA_MODEL = "gpt-oss:20b"
+
+
+def obtener_ollama_api_key():
+    """Lee la credencial sin almacenarla en el repositorio."""
+    api_key = ""
+    try:
+        api_key = str(st.secrets.get("OLLAMA_API_KEY", "")).strip()
+    except Exception:
+        pass
+    api_key = api_key or os.environ.get("OLLAMA_API_KEY", "").strip()
+    if not api_key:
+        raise RuntimeError(
+            "Falta el secreto OLLAMA_API_KEY. Agrégalo en los Secrets de "
+            "Streamlit Cloud antes de generar contenido."
+        )
+    return api_key
+
+
+def llamar_ollama_cloud(prompt, temperature=0.2, timeout=120):
+    """Envía un mensaje a Ollama Cloud y devuelve únicamente su contenido."""
+    payload = {
+        "model": OLLAMA_MODEL,
+        "messages": [{"role": "user", "content": str(prompt)}],
+        "stream": False,
+        "think": "low",
+        "options": {"temperature": temperature},
+    }
+    request = Request(
+        OLLAMA_CHAT_URL,
+        data=json.dumps(payload, ensure_ascii=False).encode("utf-8"),
+        headers={
+            "Authorization": f"Bearer {obtener_ollama_api_key()}",
+            "Content-Type": "application/json",
+        },
+        method="POST",
+    )
+    try:
+        with urlopen(request, timeout=timeout) as response:
+            envoltura = json.loads(response.read().decode("utf-8"))
+    except Exception as error:
+        raise RuntimeError(
+            "No pude conectar con Ollama Cloud. Verifica OLLAMA_API_KEY, el modelo "
+            "configurado y el estado del servicio."
+        ) from error
+
+    contenido = str((envoltura.get("message") or {}).get("content", "")).strip()
+    if not contenido:
+        raise RuntimeError("Ollama Cloud respondió sin contenido.")
+    return contenido
+
+
+def probar_conexion_ollama_cloud():
+    """Prueba mínima reutilizable para confirmar credencial, endpoint y modelo."""
+    respuesta = llamar_ollama_cloud(
+        "Responde solamente con la palabra CONEXION_OK.",
+        temperature=0,
+        timeout=45,
+    )
+    return "CONEXION_OK" in respuesta.upper()
 
 
 def clave_marca_ollama(marca=None):
@@ -4694,6 +4757,19 @@ def cargar_ejemplos_buenos(marca_clave):
     return []
 
 
+@st.cache_data(show_spinner=False)
+def cargar_metodologia_posts():
+    """Incluye la metodología editorial si el proyecto proporciona el archivo."""
+    if not POST_METHODOLOGY_FILE.exists():
+        return None
+    try:
+        with POST_METHODOLOGY_FILE.open("r", encoding="utf-8") as archivo:
+            metodologia = json.load(archivo)
+    except (OSError, json.JSONDecodeError):
+        return None
+    return metodologia if isinstance(metodologia, (dict, list)) else None
+
+
 def fuentes_verificadas_de_item(item):
     fuentes = item.get("verification_sources") or item.get("sources_reviewed") or []
     if isinstance(fuentes, str):
@@ -4707,7 +4783,15 @@ def fuentes_verificadas_de_item(item):
 
 def construir_prompt_ollama(item, marca_clave):
     guia = cargar_guia_marcas()[marca_clave]
+    metodologia = cargar_metodologia_posts()
     ejemplos = cargar_ejemplos_buenos(marca_clave)
+    bloque_metodologia = ""
+    if metodologia:
+        bloque_metodologia = (
+            "\nEsta es la metodología editorial obligatoria:\n"
+            + json.dumps(metodologia, ensure_ascii=False, indent=2)
+            + "\n"
+        )
     bloque_ejemplos = ""
     if ejemplos:
         bloque_ejemplos = (
@@ -4722,6 +4806,7 @@ def construir_prompt_ollama(item, marca_clave):
     fuentes = ", ".join(fuentes_verificadas_de_item(item))
     return f"""Eres Daviet. Esta es la guía de estilo de {marca_clave}:
 {json.dumps(guia, ensure_ascii=False, indent=2)}
+{bloque_metodologia}
 {bloque_ejemplos}
 Ahora analiza esta noticia verificada y responde SOLO en JSON, sin bloques Markdown ni texto adicional.
 Noticia: {titular} - {resumen}
@@ -4749,27 +4834,17 @@ def extraer_json_ollama(texto):
 def generar_post_ollama(item, marca=None):
     marca_clave = clave_marca_ollama(marca)
     guia = cargar_guia_marcas()[marca_clave]
-    payload = {
-        "model": OLLAMA_MODEL,
-        "prompt": construir_prompt_ollama(item, marca_clave),
-        "stream": False,
-        "format": "json",
-        "options": {"temperature": 0.45},
-    }
-    request = Request(
-        OLLAMA_GENERATE_URL,
-        data=json.dumps(payload, ensure_ascii=False).encode("utf-8"),
-        headers={"Content-Type": "application/json"},
-        method="POST",
-    )
     try:
-        with urlopen(request, timeout=120) as response:
-            envoltura = json.loads(response.read().decode("utf-8"))
-        resultado = extraer_json_ollama(envoltura.get("response", ""))
+        texto_respuesta = llamar_ollama_cloud(
+            construir_prompt_ollama(item, marca_clave),
+            temperature=0.45,
+            timeout=120,
+        )
+        resultado = extraer_json_ollama(texto_respuesta)
     except Exception as error:
         raise RuntimeError(
-            "No pude conectar con Ollama. Confirma que Ollama esté abierto y que "
-            "llama3.2 esté instalado en esta computadora."
+            "No pude generar el post con Ollama Cloud. Verifica el secreto "
+            "OLLAMA_API_KEY y vuelve a intentarlo."
         ) from error
 
     etiqueta = limpiar_texto_publicable_final(resultado.get("etiqueta", "")).upper()
@@ -4798,28 +4873,15 @@ def clasificar_relevancia_ollama(item):
         "Responde solo SI o NO: "
         f"{titular} - {resumen}"
     )
-    payload = {
-        "model": OLLAMA_MODEL,
-        "prompt": prompt,
-        "stream": False,
-        "options": {"temperature": 0},
-    }
-    request = Request(
-        OLLAMA_GENERATE_URL,
-        data=json.dumps(payload, ensure_ascii=False).encode("utf-8"),
-        headers={"Content-Type": "application/json"},
-        method="POST",
-    )
     try:
-        with urlopen(request, timeout=60) as response:
-            envoltura = json.loads(response.read().decode("utf-8"))
+        texto_respuesta = llamar_ollama_cloud(prompt, temperature=0, timeout=60)
     except Exception as error:
         raise RuntimeError(
-            "No pude validar el tema con Ollama. Confirma que Ollama este abierto "
-            "y que llama3.2 este instalado."
+            "No pude validar el tema con Ollama Cloud. Verifica el secreto "
+            "OLLAMA_API_KEY."
         ) from error
 
-    respuesta = str(envoltura.get("response", "")).strip().upper().replace("Í", "I")
+    respuesta = texto_respuesta.strip().upper().replace("Í", "I")
     primera_palabra = re.sub(r"[^A-Z]", "", respuesta.split()[0]) if respuesta else ""
     if primera_palabra == "SI":
         return True
