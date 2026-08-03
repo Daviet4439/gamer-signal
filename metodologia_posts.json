@@ -1,0 +1,53 @@
+{
+  "identificacion_marca": "Nunca escribir igual para ambas marcas ni reutilizar el mismo contenido/ángulo, aunque sea la misma noticia",
+  "gamer_cave": {
+    "voz": "comunidad — habla como una página que representa y reúne gamers, no como una persona individual",
+    "tono": "cercano, entretenido, accesible, natural — nunca corporativo ni técnico",
+    "objetivo_minimo": "debe cumplir al menos uno: provocar opiniones, hacer que mencionen un juego, cuenten experiencia, elijan entre opciones, o compartan",
+    "estructura": [
+      "gancho de curiosidad",
+      "contexto breve",
+      "por qué importa para gamers",
+      "ángulo que genere conversación",
+      "pregunta abierta (no sí/no)",
+      "5 hashtags incluyendo siempre #elgamercave"
+    ]
+  },
+  "daviet_gaming": {
+    "voz": "personal — opinión, reacción o experiencia de Daviet, no institucional",
+    "tono": "directo y natural, expresiones como 'Mano, esto no me lo esperaba' cuando encajen",
+    "temas_preferidos": [
+      "opinión personal",
+      "experiencias como gamer/desarrollador",
+      "tecnología/hardware/desarrollo de videojuegos",
+      "reacciones a noticias",
+      "debates desde su perspectiva",
+      "cultura gamer, anime, nostalgia"
+    ],
+    "estructura": [
+      "gancho",
+      "contexto",
+      "opinión de Daviet",
+      "pregunta a la comunidad",
+      "5 hashtags: primero siempre #DavietGaming, los otros 4 relacionados al tema"
+    ]
+  },
+  "reglas_generales": {
+    "variedad": "variar juegos, géneros, plataformas y generaciones — evitar usar siempre GTA, los mismos clásicos, o los mismos debates repetidos",
+    "audiencia": "contenido debe interesar a gamers de Puerto Rico y Latinoamérica",
+    "verificacion_noticias": "prioridad: fuentes oficiales y documentación oficial > medios confiables > rumores/especulación — distinguir claramente cuál es cuál, y verificar nombres, fechas, plataformas, y si es realmente un anuncio nuevo",
+    "no_repetir": "verificar que el tema no se haya publicado recientemente en la misma cuenta, y que ambas marcas no publiquen el mismo post/ángulo aunque sea la misma noticia",
+    "un_tema_por_post": "cada post se concentra en un solo tema",
+    "evitar": [
+      "textos genéricos",
+      "preguntas cerradas",
+      "introducciones que expliquen todo desde la primera línea",
+      "controversias forzadas",
+      "hashtags sin relación real solo porque son populares"
+    ]
+  },
+  "resumen": {
+    "gamer_cave_pregunta_tipo": "¿Qué piensa la comunidad sobre esto?",
+    "daviet_gaming_pregunta_tipo": "Esto es lo que pienso yo; ahora quiero saber qué piensan ustedes"
+  }
+}

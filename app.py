@@ -17,8 +17,19 @@ import feedparser
 import streamlit as st
 from streamlit.components.v1 import html as components_html
 
+from ollama_post_rules import (
+    ALLOWED_LABELS,
+    canonical_news_id,
+    ensure_specific_hashtags,
+    find_recent_duplicate,
+    normalize_label,
+    post_cache_key,
+    remember_topic,
+    translated_title_is_valid,
+)
 
-APP_VERSION = "2026.08.03-ollama-cloud-1"
+
+APP_VERSION = "2026.08.03-editorial-consistency-2"
 
 st.set_page_config(page_title="Gamer Signal", page_icon="\U0001F4E1", layout="centered")
 
@@ -4645,6 +4656,7 @@ install_editorial_engine(globals())
 APP_DIR = Path(__file__).resolve().parent
 BRAND_GUIDE_FILE = APP_DIR / "guia_marcas.json"
 POST_METHODOLOGY_FILE = APP_DIR / "metodologia_posts.json"
+RECENT_TOPICS_FILE = APP_DIR / "temas_recientes.json"
 GOOD_EXAMPLES_FILES = [
     APP_DIR / "ejemplos_buenos.json",
     APP_DIR / "prompts" / "ejemplos_buenos.json",
@@ -4804,6 +4816,7 @@ def construir_prompt_ollama(item, marca_clave):
     titular = limpiar_texto_publicable_final(item.get("title", "Sin título"))
     resumen = limpiar_texto_publicable_final(item.get("summary", ""))
     fuentes = ", ".join(fuentes_verificadas_de_item(item))
+    etiquetas = ", ".join(ALLOWED_LABELS[marca_clave])
     return f"""Eres Daviet. Esta es la guía de estilo de {marca_clave}:
 {json.dumps(guia, ensure_ascii=False, indent=2)}
 {bloque_metodologia}
@@ -4812,10 +4825,15 @@ Ahora analiza esta noticia verificada y responde SOLO en JSON, sin bloques Markd
 Noticia: {titular} - {resumen}
 Fuentes verificadas: {fuentes}
 
-El post debe estar completamente en español, ser conversacional, tener máximo 3 o 4 oraciones y no sonar corporativo ni como una IA.
-Usa únicamente una etiqueta permitida por la guía de la marca.
+REGLAS OBLIGATORIAS:
+- El título o gancho también debe estar traducido y adaptado al español. Nunca copies un titular en inglés.
+- Explica el dato concreto de esta noticia; no uses relleno genérico ni cambies de tema.
+- Todo el post debe estar en español, ser conversacional y no sonar corporativo ni como una IA.
+- Termina con una pregunta abierta y específica al tema.
+- La etiqueta debe ser EXACTAMENTE una de estas: {etiquetas}.
+- Propón exactamente cinco hashtags. Incluye la marca y nombres específicos del juego, franquicia, plataforma o tema real. Evita repetir siempre #gaming, #videojuegos o #gamers.
 
-{{"etiqueta": "...", "post": "..."}}"""
+{{"titulo": "título adaptado al español", "etiqueta": "...", "post": "...", "hashtags": ["#...", "#...", "#...", "#...", "#..."]}}"""
 
 
 def extraer_json_ollama(texto):
@@ -4833,36 +4851,61 @@ def extraer_json_ollama(texto):
 
 def generar_post_ollama(item, marca=None):
     marca_clave = clave_marca_ollama(marca)
-    guia = cargar_guia_marcas()[marca_clave]
-    try:
-        texto_respuesta = llamar_ollama_cloud(
-            construir_prompt_ollama(item, marca_clave),
-            temperature=0.45,
-            timeout=120,
-        )
-        resultado = extraer_json_ollama(texto_respuesta)
-    except Exception as error:
-        raise RuntimeError(
-            "No pude generar el post con Ollama Cloud. Verifica el secreto "
-            "OLLAMA_API_KEY y vuelve a intentarlo."
-        ) from error
+    prompt = construir_prompt_ollama(item, marca_clave)
+    resultado = None
+    etiqueta = ""
+    titulo_espanol = ""
+    titulo_original = limpiar_texto_publicable_final(item.get("title", ""))
+    for _intento in range(2):
+        try:
+            texto_respuesta = llamar_ollama_cloud(prompt, temperature=0.4, timeout=120)
+            resultado = extraer_json_ollama(texto_respuesta)
+        except Exception as error:
+            raise RuntimeError(
+                "No pude generar el post con Ollama Cloud. Verifica el secreto "
+                "OLLAMA_API_KEY y vuelve a intentarlo."
+            ) from error
 
-    etiqueta = limpiar_texto_publicable_final(resultado.get("etiqueta", "")).upper()
+        etiqueta_original = limpiar_texto_publicable_final(resultado.get("etiqueta", ""))
+        etiqueta, etiqueta_valida = normalize_label(etiqueta_original, marca_clave)
+        titulo_espanol = limpiar_texto_publicable_final(resultado.get("titulo", ""))
+        titulo_valido = translated_title_is_valid(titulo_original, titulo_espanol)
+        if etiqueta_valida and titulo_valido:
+            break
+        correcciones = []
+        if not etiqueta_valida:
+            correcciones.append(
+                f"usa exactamente una de estas etiquetas: {', '.join(ALLOWED_LABELS[marca_clave])}"
+            )
+        if not titulo_valido:
+            correcciones.append("traduce y adapta el título completo al español")
+        prompt += "\n\nCORRECCIÓN OBLIGATORIA: " + "; ".join(correcciones) + "."
+
+    resultado = resultado or {}
+    if not translated_title_is_valid(titulo_original, titulo_espanol):
+        raise RuntimeError("Ollama no devolvió un título válido en español. Intenta otra vez.")
     post = limpiar_texto_publicable_final(resultado.get("post", ""))
-    etiquetas_permitidas = {str(valor).upper() for valor in guia.get("etiquetas", [])}
-    if etiqueta not in etiquetas_permitidas:
-        etiqueta = "NOTICIA" if "NOTICIA" in etiquetas_permitidas else next(iter(etiquetas_permitidas))
     if not post:
         raise RuntimeError("Ollama respondió sin el texto del post. Intenta generarlo otra vez.")
-    return {"etiqueta": etiqueta, "post": post, "marca": marca_clave}
+    if not post.lower().startswith(titulo_espanol.lower()):
+        post = f"{titulo_espanol}\n\n{post}"
+    post, hashtags = ensure_specific_hashtags(
+        post,
+        item,
+        marca_clave,
+        resultado.get("hashtags", []),
+    )
+    return {
+        "etiqueta": etiqueta,
+        "post": post,
+        "hashtags": hashtags,
+        "marca": marca_clave,
+        "news_id": canonical_news_id(item),
+    }
 
 
 def clave_cache_noticia(item):
-    contenido = "|".join(
-        str(item.get(campo, ""))
-        for campo in ["source", "link", "date", "title", "summary"]
-    )
-    return str(uuid.uuid5(uuid.NAMESPACE_URL, contenido))
+    return canonical_news_id(item)
 
 
 def clasificar_relevancia_ollama(item):
@@ -4925,11 +4968,16 @@ def render_boton_copiar_texto(texto, identificador):
 
 
 def render_lista_noticias_con_ollama(items, key_prefix):
-    candidatos = [
-        dict(item)
-        for item in items
-        if es_tema_gaming_anime_geek(item) and noticia_con_confianza_media_alta(item)
-    ]
+    candidatos = []
+    ids_vistos = set()
+    for item_original in items:
+        item = dict(item_original)
+        item_id = clave_cache_noticia(item)
+        if item_id in ids_vistos:
+            continue
+        if es_tema_gaming_anime_geek(item) and noticia_con_confianza_media_alta(item):
+            candidatos.append(item)
+            ids_vistos.add(item_id)
     if not candidatos:
         st.write("No encontre noticias verificadas de gaming, anime o cultura geek gamer con ese filtro.")
         return
@@ -4964,7 +5012,7 @@ def render_lista_noticias_con_ollama(items, key_prefix):
 
     for numero, item in enumerate(items_aprobados, start=1):
         item_id = clave_cache_noticia(item)
-        resultado_key = f"{marca_clave}:{item_id}"
+        resultado_key = post_cache_key(item, marca_clave)
         titulo = titulo_visible_seguro(item, categoria_de_item(item))
         resumen = resumen_publico_en_espanol(
             item.get("title", ""), item.get("summary", ""), categoria_de_item(item)
@@ -4976,11 +5024,33 @@ def render_lista_noticias_con_ollama(items, key_prefix):
 
         error_generacion = None
         if resultado_key not in resultados:
-            with st.spinner(f"Generando para {marca} con Ollama..."):
-                try:
-                    resultados[resultado_key] = generar_post_ollama(item, marca)
-                except RuntimeError as error:
-                    error_generacion = str(error)
+            repetido = find_recent_duplicate(
+                RECENT_TOPICS_FILE,
+                item,
+                marca_clave,
+                today=ahora_en_puerto_rico().date(),
+            )
+            if repetido:
+                error_generacion = (
+                    "Tema omitido porque ya se usó recientemente: "
+                    f"{repetido.get('title', 'tema similar')}."
+                )
+            else:
+                with st.spinner(f"Generando para {marca} con Ollama..."):
+                    try:
+                        resultados[resultado_key] = generar_post_ollama(item, marca)
+                        try:
+                            remember_topic(
+                                RECENT_TOPICS_FILE,
+                                item,
+                                marca_clave,
+                                resultados[resultado_key]["etiqueta"],
+                                today=ahora_en_puerto_rico().date(),
+                            )
+                        except OSError:
+                            pass
+                    except RuntimeError as error:
+                        error_generacion = str(error)
 
         resultado = resultados.get(resultado_key)
         if error_generacion:
