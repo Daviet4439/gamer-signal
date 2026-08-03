@@ -17,7 +17,7 @@ import streamlit as st
 from streamlit.components.v1 import html as components_html
 
 
-APP_VERSION = "2026.08.03-ollama-1"
+APP_VERSION = "2026.08.03-ollama-2"
 
 st.set_page_config(page_title="Gamer Signal", page_icon="\U0001F4E1", layout="centered")
 
@@ -2016,7 +2016,7 @@ def es_modo_dueno():
 
 
 def marcas_visibles():
-    return ["Gamer Cave", "Daviet Gaming"] if es_modo_dueno() else ["Gamer Cave"]
+    return ["Gamer Cave", "Daviet Gaming"]
 
 
 def marca_permitida(marca):
@@ -2068,28 +2068,17 @@ def render_access_log_simple():
 
 
 def render_dashboard():
-    marcas = marcas_visibles()
-    marca_actual = st.session_state.get("active_brand", "Gamer Cave")
-    if marca_actual == "General" or marca_actual not in marcas:
-        marca_actual = "Gamer Cave"
-        st.session_state.active_brand = marca_actual
-
-    left, center, right = st.columns([0.75, 2.5, 0.75])
-    with center:
-        st.markdown('<div class="signal-brand-title">Marca activa</div>', unsafe_allow_html=True)
-        cols = st.columns(len(marcas))
-        for col, marca in zip(cols, marcas):
-            with col:
-                activo = marca_actual == marca
-                render_brand_logo_card(marca, activo)
-                if st.button(
-                    "Activa" if activo else "Usar",
-                    key=f"brand_button_{marca.lower().replace(' ', '_')}",
-                    type="primary" if activo else "secondary",
-                    use_container_width=True,
-                ):
-                    st.session_state.active_brand = marca
-                    st.rerun()
+    opciones = ["El Gamer Cave", "Daviet Gaming"]
+    interna_actual = st.session_state.get("active_brand", "Gamer Cave")
+    seleccion_actual = "Daviet Gaming" if interna_actual == "Daviet Gaming" else "El Gamer Cave"
+    seleccion = st.radio(
+        "Marca activa",
+        opciones,
+        index=opciones.index(seleccion_actual),
+        horizontal=True,
+        key="brand_selector_visible",
+    )
+    st.session_state.active_brand = "Daviet Gaming" if seleccion == "Daviet Gaming" else "Gamer Cave"
 
 
 def image_data_url(image_path):
@@ -2230,7 +2219,6 @@ def render_control_bar():
         control_bar = st.container()
 
     with control_bar:
-        render_dashboard()
         render_quick_actions()
 
     inject_auto_hide_controls()
@@ -2707,6 +2695,77 @@ def nivel_confianza(item):
     return "low"
 
 
+FUENTES_TEMATICAS_GAMER = (
+    "playstation", "xbox", "nintendo", "steam", "epic games", "capcom",
+    "ea news", "ubisoft", "blizzard", "riot games", "bungie", "gog",
+    "crunchyroll", "anime news network", "myanimelist", "anime corner",
+    "viz", "polygon", "ign games", "gamespot", "vgc", "gematsu",
+    "eurogamer", "pc gamer", "gamesradar", "rock paper shotgun", "vg247",
+    "vandal", "gamereactor", "gamesindustry", "siliconera", "nintendo life",
+    "itch.io", "indiedb", "reddit gaming", "reddit games", "reddit truegaming",
+    "reddit patientgamers", "reddit retrogaming", "reddit pcgaming",
+    "reddit indiegaming", "reddit indiedev", "reddit anime", "reddit manga",
+    "reddit jrpg", "reddit fantheories", "reddit gamingleaks",
+    "reddit argaming", "reddit videojuegosmx",
+)
+
+PALABRAS_TEMATICAS_GAMER = (
+    "videojuego", "video game", "videogame", "gaming", "gamer", "gameplay",
+    "juego indie", "indie game", "consola", "console", "playstation", "ps5",
+    "ps4", "xbox", "game pass", "nintendo", "switch", "steam", "epic games",
+    "dlc", "expansion", "temporada", "esports", "control", "controller",
+    "retrocompatibilidad", "remake", "remaster", "arcade", "rpg", "jrpg",
+    "anime", "manga", "otaku", "crunchyroll", "shonen", "seinen",
+    "cosplay", "pokemon", "pok\u00e9mon", "mario", "zelda", "kirby", "sonic",
+    "call of duty", "fortnite", "minecraft", "roblox", "league of legends",
+    "valorant", "diablo", "warcraft", "final fantasy", "kingdom hearts",
+    "resident evil", "monster hunter", "street fighter", "unreal engine",
+    "unity game", "geforce now", "cloud gaming", "gaming pc", "pc gaming",
+)
+
+PALABRAS_TECNOLOGIA_GENERAL = (
+    "openai", "chatgpt", "large language model", "language model", "llm",
+    "artificial intelligence", "inteligencia artificial", "smartphone",
+    "iphone", "android", "macos", "ios", "data center", "enterprise ai",
+    "robotics", "productivity app", "social network", "cybersecurity",
+)
+
+
+def texto_tema_noticia(item):
+    return limpiar_html(
+        f"{item.get('source', '')} {item.get('title', '')} {item.get('summary', '')}"
+    ).lower()
+
+
+def es_tema_gaming_anime_geek(item):
+    """Filtro local conservador antes de mostrar o enviar una noticia a Ollama."""
+    if not isinstance(item, dict):
+        return False
+
+    texto = texto_tema_noticia(item)
+    fuente = str(item.get("source", "")).lower()
+    tiene_senal_gamer = any(palabra in texto for palabra in PALABRAS_TEMATICAS_GAMER)
+    fuente_especializada = any(nombre in fuente for nombre in FUENTES_TEMATICAS_GAMER)
+    tecnologia_general = any(palabra in texto for palabra in PALABRAS_TECNOLOGIA_GENERAL)
+
+    # Una noticia tecnologica general solo entra si menciona de forma directa
+    # un producto, plataforma, juego o evento gamer.
+    if tecnologia_general and not tiene_senal_gamer:
+        return False
+    return tiene_senal_gamer or fuente_especializada
+
+
+def noticia_con_confianza_media_alta(item):
+    if not item or not item.get("date"):
+        return False
+    confianza = str(item.get("confidence_level") or nivel_confianza(item)).lower()
+    return (
+        confianza in {"medium-high", "high"}
+        or bool(item.get("source_official"))
+        or int(item.get("verification_count", 0) or 0) >= 2
+    )
+
+
 def save_feedback(item_id, item_type, feedback_type, feedback_text):
     log = leer_json(FEEDBACK_FILE, [])
     item = st.session_state.generated_items.get(item_id, {})
@@ -3014,6 +3073,8 @@ def cargar_noticias_base():
             item["nostalgia_angle"] = detectar_angulo_nostalgia(item)
             item["content_angle"] = detectar_content_angle(item)
             item["confidence_level"] = nivel_confianza(item)
+            if not es_tema_gaming_anime_geek(item):
+                continue
             noticias.append(item)
     noticias = agregar_verificacion_cruzada(noticias)
     return noticias
@@ -3070,6 +3131,7 @@ def cargar_senales_comunidad():
 def buscar_noticias():
     noticias = [dict(item) for item in cargar_noticias_base()]
     noticias.extend(dict(item) for item in cargar_senales_comunidad())
+    noticias = [item for item in noticias if es_tema_gaming_anime_geek(item)]
     return aplicar_preferencias(noticias)
 
 
@@ -4720,6 +4782,52 @@ def generar_post_ollama(item, marca=None):
     return {"etiqueta": etiqueta, "post": post, "marca": marca_clave}
 
 
+def clave_cache_noticia(item):
+    contenido = "|".join(
+        str(item.get(campo, ""))
+        for campo in ["source", "link", "date", "title", "summary"]
+    )
+    return str(uuid.uuid5(uuid.NAMESPACE_URL, contenido))
+
+
+def clasificar_relevancia_ollama(item):
+    titular = limpiar_texto_publicable_final(item.get("title", ""))
+    resumen = limpiar_texto_publicable_final(item.get("summary", ""))
+    prompt = (
+        "¿Esta noticia es sobre video juegos, anime, o cultura geek gamer? "
+        "Responde solo SI o NO: "
+        f"{titular} - {resumen}"
+    )
+    payload = {
+        "model": OLLAMA_MODEL,
+        "prompt": prompt,
+        "stream": False,
+        "options": {"temperature": 0},
+    }
+    request = Request(
+        OLLAMA_GENERATE_URL,
+        data=json.dumps(payload, ensure_ascii=False).encode("utf-8"),
+        headers={"Content-Type": "application/json"},
+        method="POST",
+    )
+    try:
+        with urlopen(request, timeout=60) as response:
+            envoltura = json.loads(response.read().decode("utf-8"))
+    except Exception as error:
+        raise RuntimeError(
+            "No pude validar el tema con Ollama. Confirma que Ollama este abierto "
+            "y que llama3.2 este instalado."
+        ) from error
+
+    respuesta = str(envoltura.get("response", "")).strip().upper().replace("Í", "I")
+    primera_palabra = re.sub(r"[^A-Z]", "", respuesta.split()[0]) if respuesta else ""
+    if primera_palabra == "SI":
+        return True
+    if primera_palabra == "NO":
+        return False
+    raise RuntimeError("Ollama no respondio SI o NO al validar el tema.")
+
+
 def render_boton_copiar_texto(texto, identificador):
     texto_json = json.dumps(texto, ensure_ascii=False).replace("</", "<\\/")
     button_id = f"copy_{re.sub(r'[^a-zA-Z0-9_]', '_', identificador)}_{uuid.uuid4().hex}"
@@ -4755,18 +4863,45 @@ def render_boton_copiar_texto(texto, identificador):
 
 
 def render_lista_noticias_con_ollama(items, key_prefix):
-    items = [dict(item) for item in items if noticia_verificada_para_publicar(item)]
-    if not items:
-        st.write("No encontré noticias verificadas con ese filtro.")
+    candidatos = [
+        dict(item)
+        for item in items
+        if es_tema_gaming_anime_geek(item) and noticia_con_confianza_media_alta(item)
+    ]
+    if not candidatos:
+        st.write("No encontre noticias verificadas de gaming, anime o cultura geek gamer con ese filtro.")
         return
 
-    st.write(f"Noticias verificadas encontradas: {len(items)}")
+    relevancias = st.session_state.setdefault("ollama_relevance_checks", {})
+    items_aprobados = []
+    errores_validacion = []
+    for item in candidatos:
+        item_id = clave_cache_noticia(item)
+        if item_id not in relevancias:
+            try:
+                relevancias[item_id] = {"aprobada": clasificar_relevancia_ollama(item)}
+            except RuntimeError as error:
+                errores_validacion.append(str(error))
+                continue
+
+        validacion = relevancias[item_id]
+        if validacion.get("aprobada") is True:
+            items_aprobados.append(item)
+
+    if not items_aprobados:
+        if errores_validacion:
+            st.warning(errores_validacion[0])
+        else:
+            st.write("Las noticias encontradas no pertenecen a gaming, anime o cultura geek gamer.")
+        return
+
+    st.write(f"Noticias verificadas encontradas: {len(items_aprobados)}")
     resultados = st.session_state.setdefault("ollama_news_posts", {})
     marca = st.session_state.get("active_brand", "Gamer Cave")
     marca_clave = clave_marca_ollama(marca)
 
-    for numero, item in enumerate(items, start=1):
-        item_id = str(item.get("id") or uuid.uuid5(uuid.NAMESPACE_URL, f"{item.get('source')}|{item.get('title')}"))
+    for numero, item in enumerate(items_aprobados, start=1):
+        item_id = clave_cache_noticia(item)
         resultado_key = f"{marca_clave}:{item_id}"
         titulo = titulo_visible_seguro(item, categoria_de_item(item))
         resumen = resumen_publico_en_espanol(
@@ -4777,21 +4912,21 @@ def render_lista_noticias_con_ollama(items, key_prefix):
         st.write(f"Fuente: {item.get('source', '')}")
         st.write(resumen)
 
-        if st.button("Generar post", key=f"{key_prefix}_generate_{numero}_{item_id}"):
+        error_generacion = None
+        if resultado_key not in resultados:
             with st.spinner(f"Generando para {marca} con Ollama..."):
                 try:
                     resultados[resultado_key] = generar_post_ollama(item, marca)
                 except RuntimeError as error:
-                    resultados[resultado_key] = {"error": str(error), "marca": marca_clave}
+                    error_generacion = str(error)
 
         resultado = resultados.get(resultado_key)
-        if resultado:
-            if resultado.get("error"):
-                st.error(resultado["error"])
-            else:
-                st.write(resultado["etiqueta"])
-                st.write(resultado["post"])
-                render_boton_copiar_texto(resultado["post"], resultado_key)
+        if error_generacion:
+            st.error(error_generacion)
+        elif resultado:
+            st.write(resultado["etiqueta"])
+            st.write(resultado["post"])
+            render_boton_copiar_texto(resultado["post"], resultado_key)
         st.divider()
 
 
@@ -4808,6 +4943,8 @@ if st.session_state.get("app_version") != APP_VERSION:
         "last_post_title",
         "last_post_items",
         "pending_post_request",
+        "ollama_news_posts",
+        "ollama_relevance_checks",
     ]:
         st.session_state.pop(key, None)
     st.session_state.app_version = APP_VERSION
@@ -4858,6 +4995,11 @@ elif st.session_state.active_brand == "General":
 elif st.session_state.active_brand not in marcas_visibles():
     st.session_state.active_brand = "Gamer Cave"
 
+if st.session_state.get("brand_selector_visible") == "Daviet Gaming":
+    st.session_state.active_brand = "Daviet Gaming"
+elif st.session_state.get("brand_selector_visible") == "El Gamer Cave":
+    st.session_state.active_brand = "Gamer Cave"
+
 if "monitor_active" not in st.session_state:
     st.session_state.monitor_active = True
 
@@ -4888,6 +5030,7 @@ st.markdown(
     unsafe_allow_html=True,
 )
 render_reloj_actual()
+render_dashboard()
 activar_auto_refresh_10_minutos()
 
 if st.session_state.get("monitor_active"):

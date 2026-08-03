@@ -104,9 +104,23 @@ def test_ollama_brand_guide_and_news_actions_exist():
     assert "OPINIÓN" in guide["DAVIET_GAMING"]["etiquetas"]
     assert "def construir_prompt_ollama" in SOURCE
     assert "def generar_post_ollama" in SOURCE
+    assert "def clasificar_relevancia_ollama" in SOURCE
     assert "def render_lista_noticias_con_ollama" in SOURCE
-    assert 'st.button("Generar post"' in SOURCE
+    assert 'st.button("Generar post"' not in SOURCE
+    assert "ollama_relevance_checks" in SOURCE
+    assert "ollama_news_posts" in SOURCE
+    assert "es_tema_gaming_anime_geek(item)" in SOURCE
+    assert "noticia_con_confianza_media_alta(item)" in SOURCE
+    assert "¿Esta noticia es sobre video juegos, anime, o cultura geek gamer?" in SOURCE
     assert '"format": "json"' in SOURCE
+
+
+def test_brand_selector_is_visible_and_text_only():
+    assert 'st.radio(' in SOURCE
+    assert '["El Gamer Cave", "Daviet Gaming"]' in SOURCE
+    dashboard = function_source("render_dashboard")
+    assert "render_brand_logo_card" not in dashboard
+    assert "active_brand" in dashboard
 
 
 def test_no_dangerous_question_replacement_in_final_cleaner():
