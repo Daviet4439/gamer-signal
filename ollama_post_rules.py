@@ -113,7 +113,11 @@ def appears_english(value):
         "actualizacion", "anuncia", "con", "de", "del", "el", "en", "llega",
         "nuevo", "nueva", "para", "presenta", "recibe", "sobre", "una",
     }
-    return len(english) >= 2 and len(english) > len(spanish)
+    return (
+        len(english) >= 2 and len(english) > len(spanish)
+    ) or (
+        len(english) >= 1 and not spanish and len(words) >= 2
+    )
 
 
 def translated_title_is_valid(original, translated):
@@ -125,6 +129,91 @@ def translated_title_is_valid(original, translated):
     if appears_english(original) and _plain(original).lower() == _plain(translated).lower():
         return False
     return True
+
+
+def spanish_post_is_valid(value):
+    """Reject captions that are mostly English while allowing official names."""
+    plain = _plain(value).lower()
+    words = re.findall(r"[a-z]+", plain)
+    if len(words) < 18:
+        return False
+    english_markers = {
+        "after", "announced", "before", "coming", "during", "first", "following",
+        "from", "gets", "into", "launches", "more", "reveals", "the", "this",
+        "update", "with", "will",
+    }
+    spanish_markers = {
+        "anuncio", "con", "cuando", "de", "del", "el", "en", "esta", "fue",
+        "la", "las", "lo", "los", "para", "por", "presento", "que", "se",
+        "su", "una", "y",
+    }
+    english_count = sum(word in english_markers for word in words)
+    spanish_count = sum(word in spanish_markers for word in words)
+    return spanish_count >= 4 and english_count <= max(2, spanish_count // 3)
+
+
+def news_context(item, sources=None, max_body_chars=6000):
+    """Build the complete factual context sent to the writing model."""
+    item = item if isinstance(item, dict) else {}
+    body = (
+        item.get("body")
+        or item.get("content")
+        or item.get("full_summary")
+        or item.get("summary")
+        or ""
+    )
+    body = re.sub(r"\s+", " ", str(body)).strip()[:max_body_chars]
+    source_list = sources or item.get("verification_sources") or item.get("sources_reviewed") or []
+    if isinstance(source_list, str):
+        source_list = [source_list]
+    source_list = [str(source).strip() for source in source_list if str(source).strip()]
+    primary = str(item.get("source", "")).strip()
+    if primary and primary not in source_list:
+        source_list.insert(0, primary)
+    return {
+        "titular_original": str(item.get("title", "")).strip(),
+        "resumen_o_cuerpo": body,
+        "fecha": str(item.get("date", "") or "No indicada"),
+        "fuente_principal": primary or "No indicada",
+        "fuentes_verificadas": source_list or ["Fuente verificada por Gamer Signal"],
+        "nivel_verificacion": str(
+            item.get("verification_level") or item.get("confidence_level") or "No indicado"
+        ),
+        "categoria_o_angulo": str(item.get("content_angle", "") or "No indicado"),
+        "enlace_de_referencia": str(item.get("link", "") or "No indicado"),
+    }
+
+
+def post_quality_issues(post, item):
+    """Return editorial problems that make a caption unsafe to publish."""
+    post = re.sub(r"\s+", " ", str(post or "")).strip()
+    issues = []
+    if not spanish_post_is_valid(post):
+        issues.append("el texto completo debe estar en espanol")
+
+    generic_phrases = (
+        "es un tema reciente", "lo importante es explicar", "abre conversacion",
+        "puede servir para", "la clave es explicar", "conviene usarlo como punto de entrada",
+        "esto conecta con la comunidad", "puede mover conversacion",
+    )
+    plain_post = _plain(post).lower()
+    if any(phrase in plain_post for phrase in generic_phrases):
+        issues.append("elimina frases editoriales vagas y explica hechos concretos")
+
+    title_tokens = _topic_tokens(item.get("title", ""))
+    post_tokens = _topic_tokens(post)
+    if title_tokens and not (title_tokens & post_tokens):
+        issues.append("menciona claramente el sujeto principal de la noticia")
+
+    sentences = [part.strip() for part in re.split(r"(?<=[.!?])\s+", post) if part.strip()]
+    if len(sentences) < 3:
+        issues.append("incluye al menos tres oraciones informativas")
+    for index, sentence in enumerate(sentences):
+        for other in sentences[index + 1:]:
+            if SequenceMatcher(None, _plain(sentence).lower(), _plain(other).lower()).ratio() >= 0.82:
+                issues.append("evita repetir la misma idea en varias oraciones")
+                return issues
+    return issues
 
 
 def _hashtag_slug(value):

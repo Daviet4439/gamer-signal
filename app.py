@@ -22,14 +22,16 @@ from ollama_post_rules import (
     canonical_news_id,
     ensure_specific_hashtags,
     find_recent_duplicate,
+    news_context,
     normalize_label,
+    post_quality_issues,
     post_cache_key,
     remember_topic,
     translated_title_is_valid,
 )
 
 
-APP_VERSION = "2026.08.03-editorial-consistency-2"
+APP_VERSION = "2026.08.03-context-quality-3"
 
 st.set_page_config(page_title="Gamer Signal", page_icon="\U0001F4E1", layout="centered")
 
@@ -2949,9 +2951,16 @@ def leer_feed(url):
         fecha = entrada.get("published_parsed") or entrada.get("updated_parsed")
         if not fecha:
             continue
+        contenidos = entrada.get("content") or []
+        candidatos_cuerpo = [entrada.get("summary", ""), entrada.get("description", "")]
+        candidatos_cuerpo.extend(
+            bloque.get("value", "") for bloque in contenidos if isinstance(bloque, dict)
+        )
+        cuerpo = max((str(valor or "") for valor in candidatos_cuerpo), key=len, default="")
         entradas_limpias.append({
             "title": entrada.get("title", "Sin t\u00edtulo"),
             "summary": entrada.get("summary", ""),
+            "body": cuerpo,
             "link": entrada.get("link", ""),
             "year": fecha.tm_year,
             "month": fecha.tm_mon,
@@ -3071,11 +3080,13 @@ def cargar_noticias_base():
                 continue
             titulo = limpiar_html(noticia.get("title", "Sin t\u00edtulo"))
             resumen = limpiar_html(noticia.get("summary", ""))
+            cuerpo = limpiar_html(noticia.get("body", "")) or resumen
             link = noticia.get("link", "")
             item = {
                 "id": str(uuid.uuid5(uuid.NAMESPACE_URL, f"{fuente}|{link}|{titulo}")),
                 "title": limpiar_html(noticia.get("title", "Sin t\u00edtulo")),
                 "summary": limpiar_html(noticia.get("summary", "")),
+                "body": cuerpo,
                 "date": str(fecha),
                 "source": fuente,
                 "link": noticia.get("link", ""),
@@ -3104,6 +3115,7 @@ def cargar_senales_comunidad():
 
             titulo = limpiar_html(entrada.get("title", "Tema de comunidad"))
             resumen_original = limpiar_html(entrada.get("summary", ""))
+            cuerpo_original = limpiar_html(entrada.get("body", "")) or resumen_original
             resumen = (
                 "Se\u00f1al de conversaci\u00f3n detectada en comunidad. "
                 "Usar con cautela como idea de nostalgia, teor\u00eda, debate o fandom; no presentarlo como noticia confirmada."
@@ -3115,6 +3127,7 @@ def cargar_senales_comunidad():
                 "id": str(uuid.uuid5(uuid.NAMESPACE_URL, f"{fuente}|{entrada.get('link', '')}|{titulo}")),
                 "title": titulo,
                 "summary": resumen,
+                "body": cuerpo_original,
                 "date": str(fecha),
                 "source": fuente,
                 "link": entrada.get("link", ""),
@@ -4813,17 +4826,27 @@ def construir_prompt_ollama(item, marca_clave):
             + "\n"
         )
 
-    titular = limpiar_texto_publicable_final(item.get("title", "Sin título"))
-    resumen = limpiar_texto_publicable_final(item.get("summary", ""))
-    fuentes = ", ".join(fuentes_verificadas_de_item(item))
+    contexto = news_context(item, fuentes_verificadas_de_item(item))
     etiquetas = ", ".join(ALLOWED_LABELS[marca_clave])
-    return f"""Eres Daviet. Esta es la guía de estilo de {marca_clave}:
+    return f"""Eres un editor factual de noticias gamer, anime y cultura geek.
+
+PRIORIDAD 1 - CALIDAD FACTUAL Y DE REDACCIÓN:
+- Escribe el contenido completo en español. Traduce y adapta también el titular original; no dejes frases ni oraciones en inglés. Los nombres oficiales de juegos, estudios y productos pueden conservarse.
+- Primero explica claramente qué pasó, cuándo ocurrió y quiénes están involucrados usando SOLO el contexto proporcionado. Si falta un dato, omítelo; nunca lo inventes.
+- El post debe entenderse por sí solo sin haber leído la noticia original.
+- Cada oración debe aportar información nueva. No repitas el titular ni la misma idea con otras palabras.
+- Prohibido usar relleno editorial como "es un tema reciente", "lo importante es explicar", "abre conversación", "puede servir para" o frases aplicables a cualquier noticia.
+- Después de cumplir estos mínimos, aplica el tono y la estructura de la marca activa.
+
+CONTEXTO COMPLETO DE LA NOTICIA:
+{json.dumps(contexto, ensure_ascii=False, indent=2)}
+
+PRIORIDAD 2 - GUÍA DE MARCA:
+Esta es la guía de estilo de {marca_clave}:
 {json.dumps(guia, ensure_ascii=False, indent=2)}
 {bloque_metodologia}
 {bloque_ejemplos}
 Ahora analiza esta noticia verificada y responde SOLO en JSON, sin bloques Markdown ni texto adicional.
-Noticia: {titular} - {resumen}
-Fuentes verificadas: {fuentes}
 
 REGLAS OBLIGATORIAS:
 - El título o gancho también debe estar traducido y adaptado al español. Nunca copies un titular en inglés.
@@ -4855,6 +4878,7 @@ def generar_post_ollama(item, marca=None):
     resultado = None
     etiqueta = ""
     titulo_espanol = ""
+    post_candidato = ""
     titulo_original = limpiar_texto_publicable_final(item.get("title", ""))
     for _intento in range(2):
         try:
@@ -4870,7 +4894,9 @@ def generar_post_ollama(item, marca=None):
         etiqueta, etiqueta_valida = normalize_label(etiqueta_original, marca_clave)
         titulo_espanol = limpiar_texto_publicable_final(resultado.get("titulo", ""))
         titulo_valido = translated_title_is_valid(titulo_original, titulo_espanol)
-        if etiqueta_valida and titulo_valido:
+        post_candidato = limpiar_texto_publicable_final(resultado.get("post", ""))
+        problemas_calidad = post_quality_issues(post_candidato, item)
+        if etiqueta_valida and titulo_valido and not problemas_calidad:
             break
         correcciones = []
         if not etiqueta_valida:
@@ -4879,14 +4905,20 @@ def generar_post_ollama(item, marca=None):
             )
         if not titulo_valido:
             correcciones.append("traduce y adapta el título completo al español")
+        correcciones.extend(problemas_calidad)
         prompt += "\n\nCORRECCIÓN OBLIGATORIA: " + "; ".join(correcciones) + "."
 
     resultado = resultado or {}
     if not translated_title_is_valid(titulo_original, titulo_espanol):
         raise RuntimeError("Ollama no devolvió un título válido en español. Intenta otra vez.")
-    post = limpiar_texto_publicable_final(resultado.get("post", ""))
+    post = post_candidato
     if not post:
         raise RuntimeError("Ollama respondió sin el texto del post. Intenta generarlo otra vez.")
+    problemas_calidad = post_quality_issues(post, item)
+    if problemas_calidad:
+        raise RuntimeError(
+            "Ollama no produjo un post publicable: " + "; ".join(problemas_calidad) + "."
+        )
     if not post.lower().startswith(titulo_espanol.lower()):
         post = f"{titulo_espanol}\n\n{post}"
     post, hashtags = ensure_specific_hashtags(

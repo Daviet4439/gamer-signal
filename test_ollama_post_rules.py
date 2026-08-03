@@ -7,9 +7,12 @@ from ollama_post_rules import (
     canonical_news_id,
     ensure_specific_hashtags,
     find_recent_duplicate,
+    news_context,
     normalize_label,
+    post_quality_issues,
     post_cache_key,
     remember_topic,
+    spanish_post_is_valid,
     translated_title_is_valid,
 )
 
@@ -64,6 +67,56 @@ assert not translated_title_is_valid(
 assert translated_title_is_valid(
     "Nintendo reveals a new Zelda update",
     "Nintendo revela una nueva actualización de Zelda",
+)
+assert not translated_title_is_valid("Diablo 4 Update", "Diablo 4 Update")
+assert translated_title_is_valid(
+    "The Legend of Zelda update",
+    "The Legend of Zelda recibe una actualización",
+)
+
+zelda_a["body"] = (
+    "Nintendo confirmó el 3 de agosto de 2026 que la actualización de Zelda "
+    "añadirá un nuevo desafío gratuito en Nintendo Switch."
+)
+zelda_a["verification_level"] = "fuente oficial"
+zelda_a["content_angle"] = "gaming"
+contexto = news_context(zelda_a, ["Nintendo oficial", "Nintendo Life"])
+assert contexto["resumen_o_cuerpo"] == zelda_a["body"]
+assert contexto["fecha"] == "2026-08-03"
+assert contexto["fuente_principal"] == "Nintendo oficial"
+assert contexto["nivel_verificacion"] == "fuente oficial"
+assert contexto["categoria_o_angulo"] == "gaming"
+
+posts_publicables = [
+    (
+        zelda_a,
+        "Nintendo confirmó el 3 de agosto de 2026 una actualización gratuita de Zelda para Nintendo Switch. "
+        "El contenido añadirá un desafío nuevo para quienes ya terminaron la aventura principal. "
+        "¿Qué tipo de reto te gustaría encontrar en esta actualización?",
+    ),
+    (
+        diablo,
+        "Blizzard presentó una nueva temporada de Diablo 4 con cambios para sus jugadores. "
+        "La actualización modifica la progresión y suma actividades que renuevan el recorrido. "
+        "¿Cuál de estos cambios te animaría a regresar a Santuario?",
+    ),
+    (
+        anime,
+        "El nuevo avance de Frieren mostró escenas inéditas y confirmó novedades para la serie. "
+        "La producción vuelve a reunir a los personajes que acompañan el viaje de la protagonista. "
+        "¿Qué momento esperas ver desarrollado en esta nueva etapa?",
+    ),
+]
+for item, post in posts_publicables:
+    assert spanish_post_is_valid(post)
+    assert post_quality_issues(post, item) == []
+
+assert not spanish_post_is_valid(
+    "The new update will bring more challenges and this reveal gets fans ready for launch."
+)
+assert post_quality_issues(
+    "Es un tema reciente. Lo importante es explicar qué pasó. Esto abre conversación.",
+    zelda_a,
 )
 
 zelda_post, zelda_tags = ensure_specific_hashtags(
