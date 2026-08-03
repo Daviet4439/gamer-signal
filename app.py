@@ -16,6 +16,8 @@ from urllib.request import Request, urlopen
 import feedparser
 import streamlit as st
 from streamlit.components.v1 import html as components_html
+from feedback_learning import count_examples, save_example
+from translation_layer import traducir_noticia
 
 from ollama_post_rules import (
     ALLOWED_LABELS,
@@ -31,7 +33,7 @@ from ollama_post_rules import (
 )
 
 
-APP_VERSION = "2026.08.03-context-quality-3"
+APP_VERSION = "2026.08.03-translation-feedback-4"
 
 st.set_page_config(page_title="Gamer Signal", page_icon="\U0001F4E1", layout="centered")
 
@@ -2093,6 +2095,11 @@ def render_dashboard():
         key="brand_selector_visible",
     )
     st.session_state.active_brand = "Daviet Gaming" if seleccion == "Daviet Gaming" else "Gamer Cave"
+    conteos = contar_ejemplos_buenos()
+    st.caption(
+        f"{conteos['GAMER_CAVE']} ejemplos guardados para Gamer Cave, "
+        f"{conteos['DAVIET_GAMING']} para Daviet Gaming"
+    )
 
 
 def image_data_url(image_path):
@@ -3093,6 +3100,7 @@ def cargar_noticias_base():
                 "source_official": "oficial" in fuente.lower(),
                 "source_trusted": True,
             }
+            item = traducir_noticia(item)
             item["nostalgia_angle"] = detectar_angulo_nostalgia(item)
             item["content_angle"] = detectar_content_angle(item)
             item["confidence_level"] = nivel_confianza(item)
@@ -3138,6 +3146,7 @@ def cargar_senales_comunidad():
                 "verification_count": 0,
                 "verification_level": "se\u00f1al de comunidad; no confirma noticia",
             }
+            item = traducir_noticia(item)
             item["nostalgia_angle"] = detectar_angulo_nostalgia(item)
             item["content_angle"] = detectar_content_angle(item)
             fuente_baja = fuente.lower()
@@ -3156,6 +3165,7 @@ def cargar_senales_comunidad():
 def buscar_noticias():
     noticias = [dict(item) for item in cargar_noticias_base()]
     noticias.extend(dict(item) for item in cargar_senales_comunidad())
+    noticias = [traducir_noticia(item) for item in noticias]
     noticias = [item for item in noticias if es_tema_gaming_anime_geek(item)]
     return aplicar_preferencias(noticias)
 
@@ -4670,8 +4680,10 @@ APP_DIR = Path(__file__).resolve().parent
 BRAND_GUIDE_FILE = APP_DIR / "guia_marcas.json"
 POST_METHODOLOGY_FILE = APP_DIR / "metodologia_posts.json"
 RECENT_TOPICS_FILE = APP_DIR / "temas_recientes.json"
+GOOD_EXAMPLES_FILE = APP_DIR / "ejemplos_buenos.json"
+BAD_EXAMPLES_FILE = APP_DIR / "ejemplos_malos.json"
 GOOD_EXAMPLES_FILES = [
-    APP_DIR / "ejemplos_buenos.json",
+    GOOD_EXAMPLES_FILE,
     APP_DIR / "prompts" / "ejemplos_buenos.json",
 ]
 OLLAMA_CHAT_URL = "https://ollama.com/api/chat"
@@ -4778,8 +4790,29 @@ def cargar_ejemplos_buenos(marca_clave):
             ejemplos = []
 
         if ejemplos:
-            return ejemplos[:5]
+            return ejemplos[-3:]
     return []
+
+
+def contar_ejemplos_buenos():
+    return count_examples(GOOD_EXAMPLES_FILE)
+
+
+def guardar_feedback_ollama(item, resultado, marca_clave, aprobado):
+    ruta = GOOD_EXAMPLES_FILE if aprobado else BAD_EXAMPLES_FILE
+    titulo_original = str(item.get("original_title") or item.get("title") or "").strip()
+    resumen_original = str(item.get("original_summary") or item.get("summary") or "").strip()
+    noticia_original = titulo_original
+    if resumen_original and resumen_original.lower() not in titulo_original.lower():
+        noticia_original = f"{titulo_original} - {resumen_original}"
+    registro = {
+        "marca": marca_clave,
+        "etiqueta": str(resultado.get("etiqueta", "")).strip(),
+        "noticia_original": noticia_original,
+        "post": str(resultado.get("post", "")).strip(),
+        "fecha": ahora_en_puerto_rico().isoformat(),
+    }
+    return save_example(ruta, marca_clave, registro)
 
 
 @st.cache_data(show_spinner=False)
@@ -4807,6 +4840,7 @@ def fuentes_verificadas_de_item(item):
 
 
 def construir_prompt_ollama(item, marca_clave):
+    item = traducir_noticia(item)
     guia = cargar_guia_marcas()[marca_clave]
     metodologia = cargar_metodologia_posts()
     ejemplos = cargar_ejemplos_buenos(marca_clave)
@@ -4873,6 +4907,7 @@ def extraer_json_ollama(texto):
 
 
 def generar_post_ollama(item, marca=None):
+    item = traducir_noticia(item)
     marca_clave = clave_marca_ollama(marca)
     prompt = construir_prompt_ollama(item, marca_clave)
     resultado = None
@@ -4941,6 +4976,7 @@ def clave_cache_noticia(item):
 
 
 def clasificar_relevancia_ollama(item):
+    item = traducir_noticia(item)
     titular = limpiar_texto_publicable_final(item.get("title", ""))
     resumen = limpiar_texto_publicable_final(item.get("summary", ""))
     prompt = (
@@ -5043,6 +5079,7 @@ def render_lista_noticias_con_ollama(items, key_prefix):
     marca_clave = clave_marca_ollama(marca)
 
     for numero, item in enumerate(items_aprobados, start=1):
+        item = traducir_noticia(item)
         item_id = clave_cache_noticia(item)
         resultado_key = post_cache_key(item, marca_clave)
         titulo = titulo_visible_seguro(item, categoria_de_item(item))
@@ -5091,6 +5128,22 @@ def render_lista_noticias_con_ollama(items, key_prefix):
             st.write(resultado["etiqueta"])
             st.write(resultado["post"])
             render_boton_copiar_texto(resultado["post"], resultado_key)
+            feedback_estado = st.session_state.setdefault("ollama_post_feedback", {})
+            col_bueno, col_malo, _ = st.columns([1, 1, 6])
+            with col_bueno:
+                if st.button("👍", key=f"feedback_good_{key_prefix}_{resultado_key}"):
+                    guardar_feedback_ollama(item, resultado, marca_clave, aprobado=True)
+                    feedback_estado[resultado_key] = "bueno"
+                    st.rerun()
+            with col_malo:
+                if st.button("👎", key=f"feedback_bad_{key_prefix}_{resultado_key}"):
+                    guardar_feedback_ollama(item, resultado, marca_clave, aprobado=False)
+                    feedback_estado[resultado_key] = "malo"
+                    st.rerun()
+            if feedback_estado.get(resultado_key) == "bueno":
+                st.caption("Guardado como ejemplo bueno para esta marca.")
+            elif feedback_estado.get(resultado_key) == "malo":
+                st.caption("Marcado para no usar como ejemplo de estilo.")
         st.divider()
 
 
@@ -5109,6 +5162,7 @@ if st.session_state.get("app_version") != APP_VERSION:
         "pending_post_request",
         "ollama_news_posts",
         "ollama_relevance_checks",
+        "ollama_post_feedback",
     ]:
         st.session_state.pop(key, None)
     st.session_state.app_version = APP_VERSION
