@@ -20,7 +20,7 @@ from supabase_feedback import (
     count_good_examples,
     create_feedback_client,
     recent_good_examples,
-    save_feedback,
+    save_feedback as save_post_feedback,
 )
 from translation_layer import traducir_noticia
 
@@ -38,7 +38,7 @@ from ollama_post_rules import (
 )
 
 
-APP_VERSION = "2026.08.03-supabase-feedback-5.1"
+APP_VERSION = "2026.08.03-supabase-feedback-5.2"
 
 st.set_page_config(page_title="Gamer Signal", page_icon="\U0001F4E1", layout="centered")
 
@@ -4811,7 +4811,7 @@ def guardar_feedback_ollama(item, resultado, marca_clave, aprobado):
         "fecha_creado": ahora_en_puerto_rico().isoformat(),
     }
     try:
-        guardado = save_feedback(obtener_cliente_supabase(), registro)
+        guardado = save_post_feedback(obtener_cliente_supabase(), registro)
     except Exception as error:
         detalle = str(error).strip() or type(error).__name__
         raise RuntimeError(f"No pude guardar el feedback en Supabase. Detalle: {detalle}") from error
