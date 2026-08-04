@@ -16,7 +16,12 @@ from urllib.request import Request, urlopen
 import feedparser
 import streamlit as st
 from streamlit.components.v1 import html as components_html
-from feedback_learning import count_examples, save_example
+from supabase_feedback import (
+    count_good_examples,
+    create_feedback_client,
+    recent_good_examples,
+    save_feedback,
+)
 from translation_layer import traducir_noticia
 
 from ollama_post_rules import (
@@ -33,7 +38,7 @@ from ollama_post_rules import (
 )
 
 
-APP_VERSION = "2026.08.03-translation-feedback-4"
+APP_VERSION = "2026.08.03-supabase-feedback-5"
 
 st.set_page_config(page_title="Gamer Signal", page_icon="\U0001F4E1", layout="centered")
 
@@ -2095,11 +2100,14 @@ def render_dashboard():
         key="brand_selector_visible",
     )
     st.session_state.active_brand = "Daviet Gaming" if seleccion == "Daviet Gaming" else "Gamer Cave"
-    conteos = contar_ejemplos_buenos()
-    st.caption(
-        f"{conteos['GAMER_CAVE']} ejemplos guardados para Gamer Cave, "
-        f"{conteos['DAVIET_GAMING']} para Daviet Gaming"
-    )
+    try:
+        conteos = contar_ejemplos_buenos()
+        st.caption(
+            f"{conteos['GAMER_CAVE']} ejemplos guardados para Gamer Cave, "
+            f"{conteos['DAVIET_GAMING']} para Daviet Gaming"
+        )
+    except RuntimeError as error:
+        st.caption(f"Aprendizaje persistente no disponible: {error}")
 
 
 def image_data_url(image_path):
@@ -4680,12 +4688,6 @@ APP_DIR = Path(__file__).resolve().parent
 BRAND_GUIDE_FILE = APP_DIR / "guia_marcas.json"
 POST_METHODOLOGY_FILE = APP_DIR / "metodologia_posts.json"
 RECENT_TOPICS_FILE = APP_DIR / "temas_recientes.json"
-GOOD_EXAMPLES_FILE = APP_DIR / "ejemplos_buenos.json"
-BAD_EXAMPLES_FILE = APP_DIR / "ejemplos_malos.json"
-GOOD_EXAMPLES_FILES = [
-    GOOD_EXAMPLES_FILE,
-    APP_DIR / "prompts" / "ejemplos_buenos.json",
-]
 OLLAMA_CHAT_URL = "https://ollama.com/api/chat"
 # En la API directa de ollama.com los modelos cloud se nombran sin el sufijo
 # "-cloud" que usa el cliente local de Ollama.
@@ -4767,39 +4769,34 @@ def cargar_guia_marcas():
     return guia
 
 
+@st.cache_resource(show_spinner=False)
+def obtener_cliente_supabase():
+    try:
+        url = str(st.secrets.get("SUPABASE_URL", "")).strip()
+        key = str(st.secrets.get("SUPABASE_KEY", "")).strip()
+    except Exception as error:
+        raise RuntimeError("No pude leer los Secrets de Supabase.") from error
+    return create_feedback_client(url, key)
+
+
+@st.cache_data(ttl=30, show_spinner=False)
 def cargar_ejemplos_buenos(marca_clave):
-    """Carga ejemplos aprobados si existe un archivo de feedback compatible."""
-    for ruta in GOOD_EXAMPLES_FILES:
-        if not ruta.exists():
-            continue
-        try:
-            with ruta.open("r", encoding="utf-8") as archivo:
-                datos = json.load(archivo)
-        except (OSError, json.JSONDecodeError):
-            continue
-
-        if isinstance(datos, dict):
-            ejemplos = datos.get(marca_clave, datos.get(marca_clave.replace("_", " ").title(), []))
-        elif isinstance(datos, list):
-            ejemplos = [
-                ejemplo for ejemplo in datos
-                if isinstance(ejemplo, dict)
-                and clave_marca_ollama(ejemplo.get("marca", "")) == marca_clave
-            ]
-        else:
-            ejemplos = []
-
-        if ejemplos:
-            return ejemplos[-3:]
-    return []
+    """Obtiene los tres ejemplos buenos más recientes de la marca activa."""
+    try:
+        return recent_good_examples(obtener_cliente_supabase(), marca_clave, limit=3)
+    except Exception as error:
+        raise RuntimeError("No pude consultar los ejemplos guardados en Supabase.") from error
 
 
+@st.cache_data(ttl=30, show_spinner=False)
 def contar_ejemplos_buenos():
-    return count_examples(GOOD_EXAMPLES_FILE)
+    try:
+        return count_good_examples(obtener_cliente_supabase())
+    except Exception as error:
+        raise RuntimeError("No pude consultar el contador de Supabase.") from error
 
 
 def guardar_feedback_ollama(item, resultado, marca_clave, aprobado):
-    ruta = GOOD_EXAMPLES_FILE if aprobado else BAD_EXAMPLES_FILE
     titulo_original = str(item.get("original_title") or item.get("title") or "").strip()
     resumen_original = str(item.get("original_summary") or item.get("summary") or "").strip()
     noticia_original = titulo_original
@@ -4810,9 +4807,16 @@ def guardar_feedback_ollama(item, resultado, marca_clave, aprobado):
         "etiqueta": str(resultado.get("etiqueta", "")).strip(),
         "noticia_original": noticia_original,
         "post": str(resultado.get("post", "")).strip(),
-        "fecha": ahora_en_puerto_rico().isoformat(),
+        "feedback": "bueno" if aprobado else "malo",
+        "fecha_creado": ahora_en_puerto_rico().isoformat(),
     }
-    return save_example(ruta, marca_clave, registro)
+    try:
+        guardado = save_feedback(obtener_cliente_supabase(), registro)
+    except Exception as error:
+        raise RuntimeError("No pude guardar el feedback en Supabase.") from error
+    cargar_ejemplos_buenos.clear()
+    contar_ejemplos_buenos.clear()
+    return guardado
 
 
 @st.cache_data(show_spinner=False)
@@ -5132,14 +5136,22 @@ def render_lista_noticias_con_ollama(items, key_prefix):
             col_bueno, col_malo, _ = st.columns([1, 1, 6])
             with col_bueno:
                 if st.button("👍", key=f"feedback_good_{key_prefix}_{resultado_key}"):
-                    guardar_feedback_ollama(item, resultado, marca_clave, aprobado=True)
-                    feedback_estado[resultado_key] = "bueno"
-                    st.rerun()
+                    try:
+                        guardar_feedback_ollama(item, resultado, marca_clave, aprobado=True)
+                    except RuntimeError as error:
+                        st.error(str(error))
+                    else:
+                        feedback_estado[resultado_key] = "bueno"
+                        st.rerun()
             with col_malo:
                 if st.button("👎", key=f"feedback_bad_{key_prefix}_{resultado_key}"):
-                    guardar_feedback_ollama(item, resultado, marca_clave, aprobado=False)
-                    feedback_estado[resultado_key] = "malo"
-                    st.rerun()
+                    try:
+                        guardar_feedback_ollama(item, resultado, marca_clave, aprobado=False)
+                    except RuntimeError as error:
+                        st.error(str(error))
+                    else:
+                        feedback_estado[resultado_key] = "malo"
+                        st.rerun()
             if feedback_estado.get(resultado_key) == "bueno":
                 st.caption("Guardado como ejemplo bueno para esta marca.")
             elif feedback_estado.get(resultado_key) == "malo":

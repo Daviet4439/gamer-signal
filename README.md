@@ -14,6 +14,19 @@ OLLAMA_API_KEY = "tu_clave_nueva_de_ollama"
 
 La clave nunca debe añadirse a `app.py`, GitHub ni a `.streamlit/config.toml`.
 
+## Aprendizaje persistente con Supabase
+
+Los votos de los posts se guardan en la tabla `ejemplos_posts`. En los Secrets
+de Streamlit Community Cloud agrega tambien:
+
+```toml
+SUPABASE_URL = "https://tu-proyecto.supabase.co"
+SUPABASE_KEY = "tu_clave_de_supabase"
+```
+
+La estructura reproducible de la tabla esta en
+`supabase/migrations/20260803_create_ejemplos_posts.sql`.
+
 ## App en la nube
 
 - Publico: https://gamer-signal.streamlit.app/
